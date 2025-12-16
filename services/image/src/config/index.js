@@ -1,9 +1,6 @@
 require("dotenv").config();
 const Joi = require("joi");
 
-/**
- * Centralized Configuration Management for Club Service
- */
 class ConfigManager {
   constructor() {
     this.config = null;
@@ -16,30 +13,22 @@ class ConfigManager {
         .valid("development", "test", "production")
         .default("development"),
 
-      PORT: Joi.number().port().default(3002),
+      PORT: Joi.number().port().default(3004),
 
-      // Database
-      MONGODB_URI: Joi.string()
-        .uri({ scheme: ["mongodb", "mongodb+srv"] })
-        .required(),
+      // Cloudinary (Required for Storage)
+      CLOUDINARY_CLOUD_NAME: Joi.string().required(),
+      CLOUDINARY_API_KEY: Joi.string().required(),
+      CLOUDINARY_API_SECRET: Joi.string().required(),
 
-      // RabbitMQ (Optional for now, but recommended)
+      // RabbitMQ (Required for Events)
       RABBITMQ_URL: Joi.string()
         .uri({ scheme: ["amqp", "amqps"] })
-        .optional(),
+        .default("amqp://localhost:5672"),
 
-      // Security
-      API_GATEWAY_SECRET: Joi.string().required(),
-
-      // Service Dependencies
-      EVENT_SERVICE_URL: Joi.string()
-        .uri()
-        .default("http://event-service:3003"),
-
-      AUTH_SERVICE_URL: Joi.string().uri().default("http://auth-service:3001"),
-
-      MOCK_DB: Joi.boolean().default(false),
-    }).unknown(true); // Allow other env vars
+      // Upload Limits
+      MAX_FILE_SIZE: Joi.string().default("10MB"),
+      MAX_FILES: Joi.number().default(10),
+    }).unknown(true);
   }
 
   loadAndValidateConfig() {
@@ -47,12 +36,15 @@ class ConfigManager {
     const envVars = {
       NODE_ENV: process.env.NODE_ENV,
       PORT: process.env.PORT,
-      MONGODB_URI: process.env.MONGODB_URI || process.env.MONGO_URI,
+
+      CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
+      CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
+      CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
+
       RABBITMQ_URL: process.env.RABBITMQ_URL,
-      API_GATEWAY_SECRET: process.env.API_GATEWAY_SECRET,
-      EVENT_SERVICE_URL: process.env.EVENT_SERVICE_URL,
-      AUTH_SERVICE_URL: process.env.AUTH_SERVICE_URL,
-      MOCK_DB: process.env.MOCK_DB === "true",
+
+      MAX_FILE_SIZE: process.env.MAX_FILE_SIZE,
+      MAX_FILES: process.env.MAX_FILES,
     };
 
     const { error, value } = schema.validate(envVars, {

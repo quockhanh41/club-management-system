@@ -14,7 +14,7 @@ def create_env_file():
     """Create .env file from template"""
     env_content = """# Database Configuration
 SUPABASE_DB_URL=postgresql://postgres.rkzyqtmqflkuxbcghkmy:tDUBMmQzQ5ilqlgU@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres
-MONGODB_URI=mongodb+srv://ngqkhai:byNceAIfBWS8xDvT@club-management-cluster.jgzkju5.mongodb.net/club_service_db?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://22127188_db_user:CqXqm4HFiPSsCxr3@club.gpfnjhm.mongodb.net/club_management_system?retryWrites=true&w=majority&appName=club-management-system
 
 # Cloudinary Configuration (for realistic image URLs)
 CLOUDINARY_CLOUD_NAME=djupm4v0l

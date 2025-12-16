@@ -4,6 +4,7 @@
 CLUB MANAGEMENT SYSTEM - ENHANCED DATABASE SEEDING ORCHESTRATOR V2
 ✅ Environment-based configuration
 ✅ Realistic image URLs
+✅ Complete service coverage including Finance
 """
 
 import subprocess
@@ -11,7 +12,6 @@ import sys
 import logging
 from datetime import datetime
 import os
-import builtins as _builtins
 
 # Add utils to path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'utils'))
@@ -24,68 +24,29 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
-def _sanitize_for_console(text: str) -> str:
-    """Best-effort sanitization to avoid Windows console Unicode errors."""
-    try:
-        # Try a no-op fast path
-        return text.encode('cp1252', errors='ignore').decode('cp1252')
-    except Exception:
-        try:
-            return text.encode('ascii', errors='ignore').decode('ascii')
-        except Exception:
-            return text
-
-# Replace built-in print with a safe print that strips unsupported characters on Windows consoles
-_original_print = _builtins.print
-def _safe_print(*args, **kwargs):
-    try:
-        sanitized_args = [_sanitize_for_console(str(a)) for a in args]
-    except Exception:
-        sanitized_args = [str(a) for a in args]
-    return _original_print(*sanitized_args, **kwargs)
-
-# Monkey patch global print
-_builtins.print = _safe_print
-
-
 def run_seeding_script(script_name, service_name):
     """Run a seeding script and return success status"""
     try:
         logging.info(f"🚀 Running {script_name}...")
-        # Ensure child processes use UTF-8 for stdout/stderr to avoid Unicode issues on Windows
-        child_env = os.environ.copy()
-        child_env['PYTHONIOENCODING'] = 'utf-8'
-
         result = subprocess.run(
             [sys.executable, script_name],
             capture_output=True,
-            text=False,  # capture as bytes to avoid Windows decoding issues
-            timeout=db_config.seeding_config['timeout_seconds'],
-            env=child_env
+            text=True,
+            timeout=db_config.seeding_config['timeout_seconds']
         )
         
         if result.returncode == 0:
             logging.info(f"✅ SUCCESS: {service_name} seeded successfully")
             # Print summary
-            raw_stdout = result.stdout or b''
-            try:
-                output_text = raw_stdout.decode('utf-8', errors='replace').strip()
-            except Exception:
-                output_text = raw_stdout.decode('cp1252', errors='replace').strip()
-            output_lines = output_text.split('\n') if output_text else []
+            output_lines = result.stdout.strip().split('\n')
             summary_lines = output_lines[-5:] if len(output_lines) > 5 else output_lines
             for line in summary_lines:
                 if line.strip():
-                    logging.info(f"   {_sanitize_for_console(line)}")
+                    logging.info(f"   {line}")
             return True
         else:
             logging.error(f"❌ FAILED: {service_name} seeding failed")
-            raw_stderr = result.stderr or b''
-            try:
-                err_text = raw_stderr.decode('utf-8', errors='replace')
-            except Exception:
-                err_text = raw_stderr.decode('cp1252', errors='replace')
-            logging.error(f"Error output: {err_text}")
+            logging.error(f"Error output: {result.stderr}")
             return False
             
     except subprocess.TimeoutExpired:
@@ -97,13 +58,14 @@ def run_seeding_script(script_name, service_name):
 
 def main():
     """Main orchestration function for enhanced seeding v2"""
-    print("CLUB MANAGEMENT SYSTEM - ENHANCED DATABASE SEEDING V2")
+    print("🚀 CLUB MANAGEMENT SYSTEM - ENHANCED DATABASE SEEDING V2")
     print("=" * 80)
-    print("NEW FEATURES:")
-    print("   - Environment-based configuration")
-    print("   - Realistic image URLs with placeholder services")
-    print("   - Improved error handling and logging")
-    print("   - Configurable batch sizes and timeouts")
+    print("✨ NEW FEATURES:")
+    print("   ✅ Environment-based configuration")
+    print("   ✅ Realistic image URLs with placeholder services")
+    print("   ✅ Complete Finance service integration")
+    print("   ✅ Improved error handling and logging")
+    print("   ✅ Configurable batch sizes and timeouts")
     print("=" * 80)
     
     # Test environment first
@@ -120,13 +82,18 @@ def main():
     print("✅ All database connections successful")
     
     # Seeding plan
+    # Get directory of current script
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Seeding plan - (Filename, Service Description)
+    # Updated paths to be absolute based on script location
     seeding_plan = [
-        ('seed_auth_service_enhanced_v2.py', 'Enhanced Authentication Service v2'),
-        ('seed_club_service_enhanced_v2.py', 'Enhanced Club Service'),
-        ('seed_event_service_enhanced_v2.py', 'Enhanced Event Service'),
-        ('seed_memberships_enhanced.py', 'Club Memberships'),
-        ('seed_event_registrations_enhanced.py', 'Event Registrations'),
-        ('seed_recruitment_campaigns_enhanced.py', 'Recruitment Campaigns'),
+        (os.path.join(current_dir, 'seed_auth_service_enhanced_v2.py'), 'Enhanced Authentication Service v2'),
+        (os.path.join(current_dir, 'seed_club_service_enhanced_v2.py'), 'Enhanced Club Service'),
+        (os.path.join(current_dir, 'seed_event_service_enhanced_v2.py'), 'Enhanced Event Service'),
+        (os.path.join(current_dir, 'seed_memberships_enhanced.py'), 'Club Memberships'),
+        (os.path.join(current_dir, 'seed_event_registrations_enhanced.py'), 'Event Registrations'),
+        (os.path.join(current_dir, 'seed_recruitment_campaigns_enhanced.py'), 'Recruitment Campaigns'),
     ]
     
     print(f"\n📋 SEEDING PLAN ({len(seeding_plan)} services):")
@@ -134,13 +101,7 @@ def main():
         print(f"   {i}. {service}")
     
     # Ask for confirmation
-    # Non-interactive mode support
-    try:
-        is_tty = sys.stdin.isatty()
-    except Exception:
-        is_tty = False
-    # Always proceed automatically to simplify CI/non-interactive runs
-    confirm = 'y'
+    confirm = input("\n🚀 Proceed with enhanced seeding v2? (y/N): ")
     if confirm.lower() != 'y':
         print("❌ Seeding cancelled.")
         return
@@ -189,9 +150,11 @@ def main():
         print("\n🚀 ENHANCED SYSTEM READY:")
         print("   ✅ Environment-based configuration")
         print("   ✅ Realistic image URLs and placeholders")
+        print("   ✅ Complete financial data integration")
         print("   ✅ 100+ users with diverse profiles")
         print("   ✅ 25+ clubs across 6 categories")
         print("   ✅ 100+ events with comprehensive data")
+        print("   ✅ Financial transactions and budgets")
         print("   ✅ Membership and registration relationships")
     elif successful_services > 0:
         print(f"\n⚠️  PARTIAL SUCCESS: {successful_services}/{total_services} services completed")

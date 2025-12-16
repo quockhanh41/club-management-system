@@ -32,7 +32,7 @@ logging.basicConfig(
 def get_existing_users():
     """Fetch existing user IDs from PostgreSQL auth service"""
     try:
-        conn = psycopg2.connect(db_config.supabase_url)
+        conn = psycopg2.connect(os.getenv("SUPABASE_DB_URL"))
         cursor = conn.cursor()
         cursor.execute("""
             SELECT id, email,
@@ -390,7 +390,7 @@ def seed_clubs():
     try:
         # Connect to MongoDB
         client = MongoClient(db_config.club_db_uri, serverSelectionTimeoutMS=5000)
-        db = client.club_service_db
+        db = client.club_management_system
         
         # Test connection
         client.admin.command('ping')

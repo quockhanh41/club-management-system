@@ -10,6 +10,7 @@ import random
 from datetime import datetime, timedelta
 from pymongo import MongoClient
 from bson import ObjectId
+import os
 
 # Configure logging
 logging.basicConfig(
@@ -22,13 +23,13 @@ logging.basicConfig(
 )
 
 # Database connection
-MONGODB_URI = "mongodb+srv://ngqkhai:byNceAIfBWS8xDvT@club-management-cluster.jgzkju5.mongodb.net/club_service_db?retryWrites=true&w=majority"
+MONGODB_URI = os.getenv("MONGODB_URI")
 
 def get_existing_clubs():
     """Fetch existing club IDs and details from MongoDB"""
     try:
         client = MongoClient(MONGODB_URI)
-        db = client.club_service_db
+        db = client.club_management_system
         
         clubs = list(db.clubs.find({}, {
             '_id': 1, 
@@ -348,7 +349,7 @@ def seed_recruitment_campaigns():
         
         # Connect to MongoDB and seed
         client = MongoClient(MONGODB_URI)
-        db = client.club_service_db
+        db = client.club_management_system
         
         # Clear existing campaigns
         logging.info("[CLEANING] Clearing existing recruitment campaigns...")

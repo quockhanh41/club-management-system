@@ -5,12 +5,18 @@ Generates realistic membership data for club-user relationships
 Ensures proper ID references between users (PostgreSQL) and clubs (MongoDB)
 """
 
+import sys
+import os
 import logging
 import random
 from datetime import datetime, timedelta
 from pymongo import MongoClient
 import psycopg2
 from bson import ObjectId
+
+# Add utils to path
+sys.path.append(os.path.join(os.path.dirname(__file__), 'utils'))
+from database_config import db_config
 
 # Configure logging
 logging.basicConfig(
@@ -23,8 +29,8 @@ logging.basicConfig(
 )
 
 # Database connections
-MONGODB_URI = "mongodb+srv://ngqkhai:byNceAIfBWS8xDvT@club-management-cluster.jgzkju5.mongodb.net/club_service_db?retryWrites=true&w=majority"
-SUPABASE_DB_URL = "postgresql://postgres.rkzyqtmqflkuxbcghkmy:tDUBMmQzQ5ilqlgU@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"
+MONGODB_URI = db_config.club_db_uri
+SUPABASE_DB_URL = db_config.supabase_url
 
 def get_existing_users():
     """Fetch existing user IDs and details from PostgreSQL"""
@@ -62,7 +68,7 @@ def get_existing_clubs():
     """Fetch existing club IDs and details from MongoDB"""
     try:
         client = MongoClient(MONGODB_URI)
-        db = client.club_service_db
+        db = client.club_management_system
         
         clubs = list(db.clubs.find({}, {
             '_id': 1, 
@@ -85,7 +91,7 @@ def get_existing_campaigns():
     """Fetch existing recruitment campaigns from MongoDB club service"""
     try:
         client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000)
-        db = client.club_service_db
+        db = client.club_management_system
 
         campaigns = list(db.recruitmentcampaigns.find(
             {},  # Get all campaigns regardless of status
@@ -248,7 +254,7 @@ def seed_memberships():
         
         # Connect to MongoDB and seed
         client = MongoClient(MONGODB_URI)
-        db = client.club_service_db
+        db = client.club_management_system
         
         # Clear existing memberships
         logging.info("[CLEANING] Clearing existing memberships...")

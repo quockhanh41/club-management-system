@@ -1,9 +1,9 @@
-require('dotenv').config();
-const { createApp } = require('./app');
-const consumerService = require('./services/consumerService');
-const logger = require('./config/logger');
-const emailService = require('./services/emailService');
-const rabbitmq = require('./config/rabbitmq');
+require("dotenv").config();
+const { createApp } = require("./app");
+const consumerService = require("./services/consumerService");
+const logger = require("./config/logger");
+const emailService = require("./services/emailService");
+const rabbitmq = require("./config/rabbitmq");
 
 /**
  * Main server class that orchestrates both HTTP server and RabbitMQ consumers
@@ -12,8 +12,9 @@ class NotificationServer {
   constructor() {
     this.app = createApp();
     this.server = null;
-    this.port = process.env.PORT || 3005;
-    this.host = process.env.HOST || '0.0.0.0';
+    const config = require("./config");
+    this.port = config.get("PORT");
+    this.host = config.get("HOST");
     this.healthCheckInterval = null;
     this.isShuttingDown = false;
   }
@@ -23,10 +24,10 @@ class NotificationServer {
    */
   async start() {
     try {
-      logger.info('Starting Notification Service...', {
+      logger.info("Starting Notification Service...", {
         port: this.port,
         host: this.host,
-        environment: process.env.NODE_ENV || 'development'
+        environment: process.env.NODE_ENV || "development",
       });
 
       // Start RabbitMQ consumers first
@@ -41,15 +42,14 @@ class NotificationServer {
       // Setup graceful shutdown
       this.setupGracefulShutdown();
 
-      logger.info('Notification Service started successfully', {
+      logger.info("Notification Service started successfully", {
         port: this.port,
         host: this.host,
         httpEndpoint: `http://${this.host}:${this.port}`,
-        healthEndpoint: `http://${this.host}:${this.port}/health`
+        healthEndpoint: `http://${this.host}:${this.port}/health`,
       });
-
     } catch (error) {
-      logger.error('Failed to start Notification Service:', error);
+      logger.error("Failed to start Notification Service:", error);
       await this.gracefulShutdown();
       process.exit(1);
     }
@@ -60,11 +60,11 @@ class NotificationServer {
    */
   async startConsumers() {
     try {
-      logger.info('Starting RabbitMQ consumers...');
+      logger.info("Starting RabbitMQ consumers...");
       await consumerService.startConsumers();
-      logger.info('RabbitMQ consumers started successfully');
+      logger.info("RabbitMQ consumers started successfully");
     } catch (error) {
-      logger.error('Failed to start RabbitMQ consumers:', error);
+      logger.error("Failed to start RabbitMQ consumers:", error);
       throw error;
     }
   }
@@ -78,20 +78,20 @@ class NotificationServer {
         if (err) {
           reject(err);
         } else {
-          logger.info('HTTP server started', {
+          logger.info("HTTP server started", {
             port: this.port,
-            host: this.host
+            host: this.host,
           });
           resolve();
         }
       });
 
       // Handle server errors
-      this.server.on('error', (error) => {
-        if (error.code === 'EADDRINUSE') {
+      this.server.on("error", (error) => {
+        if (error.code === "EADDRINUSE") {
           logger.error(`Port ${this.port} is already in use`);
         } else {
-          logger.error('HTTP server error:', error);
+          logger.error("HTTP server error:", error);
         }
         reject(error);
       });
@@ -102,21 +102,22 @@ class NotificationServer {
    * Setup health monitoring
    */
   setupHealthMonitoring() {
-    const healthCheckInterval = parseInt(process.env.HEALTH_CHECK_INTERVAL_MS) || 30000; // 30 seconds
-    
+    const config = require("./config");
+    const healthCheckInterval = config.get("HEALTH_CHECK_INTERVAL_MS");
+
     this.healthCheckInterval = setInterval(async () => {
       try {
         const health = await this.getHealthStatus();
-        if (process.env.ENABLE_HEALTH_LOGGING === 'true') {
-          logger.info('Health check completed', health);
+        if (process.env.ENABLE_HEALTH_LOGGING === "true") {
+          logger.info("Health check completed", health);
         }
       } catch (error) {
-        logger.error('Health check failed:', error);
+        logger.error("Health check failed:", error);
       }
     }, healthCheckInterval);
 
-    logger.info('Health monitoring started', { 
-      intervalMs: healthCheckInterval 
+    logger.info("Health monitoring started", {
+      intervalMs: healthCheckInterval,
     });
   }
 
@@ -127,18 +128,19 @@ class NotificationServer {
     try {
       const emailHealth = await emailService.getHealthStatus();
       const rabbitHealth = await rabbitmq.healthCheck();
-      
+
       return {
-        status: emailHealth.healthy && rabbitHealth.healthy ? 'healthy' : 'unhealthy',
+        status:
+          emailHealth.healthy && rabbitHealth.healthy ? "healthy" : "unhealthy",
         email: emailHealth,
         rabbitmq: rabbitHealth,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       return {
-        status: 'unhealthy',
+        status: "unhealthy",
         error: error.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }
@@ -148,9 +150,9 @@ class NotificationServer {
    */
   setupGracefulShutdown() {
     // Handle various shutdown signals
-    const signals = ['SIGTERM', 'SIGINT', 'SIGUSR2'];
-    
-    signals.forEach(signal => {
+    const signals = ["SIGTERM", "SIGINT", "SIGUSR2"];
+
+    signals.forEach((signal) => {
       process.on(signal, () => {
         logger.info(`Received ${signal}, initiating graceful shutdown...`);
         this.gracefulShutdown();
@@ -158,14 +160,14 @@ class NotificationServer {
     });
 
     // Handle uncaught exceptions
-    process.on('uncaughtException', (error) => {
-      logger.error('Uncaught exception:', error);
+    process.on("uncaughtException", (error) => {
+      logger.error("Uncaught exception:", error);
       this.gracefulShutdown();
     });
 
     // Handle unhandled promise rejections
-    process.on('unhandledRejection', (reason, promise) => {
-      logger.error('Unhandled promise rejection:', reason, { promise });
+    process.on("unhandledRejection", (reason, promise) => {
+      logger.error("Unhandled promise rejection:", reason, { promise });
       this.gracefulShutdown();
     });
   }
@@ -175,16 +177,16 @@ class NotificationServer {
    */
   async gracefulShutdown() {
     if (this.isShuttingDown) {
-      logger.warn('Shutdown already in progress');
+      logger.warn("Shutdown already in progress");
       return;
     }
 
     this.isShuttingDown = true;
-    logger.info('Starting graceful shutdown...');
+    logger.info("Starting graceful shutdown...");
 
     const shutdownTimeout = 30000; // 30 seconds timeout
     const shutdownTimer = setTimeout(() => {
-      logger.error('Graceful shutdown timeout, forcing exit');
+      logger.error("Graceful shutdown timeout, forcing exit");
       process.exit(1);
     }, shutdownTimeout);
 
@@ -192,7 +194,7 @@ class NotificationServer {
       // Stop health monitoring
       if (this.healthCheckInterval) {
         clearInterval(this.healthCheckInterval);
-        logger.info('Health monitoring stopped');
+        logger.info("Health monitoring stopped");
       }
 
       // Stop HTTP server
@@ -204,12 +206,11 @@ class NotificationServer {
       await this.stopConsumers();
 
       clearTimeout(shutdownTimer);
-      logger.info('Graceful shutdown completed successfully');
+      logger.info("Graceful shutdown completed successfully");
       process.exit(0);
-
     } catch (error) {
       clearTimeout(shutdownTimer);
-      logger.error('Error during graceful shutdown:', error);
+      logger.error("Error during graceful shutdown:", error);
       process.exit(1);
     }
   }
@@ -224,20 +225,20 @@ class NotificationServer {
         return;
       }
 
-      logger.info('Stopping HTTP server...');
-      
+      logger.info("Stopping HTTP server...");
+
       this.server.close((err) => {
         if (err) {
-          logger.error('Error stopping HTTP server:', err);
+          logger.error("Error stopping HTTP server:", err);
         } else {
-          logger.info('HTTP server stopped');
+          logger.info("HTTP server stopped");
         }
         resolve();
       });
 
       // Force close after timeout
       setTimeout(() => {
-        logger.warn('Force closing HTTP server');
+        logger.warn("Force closing HTTP server");
         this.server.destroy();
         resolve();
       }, 10000); // 10 seconds timeout
@@ -249,11 +250,11 @@ class NotificationServer {
    */
   async stopConsumers() {
     try {
-      logger.info('Stopping RabbitMQ consumers...');
+      logger.info("Stopping RabbitMQ consumers...");
       await consumerService.stopConsumers();
-      logger.info('RabbitMQ consumers stopped');
+      logger.info("RabbitMQ consumers stopped");
     } catch (error) {
-      logger.error('Error stopping RabbitMQ consumers:', error);
+      logger.error("Error stopping RabbitMQ consumers:", error);
       throw error;
     }
   }
@@ -263,7 +264,7 @@ class NotificationServer {
 if (require.main === module) {
   const server = new NotificationServer();
   server.start().catch((error) => {
-    logger.error('Failed to start server:', error);
+    logger.error("Failed to start server:", error);
     process.exit(1);
   });
 }

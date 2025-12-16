@@ -20,7 +20,17 @@ class DatabaseConfig:
     
     @property
     def supabase_url(self) -> str:
-        """Get Supabase PostgreSQL URL"""
+        """Get PostgreSQL URL (Supports AWS RDS via SSH Tunnel or Supabase)"""
+        # Priority 1: Custom DB Connection (e.g. AWS RDS via Tunnel)
+        db_host = os.getenv('DB_HOST')
+        if db_host:
+            db_port = os.getenv('DB_PORT', '5432')
+            db_user = os.getenv('DB_USER', 'postgres')
+            db_password = os.getenv('DB_PASSWORD', '')
+            db_name = os.getenv('DB_NAME', 'postgres')
+            return f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+
+        # Priority 2: Supabase URL
         url = os.getenv('SUPABASE_DB_URL')
         if not url:
             # Fallback to hardcoded for backward compatibility (with warning)
@@ -35,7 +45,7 @@ class DatabaseConfig:
         if not uri:
             # Fallback to hardcoded for backward compatibility (with warning)
             self.logger.warning("⚠️  MONGODB_URI not found in environment, using fallback")
-            uri = "mongodb+srv://ngqkhai:byNceAIfBWS8xDvT@club-management-cluster.jgzkju5.mongodb.net/club_service_db?retryWrites=true&w=majority"
+            uri = "mongodb+srv://22127188_db_user:CqXqm4HFiPSsCxr3@club.gpfnjhm.mongodb.net/club_management_system?retryWrites=true&w=majority&appName=club-management-system"
         return uri
     
     @property
@@ -43,13 +53,8 @@ class DatabaseConfig:
         """Get Club Service MongoDB URI"""
         uri = os.getenv('CLUB_MONGODB_URI')
         if not uri:
-            # Use main MongoDB URI with club_service_db
-            base_uri = self.mongodb_uri
-            if 'club_service_db' in base_uri:
-                return base_uri
-            else:
-                # Replace database name
-                return base_uri.replace('/event_service_db', '/club_service_db').replace('?', '?')
+            # Use main MongoDB URI
+            return self.mongodb_uri
         return uri
     
     @property
@@ -57,13 +62,8 @@ class DatabaseConfig:
         """Get Event Service MongoDB URI"""
         uri = os.getenv('EVENT_MONGODB_URI')
         if not uri:
-            # Use main MongoDB URI with event_service_db
-            base_uri = self.mongodb_uri
-            if 'event_service_db' in base_uri:
-                return base_uri
-            else:
-                # Replace database name
-                return base_uri.replace('/club_service_db', '/event_service_db')
+            # Use main MongoDB URI
+            return self.mongodb_uri
         return uri
     
     @property
@@ -98,6 +98,9 @@ class DatabaseConfig:
         
         for var in critical_vars:
             if not os.getenv(var):
+                # If SUPABASE_DB_URL is missing, check if we have DB_HOST replacement
+                if var == 'SUPABASE_DB_URL' and os.getenv('DB_HOST'):
+                    continue
                 missing_vars.append(var)
         
         if missing_vars:

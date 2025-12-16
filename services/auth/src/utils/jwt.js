@@ -1,8 +1,8 @@
-const jwt = require('jsonwebtoken');
-const fs = require('fs');
-const path = require('path');
-const logger = require('../config/logger');
-const config = require('../config');
+const jwt = require("jsonwebtoken");
+const fs = require("fs");
+const path = require("path");
+const logger = require("../config/logger");
+const config = require("../config");
 
 class JWTUtil {
   constructor() {
@@ -14,20 +14,34 @@ class JWTUtil {
 
     // Load RSA keys for access tokens
     try {
-      const privateKeyPath = path.resolve(jwtConfig.privateKeyPath);
-      const publicKeyPath = path.resolve(jwtConfig.publicKeyPath);
-      
-      this.privateKey = fs.readFileSync(privateKeyPath, 'utf8');
-      this.publicKey = fs.readFileSync(publicKeyPath, 'utf8');
-      
-      logger.info('RSA keys loaded successfully for JWT signing');
+      if (jwtConfig.privateKeyContent) {
+        this.privateKey = jwtConfig.privateKeyContent.replace(/\\n/g, "\n");
+        logger.info("RSA private key loaded from environment variable");
+      } else {
+        const privateKeyPath = path.resolve(jwtConfig.privateKeyPath);
+        this.privateKey = fs.readFileSync(privateKeyPath, "utf8");
+        logger.info("RSA private key loaded from file system");
+      }
+
+      if (jwtConfig.publicKeyContent) {
+        this.publicKey = jwtConfig.publicKeyContent.replace(/\\n/g, "\n");
+        logger.info("RSA public key loaded from environment variable");
+      } else {
+        const publicKeyPath = path.resolve(jwtConfig.publicKeyPath);
+        this.publicKey = fs.readFileSync(publicKeyPath, "utf8");
+        logger.info("RSA public key loaded from file system");
+      }
     } catch (error) {
-      logger.error('Failed to load RSA keys:', error);
-      throw new Error('RSA keys required for JWT signing. Run: node scripts/generate-keys.js');
+      logger.error("Failed to load RSA keys:", error);
+      throw new Error(
+        "RSA keys required for JWT signing. Run: node scripts/generate-keys.js or set JWT_PRIVATE/PUBLIC_KEY_CONTENT env vars"
+      );
     }
 
     if (!this.refreshTokenSecret) {
-      throw new Error('Refresh token secret must be defined in environment variables');
+      throw new Error(
+        "Refresh token secret must be defined in environment variables"
+      );
     }
   }
 
@@ -38,23 +52,23 @@ class JWTUtil {
         email: payload.email,
         role: payload.role,
         full_name: payload.full_name,
-        type: 'access'
+        type: "access",
       };
 
       return jwt.sign(tokenPayload, this.privateKey, {
         algorithm: this.algorithm,
         expiresIn: this.accessTokenExpiry,
-        issuer: 'auth-service',
-        audience: 'club-management-system',
+        issuer: "auth-service",
+        audience: "club-management-system",
         header: {
           alg: this.algorithm,
-          typ: 'JWT',
-          kid: 'auth-service-key-1' // For Kong JWT plugin key identification
-        }
+          typ: "JWT",
+          kid: "auth-service-key-1", // For Kong JWT plugin key identification
+        },
       });
     } catch (error) {
-      logger.error('Error generating access token:', error);
-      throw new Error('Failed to generate access token');
+      logger.error("Error generating access token:", error);
+      throw new Error("Failed to generate access token");
     }
   }
 
@@ -63,17 +77,17 @@ class JWTUtil {
       const tokenPayload = {
         id: payload.id,
         email: payload.email,
-        type: 'refresh'
+        type: "refresh",
       };
 
       return jwt.sign(tokenPayload, this.refreshTokenSecret, {
         expiresIn: this.refreshTokenExpiry,
-        issuer: 'auth-service',
-        audience: 'club-management-system'
+        issuer: "auth-service",
+        audience: "club-management-system",
       });
     } catch (error) {
-      logger.error('Error generating refresh token:', error);
-      throw new Error('Failed to generate refresh token');
+      logger.error("Error generating refresh token:", error);
+      throw new Error("Failed to generate refresh token");
     }
   }
 
@@ -81,17 +95,17 @@ class JWTUtil {
     try {
       return jwt.verify(token, this.publicKey, {
         algorithms: [this.algorithm],
-        issuer: 'auth-service',
-        audience: 'club-management-system'
+        issuer: "auth-service",
+        audience: "club-management-system",
       });
     } catch (error) {
-      if (error.name === 'TokenExpiredError') {
-        throw new Error('Access token has expired');
-      } else if (error.name === 'JsonWebTokenError') {
-        throw new Error('Invalid access token');
+      if (error.name === "TokenExpiredError") {
+        throw new Error("Access token has expired");
+      } else if (error.name === "JsonWebTokenError") {
+        throw new Error("Invalid access token");
       } else {
-        logger.error('Error verifying access token:', error);
-        throw new Error('Failed to verify access token');
+        logger.error("Error verifying access token:", error);
+        throw new Error("Failed to verify access token");
       }
     }
   }
@@ -99,17 +113,17 @@ class JWTUtil {
   verifyRefreshToken(token) {
     try {
       return jwt.verify(token, this.refreshTokenSecret, {
-        issuer: 'auth-service',
-        audience: 'club-management-system'
+        issuer: "auth-service",
+        audience: "club-management-system",
       });
     } catch (error) {
-      if (error.name === 'TokenExpiredError') {
-        throw new Error('Refresh token has expired');
-      } else if (error.name === 'JsonWebTokenError') {
-        throw new Error('Invalid refresh token');
+      if (error.name === "TokenExpiredError") {
+        throw new Error("Refresh token has expired");
+      } else if (error.name === "JsonWebTokenError") {
+        throw new Error("Invalid refresh token");
       } else {
-        logger.error('Error verifying refresh token:', error);
-        throw new Error('Failed to verify refresh token');
+        logger.error("Error verifying refresh token:", error);
+        throw new Error("Failed to verify refresh token");
       }
     }
   }
@@ -118,7 +132,7 @@ class JWTUtil {
     try {
       return jwt.decode(token, { complete: true });
     } catch (error) {
-      logger.error('Error decoding token:', error);
+      logger.error("Error decoding token:", error);
       return null;
     }
   }
@@ -131,7 +145,7 @@ class JWTUtil {
       }
       return null;
     } catch (error) {
-      logger.error('Error getting token expiration:', error);
+      logger.error("Error getting token expiration:", error);
       return null;
     }
   }
@@ -140,7 +154,7 @@ class JWTUtil {
     try {
       const expirationTime = this.getTokenExpirationTime(token);
       if (!expirationTime) return true;
-      
+
       return new Date() > expirationTime;
     } catch (error) {
       return true;
@@ -152,18 +166,18 @@ class JWTUtil {
       const tokenPayload = {
         userId,
         email,
-        type: 'email_verification'
+        type: "email_verification",
       };
 
       return jwt.sign(tokenPayload, this.privateKey, {
         algorithm: this.algorithm,
-        expiresIn: '1h', // 1 hour expiration for email verification
-        issuer: 'auth-service',
-        audience: 'club-management-system'
+        expiresIn: "1h", // 1 hour expiration for email verification
+        issuer: "auth-service",
+        audience: "club-management-system",
       });
     } catch (error) {
-      logger.error('Error generating email verification token:', error);
-      throw new Error('Failed to generate email verification token');
+      logger.error("Error generating email verification token:", error);
+      throw new Error("Failed to generate email verification token");
     }
   }
 
@@ -171,24 +185,24 @@ class JWTUtil {
     try {
       const decoded = jwt.verify(token, this.publicKey, {
         algorithms: [this.algorithm],
-        issuer: 'auth-service',
-        audience: 'club-management-system'
+        issuer: "auth-service",
+        audience: "club-management-system",
       });
 
       // Ensure this is an email verification token
-      if (decoded.type !== 'email_verification') {
-        throw new Error('Invalid token type');
+      if (decoded.type !== "email_verification") {
+        throw new Error("Invalid token type");
       }
 
       return decoded;
     } catch (error) {
-      if (error.name === 'TokenExpiredError') {
-        throw new Error('Email verification token has expired');
-      } else if (error.name === 'JsonWebTokenError') {
-        throw new Error('Invalid email verification token');
+      if (error.name === "TokenExpiredError") {
+        throw new Error("Email verification token has expired");
+      } else if (error.name === "JsonWebTokenError") {
+        throw new Error("Invalid email verification token");
       } else {
-        logger.error('Error verifying email verification token:', error);
-        throw new Error('Failed to verify email verification token');
+        logger.error("Error verifying email verification token:", error);
+        throw new Error("Failed to verify email verification token");
       }
     }
   }
@@ -198,12 +212,12 @@ class JWTUtil {
       id: user.id,
       email: user.email,
       role: user.role,
-      full_name: user.full_name
+      full_name: user.full_name,
     };
 
     return {
       accessToken: this.generateAccessToken(payload),
-      refreshToken: this.generateRefreshToken(payload)
+      refreshToken: this.generateRefreshToken(payload),
     };
   }
 
@@ -225,19 +239,21 @@ class JWTUtil {
    * Get JWKS (JSON Web Key Set) for Kong
    */
   getJWKS() {
-    const crypto = require('crypto');
+    const crypto = require("crypto");
     const key = crypto.createPublicKey(this.publicKey);
-    const jwk = key.export({ format: 'jwk' });
-    
+    const jwk = key.export({ format: "jwk" });
+
     return {
-      keys: [{
-        ...jwk,
-        kid: 'auth-service-key-1',
-        alg: this.algorithm,
-        use: 'sig'
-      }]
+      keys: [
+        {
+          ...jwk,
+          kid: "auth-service-key-1",
+          alg: this.algorithm,
+          use: "sig",
+        },
+      ],
     };
   }
 }
 
-module.exports = new JWTUtil(); 
+module.exports = new JWTUtil();

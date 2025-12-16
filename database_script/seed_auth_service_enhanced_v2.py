@@ -210,6 +210,30 @@ def seed_auth_service():
         cur = conn.cursor()
         
         print("Connected to PostgreSQL")
+
+        # Create table if not exists (Required for fresh RDS)
+        print("Ensuring users table exists...")
+        create_table_query = """
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            password_hash VARCHAR(255) NOT NULL,
+            full_name VARCHAR(255),
+            role VARCHAR(50) DEFAULT 'user',
+            phone VARCHAR(50),
+            profile_picture_url TEXT,
+            bio TEXT,
+            date_of_birth DATE,
+            gender VARCHAR(50),
+            address TEXT,
+            social_links JSONB DEFAULT '{}',
+            email_verified BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            deleted_at TIMESTAMP WITH TIME ZONE
+        );
+        """
+        cur.execute(create_table_query)
         
         # Clear existing users
         print("Clearing existing users...")
@@ -298,5 +322,6 @@ if __name__ == "__main__":
     else:
         print("\nERROR: Enhanced auth service v2 seeding failed")
         print("Check your .env configuration and database connectivity")
+        sys.exit(1)
 
 

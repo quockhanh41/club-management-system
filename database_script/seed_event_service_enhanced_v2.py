@@ -54,7 +54,7 @@ def fetch_clubs():
     """Fetch actual clubs from MongoDB club service with full details"""
     try:
         client = MongoClient(db_config.club_db_uri)
-        db = client.club_service_db
+        db = client.club_management_system
         clubs_collection = db['clubs']
         
         # Get clubs with all needed information
@@ -78,7 +78,7 @@ def fetch_active_memberships_grouped_by_club():
     """Fetch active memberships from Club Service and group them by club_id"""
     try:
         client = MongoClient(db_config.club_db_uri)
-        db = client.club_service_db
+        db = client.club_management_system
         memberships_collection = db['memberships']
 
         cursor = memberships_collection.find(
@@ -637,7 +637,7 @@ def seed_events():
     try:
         # Connect to MongoDB
         client = MongoClient(db_config.event_db_uri, serverSelectionTimeoutMS=5000)
-        db = client.event_service_db
+        db = client.club_management_system
         
         # Test connection
         client.admin.command('ping')

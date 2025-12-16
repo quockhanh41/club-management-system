@@ -1,0 +1,13 @@
+Outputs:
+
+alb_dns_name = "club-alb-242294839.ap-southeast-1.elb.amazonaws.com"
+bastion_public_ip = "47.129.221.209"
+private_key_pem = <sensitive>
+rabbitmq_endpoints = tolist([
+  "amqps://b-8efe311f-16a6-4081-8336-ec909f458e79.mq.ap-southeast-1.on.aws:5671",
+])
+rds_endpoint = "club-auth-db.czsgw2ms2854.ap-southeast-1.rds.amazonaws.com:5432"
+
+terraform apply -var="db_password=MatKhauCucManh123" -var="mq_password=MatKhauRabbit123"
+
+aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin 911167910785.dkr.ecr.ap-southeast-1.amazonaws.com

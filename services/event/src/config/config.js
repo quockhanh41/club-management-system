@@ -1,9 +1,8 @@
-require("dotenv").config();
-const Joi = require("joi");
+import Joi from "joi";
+import dotenv from "dotenv";
 
-/**
- * Centralized Configuration Management for Club Service
- */
+dotenv.config();
+
 class ConfigManager {
   constructor() {
     this.config = null;
@@ -16,14 +15,14 @@ class ConfigManager {
         .valid("development", "test", "production")
         .default("development"),
 
-      PORT: Joi.number().port().default(3002),
+      PORT: Joi.number().port().default(3003), // Event service default port
 
       // Database
       MONGODB_URI: Joi.string()
         .uri({ scheme: ["mongodb", "mongodb+srv"] })
         .required(),
 
-      // RabbitMQ (Optional for now, but recommended)
+      // RabbitMQ
       RABBITMQ_URL: Joi.string()
         .uri({ scheme: ["amqp", "amqps"] })
         .optional(),
@@ -31,15 +30,9 @@ class ConfigManager {
       // Security
       API_GATEWAY_SECRET: Joi.string().required(),
 
-      // Service Dependencies
-      EVENT_SERVICE_URL: Joi.string()
-        .uri()
-        .default("http://event-service:3003"),
-
-      AUTH_SERVICE_URL: Joi.string().uri().default("http://auth-service:3001"),
-
+      // Other flags
       MOCK_DB: Joi.boolean().default(false),
-    }).unknown(true); // Allow other env vars
+    }).unknown(true);
   }
 
   loadAndValidateConfig() {
@@ -50,8 +43,6 @@ class ConfigManager {
       MONGODB_URI: process.env.MONGODB_URI || process.env.MONGO_URI,
       RABBITMQ_URL: process.env.RABBITMQ_URL,
       API_GATEWAY_SECRET: process.env.API_GATEWAY_SECRET,
-      EVENT_SERVICE_URL: process.env.EVENT_SERVICE_URL,
-      AUTH_SERVICE_URL: process.env.AUTH_SERVICE_URL,
       MOCK_DB: process.env.MOCK_DB === "true",
     };
 
@@ -77,4 +68,5 @@ class ConfigManager {
   }
 }
 
-module.exports = new ConfigManager();
+const configManager = new ConfigManager();
+export default configManager;

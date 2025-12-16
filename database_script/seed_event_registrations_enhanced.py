@@ -25,14 +25,8 @@ logging.basicConfig(
 )
 
 # Database connections (can be overridden by env vars)
-MONGODB_URI = os.getenv(
-    "MONGODB_URI",
-    "mongodb+srv://ngqkhai:byNceAIfBWS8xDvT@club-management-cluster.jgzkju5.mongodb.net/event_service_db?retryWrites=true&w=majority",
-)
-SUPABASE_DB_URL = os.getenv(
-    "SUPABASE_DB_URL",
-    "postgresql://postgres.rkzyqtmqflkuxbcghkmy:tDUBMmQzQ5ilqlgU@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres",
-)
+MONGODB_URI = os.getenv("MONGODB_URI")
+SUPABASE_DB_URL = os.getenv("SUPABASE_DB_URL")
 
 def get_existing_users():
     """Fetch existing user IDs and details from PostgreSQL"""
@@ -71,7 +65,7 @@ def get_existing_events():
     """Fetch existing event IDs and details from MongoDB"""
     try:
         client = MongoClient(MONGODB_URI)
-        db = client.event_service_db
+        db = client.club_management_system
         
         events = list(db.events.find({}, {
             '_id': 1, 
@@ -313,7 +307,7 @@ def seed_event_registrations():
         
         # Connect to MongoDB and seed
         client = MongoClient(MONGODB_URI)
-        db = client.event_service_db
+        db = client.club_management_system
         
         # Clear existing registrations
         logging.info("[CLEANING] Clearing existing registrations...")

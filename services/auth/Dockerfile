@@ -45,7 +45,5 @@ USER nodejs
 # Expose port
 EXPOSE 3001
 
-
-
 # Start production server
 CMD ["npm", "start"] 

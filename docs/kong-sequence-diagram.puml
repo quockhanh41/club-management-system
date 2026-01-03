@@ -1,0 +1,190 @@
+@startuml Kong Gateway - Detailed Sequence Diagram
+
+!theme plain
+title Kong API Gateway - Request Processing Flow (Local Development)
+
+actor User
+participant "Browser" as Browser
+participant "Kong Gateway\n:8000" as Kong
+participant "JWT Plugin" as JWT
+participant "JWT Claims\nHeaders Plugin" as Claims
+participant "API Gateway\nSecret Plugin" as Secret
+participant "Auth Service\n:3001" as Auth
+database "PostgreSQL" as DB
+
+== User Request ==
+
+User -> Browser: Click "View Profile"
+Browser -> Kong: GET /api/auth/profile\nAuthorization: Bearer eyJhbGc...
+
+== Kong Processing ==
+
+Kong -> Kong: Match route
+note right
+    Path: /api/auth/profile
+    Matched: auth-protected-route
+    Service: auth-service
+end note
+
+Kong -> JWT: Execute Plugin\n(Priority: 1000)
+
+JWT -> JWT: Extract JWT from header
+note right
+    Authorization: Bearer <token>
+    → token = eyJhbGciOiJSUzI1NiIs...
+end note
+
+JWT -> JWT: Verify JWT Signature
+note right
+    Algorithm: RS256
+    Public Key: ENV variable
+    
+    ✅ Signature valid
+end note
+
+JWT -> JWT: Verify Claims
+note right
+    Check expiration:
+    exp: 1735574400 (timestamp)
+    now: 1735570800
+    
+    ✅ Not expired (exp > now)
+end note
+
+JWT -> Kong: Store token in context
+note right
+    kong.ctx.shared.authenticated_jwt_token = <token>
+end note
+
+Kong -> Claims: Execute Plugin\n(Priority: 1000)
+
+Claims -> Claims: Get token from context
+note right
+    jwt_token = kong.ctx.shared.authenticated_jwt_token
+end note
+
+Claims -> Claims: Decode JWT payload
+note right
+    JWT structure:
+    header.payload.signature
+    
+    Extract part 2 (payload):
+    eyJpZCI6IjUwN2Yx...
+    
+    Base64 decode:
+    {
+      "id": "507f1f77bcf86cd799439011",
+      "email": "john@example.com",
+      "role": "user",
+      "full_name": "John Doe",
+      "iss": "auth-service",
+      "exp": 1735574400
+    }
+end note
+
+Claims -> Claims: Extract configured claims
+note right
+    claims_to_include:
+    - id
+    - email
+    - role
+    - full_name
+end note
+
+Claims -> Kong: Add headers to request
+note right
+    x-user-id: 507f1f77bcf86cd799439011
+    x-user-email: john@example.com
+    x-user-role: user
+    x-user-full_name: John Doe
+end note
+
+Kong -> Secret: Execute Plugin\n(Priority: 1100)
+
+Secret -> Kong: Add secret header
+note right
+    x-api-gateway-secret: test-secret-e2e
+end note
+
+== Forward to Service ==
+
+Kong -> Auth: Proxied Request
+note right
+    GET http://auth-service:3001/api/auth/profile
+    
+    Headers:
+    - x-user-id: 507f1f77bcf86cd799439011
+    - x-user-email: john@example.com
+    - x-user-role: user
+    - x-user-full_name: John Doe
+    - x-api-gateway-secret: test-secret-e2e
+end note
+
+== Service Processing ==
+
+Auth -> Auth: validateApiGatewaySecret
+note right
+    const secret = req.headers['x-api-gateway-secret'];
+    
+    if (secret === process.env.API_GATEWAY_SECRET) {
+        ✅ Valid - request from Kong
+    } else {
+        ❌ 403 Forbidden
+    }
+end note
+
+Auth -> Auth: Extract user info
+note right
+    const userId = req.headers['x-user-id'];
+    const email = req.headers['x-user-email'];
+    const role = req.headers['x-user-role'];
+    
+    ✅ No JWT verification needed!
+    ✅ Kong already validated
+end note
+
+Auth -> DB: SELECT * FROM users\nWHERE id = '507f1f77bcf86cd799439011'
+
+DB -> Auth: User data
+
+Auth -> Auth: Build response
+note right
+    {
+      "id": "507f1f77bcf86cd799439011",
+      "email": "john@example.com",
+      "full_name": "John Doe",
+      "role": "user",
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+end note
+
+== Response ==
+
+Auth -> Kong: 200 OK\n+ User Profile JSON
+
+Kong -> Browser: 200 OK\n+ User Profile JSON
+
+Browser -> User: Display Profile
+
+== Timing ==
+
+note over Kong, Auth
+    **Performance Breakdown:**
+    
+    1. Route Matching: ~2ms
+    2. JWT Plugin (verify): ~15ms
+    3. Claims Plugin (extract): ~5ms
+    4. Secret Plugin (add header): ~1ms
+    5. Proxy to service: ~2ms
+    6. Service processing: ~20ms
+    
+    **Total: ~45ms**
+    
+    **Benefits:**
+    • JWT verified once at gateway
+    • Services don't need JWT libraries
+    • Consistent security policy
+    • Easy to audit/monitor
+end note
+
+@enduml

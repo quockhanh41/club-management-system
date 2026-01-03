@@ -1,0 +1,210 @@
+@startuml Club Management System - AWS Network Architecture
+
+' Define colors and styles
+skinparam rectangle {
+    BackgroundColor<<public>> #E3F2FD
+    BackgroundColor<<private>> #E8F5E9
+    BackgroundColor<<database>> #FFF9C4
+    BackgroundColor<<service>> #F3E5F5
+    BackgroundColor<<alb>> #FFE0B2
+    BackgroundColor<<gateway>> #B2EBF2
+    BorderColor Black
+    FontSize 12
+}
+
+skinparam cloud {
+    BackgroundColor #FFFFFF
+    BorderColor Black
+}
+
+skinparam component {
+    BackgroundColor #FFEBEE
+    BorderColor Black
+}
+
+skinparam database {
+    BackgroundColor #FFF9C4
+    BorderColor Black
+}
+
+title Club Management System - AWS Network Architecture\n(Region: ap-southeast-1)
+
+' Internet
+cloud "Internet" as internet {
+}
+
+rectangle "AWS VPC (10.0.0.0/16)" as vpc {
+    
+    ' Internet Gateway
+    component "Internet Gateway" as igw <<gateway>>
+    
+    ' Availability Zones
+    rectangle "Availability Zone A\nap-southeast-1a" as az_a {
+        rectangle "Public Subnet\n10.0.101.0/24" as public_a <<public>> {
+            component "Bastion Host\nt3.micro\nAmazon Linux 2" as bastion
+            component "ALB Node A\nPort 80" as alb_a <<alb>>
+        }
+        
+        rectangle "Private Subnet\n10.0.1.0/24" as private_a <<private>> {
+            rectangle "ECS Fargate Cluster" as ecs_cluster {
+                component "Auth Service\nPort 3001" as auth_svc <<service>>
+                component "Club Service\nPort 3002" as club_svc <<service>>
+                component "Event Service\nPort 3003" as event_svc <<service>>
+                component "Image Service\nPort 3004" as image_svc <<service>>
+                component "Notify Service\nPort 3005" as notify_svc <<service>>
+                component "Frontend\nPort 3000" as frontend_svc <<service>>
+            }
+        }
+    }
+    
+    rectangle "Availability Zone B\nap-southeast-1b" as az_b {
+        rectangle "Public Subnet\n10.0.102.0/24" as public_b <<public>> {
+            component "NAT Gateway\nSingle Instance" as nat <<gateway>>
+            component "ALB Node B" as alb_b <<alb>>
+        }
+        
+        rectangle "Private Subnet\n10.0.2.0/24" as private_b <<private>> {
+            database "RDS PostgreSQL\ndb.t3.micro\nauth_db" as rds
+            component "Amazon MQ\nRabbitMQ 3.13\nmq.t3.micro" as rabbitmq <<database>>
+        }
+    }
+    
+    rectangle "Availability Zone C\nap-southeast-1c" as az_c {
+        rectangle "Public Subnet\n10.0.103.0/24" as public_c <<public>> {
+            component "ALB Node C" as alb_c <<alb>>
+        }
+        
+        rectangle "Private Subnet\n10.0.3.0/24" as private_c <<private>> {
+        }
+    }
+    
+    ' Supporting Services
+    rectangle "Supporting Services" as support {
+        component "ECR Repositories\n6 Repos" as ecr
+        component "CloudWatch Logs\n/ecs/club-management" as logs
+    }
+}
+
+' External Services (Outside VPC)
+cloud "MongoDB Atlas\n(External SaaS)" as mongodb {
+    database "MongoDB\nclub_management_system" as mongo
+}
+
+' Security Groups
+rectangle "Security Groups" as sg {
+    rectangle "ALB Security Group\nclub-alb-sg" as sg_alb {
+        note right
+            Ingress:
+            - HTTP (80) from 0.0.0.0/0
+        end note
+    }
+    
+    rectangle "ECS Tasks SG\nclub-ecs-tasks-sg" as sg_ecs {
+        note right
+            Ingress:
+            - TCP 3000-4000 from ALB SG
+        end note
+    }
+    
+    rectangle "Database SG\nclub-db-sg" as sg_db {
+        note right
+            Ingress:
+            - PostgreSQL (5432) from ECS & Bastion
+            - MongoDB (27017) from ECS & Bastion
+            - RabbitMQ (5672, 5671) from ECS
+        end note
+    }
+    
+    rectangle "Bastion SG\nclub-bastion-sg" as sg_bastion {
+        note right
+            Ingress:
+            - SSH (22) from 0.0.0.0/0
+        end note
+    }
+}
+
+' Network Flow Connections
+internet --> igw : "HTTP/HTTPS\nTraffic"
+igw --> alb_a
+igw --> alb_b
+igw --> alb_c
+internet --> bastion : "SSH (22)"
+
+alb_a --> ecs_cluster : "Forward to\nTarget Groups"
+alb_b --> ecs_cluster
+alb_c --> ecs_cluster
+
+ecs_cluster --> nat : "Outbound\nInternet Access"
+nat --> igw
+
+auth_svc --> rds : "PostgreSQL\n5432"
+auth_svc --> rabbitmq : "AMQPS\n5671"
+club_svc --> rabbitmq : "AMQPS\n5671"
+event_svc --> rabbitmq : "AMQPS\n5671"
+image_svc --> rabbitmq : "AMQPS\n5671"
+notify_svc --> rabbitmq : "AMQPS\n5671"
+
+club_svc --> mongo : "MongoDB\n27017"
+event_svc --> mongo : "MongoDB\n27017"
+
+bastion --> rds : "SSH Tunnel"
+bastion --> mongo : "SSH Tunnel"
+
+ecs_cluster --> ecr : "Pull Images"
+ecs_cluster --> logs : "Send Logs"
+
+' ALB Routing Rules
+note right of alb_a
+    **ALB Listener Rules (Port 80):**
+    Priority 10: /api/auth* → Auth Service (3001)
+    Priority 20: /api/clubs*, /api/campaigns*, /api/applications* → Club Service (3002)
+    Priority 30: /api/events* → Event Service (3003)
+    Priority 40: /api/images* → Image Service (3004)
+    Priority 50: /api/notifications* → Notify Service (3005)
+    Priority 100: /* → Frontend (3000)
+    Default: 404 Fixed Response
+end note
+
+' Network Details
+note bottom of vpc
+    **VPC Configuration:**
+    - CIDR: 10.0.0.0/16
+    - 3 Availability Zones
+    - 3 Public Subnets (10.0.101-103.0/24)
+    - 3 Private Subnets (10.0.1-3.0/24)
+    - DNS Hostnames: Enabled
+    - DNS Support: Enabled
+    - Single NAT Gateway (Cost Optimization)
+end note
+
+' ECS Cluster Details
+note bottom of ecs_cluster
+    **ECS Cluster: club-management-cluster**
+    - Launch Type: Fargate (Serverless)
+    - Network Mode: awsvpc
+    - 6 Services Running
+    - CPU: 256-512, Memory: 512-1024MB
+    - No Public IP (Private Subnet)
+end note
+
+' Database Details
+note bottom of rds
+    **Database Configuration:**
+    - RDS: PostgreSQL 15 (auth_db)
+    - Storage: 20GB gp3
+    - Multi-AZ: Disabled (Cost Saving)
+    - Publicly Accessible: False
+    - Subnet Group: 3 Private Subnets
+end note
+
+legend right
+    |= Color |= Component Type |
+    | <back:#E3F2FD>Public Subnet</back> | Public-facing resources |
+    | <back:#E8F5E9>Private Subnet</back> | Internal resources |
+    | <back:#FFF9C4>Database</back> | Data storage |
+    | <back:#F3E5F5>Service</back> | Microservices |
+    | <back:#FFE0B2>ALB</back> | Load Balancer |
+    | <back:#B2EBF2>Gateway</back> | Network Gateway |
+endlegend
+
+@enduml

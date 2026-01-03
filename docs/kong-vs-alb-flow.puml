@@ -1,0 +1,229 @@
+@startuml API Gateway - Kong vs AWS ALB Comparison
+
+!theme plain
+
+title Request Flow Comparison: Kong Gateway (Local) vs AWS ALB (Production)
+
+' Define styles
+skinparam rectangle {
+    BackgroundColor<<client>> #E3F2FD
+    BackgroundColor<<kong>> #FFE082
+    BackgroundColor<<alb>> #FFE0B2
+    BackgroundColor<<service>> #C8E6C9
+    BackgroundColor<<plugin>> #F8BBD0
+    BorderColor Black
+    FontSize 11
+}
+
+skinparam note {
+    BackgroundColor #FFF9C4
+    BorderColor Black
+}
+
+' ============================================
+' LEFT SIDE: Kong Gateway (Local Development)
+' ============================================
+
+rectangle "🏠 LOCAL DEVELOPMENT" as local_env {
+    
+    rectangle "Client Browser" as client1 <<client>> {
+        note right
+            GET /api/auth/profile
+            Authorization: Bearer <JWT>
+        end note
+    }
+    
+    client1 -down-> kong : "1. HTTP Request"
+    
+    rectangle "Kong API Gateway\nPort 8000" as kong <<kong>> {
+        
+        rectangle "Route Matching" as route1 {
+            note left
+                Path: /api/auth/profile
+                → auth-protected-route
+            end note
+        }
+        
+        route1 -down-> jwt_plugin
+        
+        rectangle "🔌 Plugin Chain" as plugins {
+            rectangle "JWT Plugin\nPriority: 1000" as jwt_plugin <<plugin>> {
+                note right
+                    ✅ Verify signature
+                    ✅ Check expiration
+                    ✅ Store in context
+                end note
+            }
+            
+            jwt_plugin -down-> claims_plugin
+            
+            rectangle "JWT Claims Headers\nPriority: 1000" as claims_plugin <<plugin>> {
+                note right
+                    ✅ Extract claims
+                    ✅ Add headers:
+                    • x-user-id
+                    • x-user-email
+                    • x-user-role
+                    • x-user-full_name
+                end note
+            }
+            
+            claims_plugin -down-> secret_plugin
+            
+            rectangle "API Gateway Secret\nPriority: 1100" as secret_plugin <<plugin>> {
+                note right
+                    ✅ Add header:
+                    • x-api-gateway-secret
+                end note
+            }
+        }
+        
+        secret_plugin -down-> service_resolution
+        
+        rectangle "Service Resolution" as service_resolution {
+            note left
+                Target: auth-service
+                URL: http://auth-service:3001
+            end note
+        }
+    }
+    
+    kong -down-> auth_local : "2. Proxied Request\n+ User Headers\n+ Secret Header"
+    
+    rectangle "Auth Service\nPort 3001" as auth_local <<service>> {
+        
+        rectangle "validateApiGatewaySecret" as validate1 {
+            note right
+                ✅ Check x-api-gateway-secret
+                ✅ Verify from Gateway
+            end note
+        }
+        
+        validate1 -down-> logic1
+        
+        rectangle "Business Logic" as logic1 {
+            note right
+                ✅ Read x-user-id header
+                ✅ No JWT verification
+                ✅ Fast processing
+            end note
+        }
+        
+        logic1 -down-> response1
+        
+        rectangle "Response" as response1 {
+            note right
+                200 OK
+                User Profile Data
+            end note
+        }
+    }
+}
+
+' ============================================
+' RIGHT SIDE: AWS ALB (Production)
+' ============================================
+
+rectangle "☁️ AWS PRODUCTION" as aws_env {
+    
+    rectangle "Client Browser" as client2 <<client>> {
+        note right
+            GET /api/auth/profile
+            Authorization: Bearer <JWT>
+        end note
+    }
+    
+    client2 -down-> alb : "1. HTTP Request"
+    
+    rectangle "Application Load Balancer\nPort 80" as alb <<alb>> {
+        
+        rectangle "Listener Rules" as rules {
+            note left
+                Priority 10: /api/auth*
+                → Auth Target Group
+                
+                ❌ NO JWT validation
+                ❌ NO claims extraction
+                ❌ NO header injection
+            end note
+        }
+        
+        rules -down-> forward
+        
+        rectangle "Forward Request" as forward {
+            note left
+                ✅ Route to target
+                ⚠️ Forward AS-IS
+                ⚠️ No processing
+            end note
+        }
+    }
+    
+    alb -down-> auth_aws : "2. Original Request\n(No extra headers)"
+    
+    rectangle "Auth Service (ECS)\nPort 3001" as auth_aws <<service>> {
+        
+        rectangle "❌ validateApiGatewaySecret" as validate2 {
+            note right
+                ❌ No secret header
+                ❌ Can't verify source
+                ❌ Direct access possible
+            end note
+        }
+        
+        validate2 -down-> jwt_verify
+        
+        rectangle "Manual JWT Verification" as jwt_verify {
+            note right
+                ❌ Parse Authorization header
+                ❌ Verify signature
+                ❌ Check expiration
+                ❌ Extract claims
+                ⚠️ CPU overhead
+            end note
+        }
+        
+        jwt_verify -down-> logic2
+        
+        rectangle "Business Logic" as logic2 {
+            note right
+                ✅ Process with user data
+                ⚠️ Slower due to JWT work
+            end note
+        }
+        
+        logic2 -down-> response2
+        
+        rectangle "Response" as response2 {
+            note right
+                200 OK
+                User Profile Data
+            end note
+        }
+    }
+}
+
+' Legend
+legend bottom
+    |= Symbol |= Meaning |
+    | ✅ | Feature available/working |
+    | ❌ | Feature missing/not working |
+    | ⚠️ | Warning/concern |
+    | 🔌 | Plugin processing |
+    
+    **Key Differences:**
+    • Kong: JWT verified at gateway → services get clean user data
+    • ALB: No JWT processing → each service must verify manually
+    • Kong: API Gateway Secret → verify internal communication
+    • ALB: No internal auth → services exposed to direct access
+    
+    **Performance Impact:**
+    • Kong: 45ms avg latency (one-time JWT verification)
+    • ALB: 25ms avg latency (but each service pays JWT overhead)
+    
+    **Security:**
+    • Kong: Centralized, consistent authentication
+    • ALB: Distributed, potential inconsistencies
+endlegend
+
+@enduml

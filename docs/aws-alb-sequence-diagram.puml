@@ -1,0 +1,232 @@
+@startuml AWS ALB - Detailed Sequence Diagram
+
+!theme plain
+title AWS ALB - Request Processing Flow (Production - Current Architecture)
+
+actor User
+participant "Browser" as Browser
+participant "Internet\nGateway" as IGW
+participant "Application\nLoad Balancer" as ALB
+participant "Auth Service\n(ECS Fargate)" as Auth
+database "RDS\nPostgreSQL" as DB
+
+== User Request ==
+
+User -> Browser: Click "View Profile"
+Browser -> IGW: GET /api/auth/profile\nAuthorization: Bearer eyJhbGc...
+
+== AWS Network ==
+
+IGW -> ALB: Forward request
+note right
+    Public subnet
+    Port: 80
+end note
+
+ALB -> ALB: Match listener rule
+note right
+    **Listener Rules:**
+    
+    Priority 10: /api/auth*
+    → Auth Target Group
+    → ECS Tasks (Port 3001)
+    
+    ⚠️ NO processing
+    ⚠️ Just routing
+end note
+
+ALB -> ALB: Health check
+note right
+    Target Group health status:
+    ✅ Healthy targets: 1
+    
+    Forward to: 10.0.1.45:3001
+end note
+
+== Forward to ECS ==
+
+ALB -> Auth: Forward request\n(Private subnet)
+note right
+    GET http://10.0.1.45:3001/api/auth/profile
+    
+    **Headers (unchanged):**
+    Authorization: Bearer eyJhbGciOiJSUzI1NiIs...
+    
+    ❌ NO x-user-* headers
+    ❌ NO x-api-gateway-secret
+    ❌ NO processing at all
+end note
+
+== Service Must Do Everything ==
+
+Auth -> Auth: ❌ validateApiGatewaySecret
+note right
+    const secret = req.headers['x-api-gateway-secret'];
+    
+    ❌ secret = undefined
+    
+    **Problem:**
+    Can't verify if request came through ALB
+    or direct access to service
+    
+    **Solution:**
+    Skip this check OR use VPC security groups
+end note
+
+Auth -> Auth: Manual JWT verification
+note right
+    **Step 1: Extract token**
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.replace('Bearer ', '');
+    
+    ❌ Must parse manually
+end note
+
+Auth -> Auth: Verify JWT signature
+note right
+    **Step 2: Load public key**
+    const publicKey = fs.readFileSync('public.pem');
+    
+    **Step 3: Verify**
+    jwt.verify(token, publicKey, {
+        algorithms: ['RS256']
+    });
+    
+    ❌ CPU intensive (RSA verification)
+    ⚠️ ~10-15ms per request
+end note
+
+Auth -> Auth: Check expiration
+note right
+    **Step 4: Decode payload**
+    const decoded = jwt.decode(token);
+    
+    **Step 5: Check exp**
+    if (decoded.exp * 1000 < Date.now()) {
+        throw new Error('Token expired');
+    }
+    
+    ❌ Must implement manually
+end note
+
+Auth -> Auth: Extract user claims
+note right
+    **Step 6: Attach to request**
+    req.user = {
+        id: decoded.id,
+        email: decoded.email,
+        role: decoded.role,
+        full_name: decoded.full_name
+    };
+    
+    ❌ Every service duplicates this logic
+end note
+
+Auth -> Auth: Business logic
+note right
+    const userId = req.user.id;
+    const email = req.user.email;
+    
+    ✅ Finally can process request
+end note
+
+Auth -> DB: SELECT * FROM users\nWHERE id = '507f1f77bcf86cd799439011'
+note right
+    RDS endpoint:
+    club-auth-db.abc.ap-southeast-1.rds.amazonaws.com
+    
+    Connection through private subnet
+end note
+
+DB -> Auth: User data
+
+Auth -> Auth: Build response
+note right
+    {
+      "id": "507f1f77bcf86cd799439011",
+      "email": "john@example.com",
+      "full_name": "John Doe",
+      "role": "user",
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+end note
+
+== Response ==
+
+Auth -> ALB: 200 OK\n+ User Profile JSON
+
+ALB -> IGW: Forward response
+
+IGW -> Browser: 200 OK\n+ User Profile JSON
+
+Browser -> User: Display Profile
+
+== Timing & Issues ==
+
+note over ALB, Auth
+    **Performance Breakdown:**
+    
+    1. ALB routing: ~5ms
+    2. Forward to ECS: ~3ms
+    3. JWT verification (service): ~15ms ❌
+    4. Claims extraction (service): ~2ms ❌
+    5. Business logic: ~20ms
+    
+    **Total: ~45ms**
+    
+    **BUT every service pays JWT overhead!**
+end note
+
+note over Auth
+    **Problems with Current Approach:**
+    
+    ❌ **Code Duplication**
+       - JWT verification in EVERY service
+       - Auth, Club, Event, Image, Notify
+       - 5x duplicate code
+    
+    ❌ **Security Concerns**
+       - Can't verify request source
+       - Services exposed to direct access
+       - No centralized policy
+    
+    ❌ **Maintenance**
+       - Update JWT logic in 5 places
+       - Inconsistent implementations
+       - Hard to audit
+    
+    ❌ **Performance**
+       - Each service does RSA verification
+       - 5x CPU overhead
+       - No caching between services
+    
+    ⚠️ **No API Gateway Features**
+       - No rate limiting
+       - No request transformation
+       - No circuit breaker
+       - No centralized logging
+end note
+
+== Alternative: With Kong on AWS ==
+
+note over ALB, Auth #LightBlue
+    **If we deploy Kong on ECS:**
+    
+    Internet → ALB → Kong (ECS) → Services
+    
+    **Benefits:**
+    ✅ JWT verified once at Kong
+    ✅ Services get clean headers
+    ✅ API Gateway Secret works
+    ✅ Consistent with local dev
+    ✅ Centralized security
+    
+    **Cost:**
+    ~$25/month for Kong container
+    +20-30ms latency
+    
+    **Trade-off:**
+    Worth it for >10M requests/month
+end note
+
+@enduml

@@ -60,3 +60,4 @@ test.json
 *.tfstate.backup
 .terraform.lock.hcl
 *.pem
+*.tfvars

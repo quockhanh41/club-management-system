@@ -46,7 +46,8 @@ services:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
       RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
-    user: "rabbitmq:rabbitmq"
+      # Enable guest user remote access for E2E tests
+      RABBITMQ_DEFAULT_VHOST: /
     volumes:
       - rabbitmq_e2e_data:/var/lib/rabbitmq
     deploy:
@@ -118,6 +119,20 @@ services:
       timeout: 5s
       retries: 12
       start_period: 10s
+
+  notify-service:
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      NODE_ENV: development
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:3005/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
   frontend:
     deploy:

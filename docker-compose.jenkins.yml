@@ -24,24 +24,26 @@ services:
       - jenkins-network
 
   # Jenkins Agent (optional - for distributed builds)
-  jenkins-agent:
-    image: jenkins/inbound-agent:latest
-    container_name: jenkins-agent
-    restart: unless-stopped
-    privileged: true
-    user: root
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - jenkins_agent_workspace:/home/jenkins/agent
-    environment:
-      - JENKINS_URL=http://jenkins:8080
-      - JENKINS_AGENT_NAME=agent-1
-      - JENKINS_SECRET=${JENKINS_AGENT_SECRET:-changeme}
-      - JENKINS_AGENT_WORKDIR=/home/jenkins/agent
-    networks:
-      - jenkins-network
-    depends_on:
-      - jenkins
+  # DISABLED: Not needed for single-node setup
+  # To enable: set JENKINS_AGENT_SECRET from Jenkins UI and uncomment
+  # jenkins-agent:
+  #   image: jenkins/inbound-agent:latest
+  #   container_name: jenkins-agent
+  #   restart: unless-stopped
+  #   privileged: true
+  #   user: root
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     - jenkins_agent_workspace:/home/jenkins/agent
+  #   environment:
+  #     - JENKINS_URL=http://jenkins:8080
+  #     - JENKINS_AGENT_NAME=agent-1
+  #     - JENKINS_SECRET=${JENKINS_AGENT_SECRET:-changeme}
+  #     - JENKINS_AGENT_WORKDIR=/home/jenkins/agent
+  #   networks:
+  #     - jenkins-network
+  #   depends_on:
+  #     - jenkins
 
   # Docker Registry (private registry for images)
   registry:

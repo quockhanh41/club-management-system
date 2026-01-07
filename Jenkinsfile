@@ -18,6 +18,9 @@ pipeline {
         
         // Playwright home
         PLAYWRIGHT_BROWSERS_PATH = "${WORKSPACE}/playwright-browsers"
+        
+        // Add paths for Docker and Node.js
+        PATH = "/usr/local/bin:/usr/bin:/bin:${env.PATH}"
     }
 
     options {

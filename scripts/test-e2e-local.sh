@@ -50,7 +50,7 @@ mkdir -p artifacts test-results logs playwright-report
 
 # Step 3: Start infrastructure services
 log_info "🗄️  Starting infrastructure services (postgres, mongodb, rabbitmq)..."
-docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d postgres mongo rabbitmq
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --force-recreate postgres mongo rabbitmq
 
 # Step 4: Wait for databases to be healthy
 log_info "⏳ Waiting for databases to be ready..."
@@ -73,7 +73,7 @@ done
 
 # Step 5: Start application services
 log_info "🚀 Starting application services..."
-docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d \
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --force-recreate \
     auth-service club-service event-service notify-service image-service frontend
 
 # Step 6: Wait for application services to be healthy

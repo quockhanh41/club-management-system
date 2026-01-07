@@ -190,7 +190,7 @@ pipeline {
                     
                     # Start infrastructure services first (databases and message queue)
                     echo "Starting infrastructure services (postgres, mongodb, rabbitmq)..."
-                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d postgres mongo rabbitmq
+                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --force-recreate postgres mongo rabbitmq
                     
                     # Wait for databases to be ready
                     echo "Waiting for databases to be ready..."
@@ -213,7 +213,7 @@ pipeline {
                     
                     # Start application services
                     echo "Starting application services..."
-                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d auth-service club-service event-service notify-service image-service frontend
+                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --force-recreate auth-service club-service event-service notify-service image-service frontend
                     
                     # Wait for services to be healthy (increased timeout for notify-service)
                     echo "Waiting for application services to be healthy..."

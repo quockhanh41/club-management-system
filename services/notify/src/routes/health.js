@@ -318,8 +318,12 @@ async function getBasicHealthStatus() {
       rabbitmqConfig.healthCheck()
     ]);
 
+    // In development/test, email config is optional - only check critical components
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const criticalHealthy = consumersHealth.healthy && rabbitmqHealth.healthy;
+    
     return {
-      healthy: consumersHealth.healthy && emailHealth.healthy && rabbitmqHealth.healthy
+      healthy: isDevelopment ? criticalHealthy : (criticalHealthy && emailHealth.healthy)
     };
   } catch (error) {
     return { healthy: false, error: error.message };

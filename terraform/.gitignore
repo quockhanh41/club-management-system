@@ -1,0 +1,59 @@
+# .gitignore for Terraform
+
+# Local .terraform directories
+**/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Exclude all .tfvars files, which might contain sensitive data
+*.tfvars
+*.tfvars.json
+
+# Allow terraform.tfvars (non-sensitive defaults)
+!terraform.tfvars
+
+# Exclude terraform.tfvars.local (for local sensitive overrides)
+terraform.tfvars.local
+
+# Ignore override files as they are usually used to override resources locally
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI configuration files
+.terraformrc
+terraform.rc
+
+# Ignore CLI configuration files
+.terraform.lock.hcl
+
+# Ignore backup files
+*.backup
+
+# Ignore private keys
+*.pem
+*.key
+bastion-key*
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Terraform plan output
+*.tfplan
+
+# Sensitive outputs
+secrets/

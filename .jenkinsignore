@@ -1,0 +1,33 @@
+# Ignore Jenkins home data
+jenkins_home/
+
+# Ignore Jenkins agent workspace
+jenkins_agent_workspace/
+
+# Ignore Docker registry data
+registry_data/
+
+# Ignore Nginx SSL certificates (should be generated or provided separately)
+nginx/ssl/*.key
+nginx/ssl/*.crt
+nginx/ssl/*.pem
+
+# Keep directory structure
+!nginx/ssl/.gitkeep
+
+# Ignore logs
+logs/
+*.log
+
+# Ignore artifacts
+artifacts/
+test-results/
+playwright-report/
+security-reports/
+
+# Ignore environment files
+.env.jenkins
+.env.local
+
+# Ignore failure diagnostics
+failure-diagnostics.txt

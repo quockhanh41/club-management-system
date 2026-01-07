@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  # Jenkins Master
+  jenkins:
+    image: jenkins/jenkins:lts-jdk17
+    container_name: jenkins-master
+    restart: unless-stopped
+    privileged: true
+    user: root
+    ports:
+      - "8080:8080"      # Jenkins Web UI
+      - "50000:50000"    # Jenkins Agent
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./scripts:/scripts:ro
+      - ./artifacts:/artifacts
+      - .:/workspace:ro  # Mount local repository for testing
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    networks:
+      - jenkins-network
+
+  # Jenkins Agent (optional - for distributed builds)
+  jenkins-agent:
+    image: jenkins/inbound-agent:latest
+    container_name: jenkins-agent
+    restart: unless-stopped
+    privileged: true
+    user: root
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - jenkins_agent_workspace:/home/jenkins/agent
+    environment:
+      - JENKINS_URL=http://jenkins:8080
+      - JENKINS_AGENT_NAME=agent-1
+      - JENKINS_SECRET=${JENKINS_AGENT_SECRET:-changeme}
+      - JENKINS_AGENT_WORKDIR=/home/jenkins/agent
+    networks:
+      - jenkins-network
+    depends_on:
+      - jenkins
+
+  # Docker Registry (private registry for images)
+  registry:
+    image: registry:2
+    container_name: docker-registry
+    restart: unless-stopped
+    ports:
+      - "5001:5000"
+    volumes:
+      - registry_data:/var/lib/registry
+    environment:
+      - REGISTRY_STORAGE_DELETE_ENABLED=true
+    networks:
+      - jenkins-network
+
+  # Nginx (reverse proxy for Jenkins and Registry)
+  nginx:
+    image: nginx:alpine
+    container_name: jenkins-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    networks:
+      - jenkins-network
+    depends_on:
+      - jenkins
+      - registry
+
+networks:
+  jenkins-network:
+    driver: bridge
+
+volumes:
+  jenkins_home:
+    driver: local
+  jenkins_agent_workspace:
+    driver: local
+  registry_data:
+    driver: local

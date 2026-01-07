@@ -76,12 +76,14 @@ pipeline {
                     npm ci
                 '''
                 
-                echo "🎭 Installing Playwright browsers"
+                echo "🎭 Installing Playwright and dependencies"
                 sh '''
+                    # Install Playwright package first
+                    npm install --save-dev @playwright/test
+                    
+                    # Install Playwright browsers
                     mkdir -p ${PLAYWRIGHT_BROWSERS_PATH}
-                    # Install browsers without system dependencies
-                    # System deps will be provided by Docker in E2E test stage
-                    npx playwright install chromium
+                    npx playwright install chromium --with-deps
                 '''
             }
         }
@@ -213,21 +215,21 @@ pipeline {
                     echo "Starting application services..."
                     docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d auth-service club-service event-service notify-service image-service frontend
                     
-                    # Wait for services to be healthy
+                    # Wait for services to be healthy (increased timeout for notify-service)
                     echo "Waiting for application services to be healthy..."
                     sleep 30
                     
-                    for i in $(seq 1 60); do
+                    for i in $(seq 1 90); do
                         if docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps | grep -E "(unhealthy|starting)" > /dev/null; then
-                            echo "Services still starting... (attempt $i/60)"
+                            echo "Services still starting... (attempt $i/90)"
                             sleep 10
                         else
                             echo "All services are healthy!"
                             break
                         fi
                         
-                        if [ $i -eq 60 ]; then
-                            echo "Services failed to become healthy within 10 minutes"
+                        if [ $i -eq 90 ]; then
+                            echo "Services failed to become healthy within 15 minutes"
                             docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
                             docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs
                             exit 1

@@ -4,12 +4,28 @@
 # - Services will use code from COPY commands in Dockerfile
 
 services:
+  # Override auth-service to use production target
+  auth-service:
+    build:
+      target: production
+    volumes: []  # Remove volume mounts, use code from image
+
   # Override club-service to use production target
   club-service:
     build:
       target: production
+    volumes: []  # Remove volume mounts, use code from image
     
   # Override event-service to use production target  
   event-service:
     build:
       target: production
+    volumes: []  # Remove volume mounts, use code from image
+  
+  # Override notify-service to use production target
+  notify-service:
+    volumes: []  # Remove volume mounts, use code from image
+  
+  # Override image-service to use production target
+  image-service:
+    volumes: []  # Remove volume mounts, use code from image

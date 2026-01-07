@@ -166,8 +166,8 @@ pipeline {
                 }
                 
                 sh """
-                    # Build services only (exclude kong for AWS deployment with ALB)
-                    docker compose build \
+                    # Build services with CI configuration (production targets, no volume mounts)
+                    docker compose -f docker-compose.yml -f docker-compose.ci.yml build \
                         --build-arg GIT_COMMIT=${env.GIT_COMMIT} \
                         --build-arg BUILD_NUMBER=${env.BUILD_NUMBER} \
                         --build-arg BUILD_TIME=${env.BUILD_TIME} \

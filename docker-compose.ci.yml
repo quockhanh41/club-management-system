@@ -1,23 +1,15 @@
 # Docker Compose override for CI/CD environments
-# - Removes volume mounts to use code baked into Docker images
-# - Services use production/development builds from Dockerfile
-# - No live code sync needed in CI
+# - Uses production build targets (code baked into images)
+# - Production targets don't rely on volume mounts for code
+# - Services will use code from COPY commands in Dockerfile
 
 services:
-  # Override services to remove volume mounts
+  # Override club-service to use production target
   club-service:
-    volumes: []
+    build:
+      target: production
     
+  # Override event-service to use production target  
   event-service:
-    volumes: []
-    
-  auth-service:
-    volumes: []
-    
-  notify-service:
-    volumes:
-      # Keep only the logs volume, remove code mount
-      - notify_logs:/app/logs
-    
-  image-service:
-    volumes: []
+    build:
+      target: production

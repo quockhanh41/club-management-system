@@ -79,7 +79,9 @@ pipeline {
                 echo "🎭 Installing Playwright browsers"
                 sh '''
                     mkdir -p ${PLAYWRIGHT_BROWSERS_PATH}
-                    npx playwright install --with-deps chromium
+                    # Install browsers without system dependencies
+                    # System deps will be provided by Docker in E2E test stage
+                    npx playwright install chromium
                 '''
             }
         }

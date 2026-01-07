@@ -171,7 +171,7 @@ pipeline {
                         --build-arg GIT_COMMIT=${env.GIT_COMMIT} \
                         --build-arg BUILD_NUMBER=${env.BUILD_NUMBER} \
                         --build-arg BUILD_TIME=${env.BUILD_TIME} \
-                        auth-service club-service event-service notification-service image-service frontend
+                        auth-service club-service event-service notify-service image-service frontend
                 """
             }
         }
@@ -188,7 +188,7 @@ pipeline {
                     
                     # Start all services (without kong - using direct ports for testing)
                     echo "Starting services..."
-                    docker compose up -d auth-service club-service event-service notification-service image-service frontend
+                    docker compose up -d auth-service club-service event-service notify-service image-service frontend
                     
                     # Wait for services to be healthy
                     echo "Waiting for services to be healthy..."

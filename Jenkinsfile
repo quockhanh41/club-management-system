@@ -29,9 +29,6 @@ pipeline {
         
         // Disable concurrent builds
         disableConcurrentBuilds()
-        
-        // Add timestamps to console output
-        timestamps()
     }
 
     stages {

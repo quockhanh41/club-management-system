@@ -186,16 +186,39 @@ pipeline {
                     # Create required directories
                     mkdir -p artifacts test-results logs
                     
-                    # Start all services (without kong - using direct ports for testing)
-                    echo "Starting services..."
-                    docker compose up -d auth-service club-service event-service notify-service image-service frontend
+                    # Start infrastructure services first (databases and message queue)
+                    echo "Starting infrastructure services (postgres, mongodb, rabbitmq)..."
+                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d postgres mongo rabbitmq
+                    
+                    # Wait for databases to be healthy
+                    echo "Waiting for databases to be ready..."
+                    for i in $(seq 1 60); do
+                        if docker compose -f docker-compose.yml -f docker-compose.e2e.yml ps postgres mongo rabbitmq | grep -E "(unhealthy|starting)" > /dev/null; then
+                            echo "Databases still starting... (attempt $i/60)"
+                            sleep 5
+                        else
+                            echo "Databases are healthy!"
+                            break
+                        fi
+                        
+                        if [ $i -eq 60 ]; then
+                            echo "Databases failed to become healthy"
+                            docker compose -f docker-compose.yml -f docker-compose.e2e.yml ps
+                            docker compose -f docker-compose.yml -f docker-compose.e2e.yml logs postgres mongo rabbitmq
+                            exit 1
+                        fi
+                    done
+                    
+                    # Start application services
+                    echo "Starting application services..."
+                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d auth-service club-service event-service notify-service image-service frontend
                     
                     # Wait for services to be healthy
-                    echo "Waiting for services to be healthy..."
+                    echo "Waiting for application services to be healthy..."
                     sleep 30
                     
-                    for i in {1..60}; do
-                        if docker compose ps | grep -E "(unhealthy|starting)" > /dev/null; then
+                    for i in $(seq 1 60); do
+                        if docker compose -f docker-compose.yml -f docker-compose.e2e.yml ps | grep -E "(unhealthy|starting)" > /dev/null; then
                             echo "Services still starting... (attempt $i/60)"
                             sleep 10
                         else
@@ -205,14 +228,14 @@ pipeline {
                         
                         if [ $i -eq 60 ]; then
                             echo "Services failed to become healthy within 10 minutes"
-                            docker compose ps
-                            docker compose logs
+                            docker compose -f docker-compose.yml -f docker-compose.e2e.yml ps
+                            docker compose -f docker-compose.yml -f docker-compose.e2e.yml logs
                             exit 1
                         fi
                     done
                     
                     # Show service status
-                    docker compose ps
+                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml ps
                     
                     # Run Playwright tests
                     echo "Running E2E tests..."
@@ -242,7 +265,7 @@ pipeline {
                     sh '''
                         echo "Collecting service logs..."
                         mkdir -p logs
-                        docker compose logs > logs/services.log 2>&1 || true
+                        docker compose -f docker-compose.yml -f docker-compose.e2e.yml logs > logs/services.log 2>&1 || true
                     '''
                     
                     archiveArtifacts(
@@ -252,7 +275,7 @@ pipeline {
                     
                     // Stop and remove containers
                     sh '''
-                        docker compose down -v || true
+                        docker compose -f docker-compose.yml -f docker-compose.e2e.yml down -v || true
                     '''
                 }
             }
@@ -426,8 +449,8 @@ pipeline {
             
             // Clean up Docker resources
             sh '''
-                # Stop and remove containers
-                docker compose down -v || true
+                # Stop and remove containers (including E2E infrastructure)
+                docker compose -f docker-compose.yml -f docker-compose.e2e.yml down -v || true
                 
                 # Remove dangling images
                 docker image prune -f || true

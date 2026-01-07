@@ -166,11 +166,12 @@ pipeline {
                 }
                 
                 sh """
-                    docker compose -f docker-compose.yml build \
+                    # Build services only (exclude kong for AWS deployment with ALB)
+                    docker compose build \
                         --build-arg GIT_COMMIT=${env.GIT_COMMIT} \
                         --build-arg BUILD_NUMBER=${env.BUILD_NUMBER} \
                         --build-arg BUILD_TIME=${env.BUILD_TIME} \
-                        --no-cache
+                        auth club event notify image frontend
                 """
             }
         }
@@ -185,16 +186,16 @@ pipeline {
                     # Create required directories
                     mkdir -p artifacts test-results logs
                     
-                    # Start all services
+                    # Start all services (without kong - using direct ports for testing)
                     echo "Starting services..."
-                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d
+                    docker compose up -d auth club event notify image frontend
                     
                     # Wait for services to be healthy
                     echo "Waiting for services to be healthy..."
                     sleep 30
                     
                     for i in {1..60}; do
-                        if docker compose -f docker-compose.yml -f docker-compose.e2e.yml ps | grep -E "(unhealthy|starting)" > /dev/null; then
+                        if docker compose ps | grep -E "(unhealthy|starting)" > /dev/null; then
                             echo "Services still starting... (attempt $i/60)"
                             sleep 10
                         else
@@ -204,14 +205,14 @@ pipeline {
                         
                         if [ $i -eq 60 ]; then
                             echo "Services failed to become healthy within 10 minutes"
-                            docker compose -f docker-compose.yml -f docker-compose.e2e.yml ps
-                            docker compose -f docker-compose.yml -f docker-compose.e2e.yml logs
+                            docker compose ps
+                            docker compose logs
                             exit 1
                         fi
                     done
                     
                     # Show service status
-                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml ps
+                    docker compose ps
                     
                     # Run Playwright tests
                     echo "Running E2E tests..."
@@ -241,7 +242,7 @@ pipeline {
                     sh '''
                         echo "Collecting service logs..."
                         mkdir -p logs
-                        docker compose -f docker-compose.yml -f docker-compose.e2e.yml logs > logs/services.log 2>&1 || true
+                        docker compose logs > logs/services.log 2>&1 || true
                     '''
                     
                     archiveArtifacts(
@@ -251,7 +252,7 @@ pipeline {
                     
                     // Stop and remove containers
                     sh '''
-                        docker compose -f docker-compose.yml -f docker-compose.e2e.yml down -v || true
+                        docker compose down -v || true
                     '''
                 }
             }
@@ -426,7 +427,7 @@ pipeline {
             // Clean up Docker resources
             sh '''
                 # Stop and remove containers
-                docker compose -f docker-compose.yml -f docker-compose.e2e.yml down -v || true
+                docker compose down -v || true
                 
                 # Remove dangling images
                 docker image prune -f || true

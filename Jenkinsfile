@@ -19,6 +19,10 @@ pipeline {
         // Playwright home
         PLAYWRIGHT_BROWSERS_PATH = "${WORKSPACE}/playwright-browsers"
         
+        // E2E Test Configuration - Use localhost (ports are exposed)
+        API_GATEWAY_URL = 'http://localhost:8000'
+        CI = 'true'
+        
         // Add paths for Docker and Node.js
         PATH = "/usr/local/bin:/usr/bin:/bin:${env.PATH}"
     }

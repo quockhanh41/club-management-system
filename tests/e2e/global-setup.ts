@@ -7,6 +7,16 @@ import { TestDataManager } from './utils/test-data-manager';
 async function globalSetup(config: FullConfig) {
   console.log('🚀 Starting E2E Global Setup...');
   
+  // In CI, services expose ports to host, so we use localhost
+  // All services expose their ports (3000, 3001, 3002, 3003, etc)
+  const frontendUrl = 'http://localhost:3000/';
+  const authUrl = 'http://localhost:3001/';
+  const clubUrl = 'http://localhost:3002/health';
+  const eventUrl = 'http://localhost:3003/health';
+  
+  const isCI = process.env.CI === 'true';
+  console.log(`🌍 Environment: ${isCI ? 'CI' : 'Local'}`);
+  
   // Wait for services to be ready
   const browser = await chromium.launch();
   const context = await browser.newContext();
@@ -18,7 +28,7 @@ async function globalSetup(config: FullConfig) {
     // Wait for frontend to be accessible
     console.log('⏳ Waiting for frontend to be ready...');
     const apiHelper = new APIHelper();
-    await apiHelper.waitForDirectService('frontend', 'http://localhost:3000/', 60000);
+    await apiHelper.waitForDirectService('frontend', frontendUrl, 60000);
     console.log('✅ Frontend is ready');
 
     // Check if API Gateway is ready
@@ -28,9 +38,9 @@ async function globalSetup(config: FullConfig) {
 
     // Check individual services directly (allow more time on cold starts)
     console.log('⏳ Checking microservices health...');
-    await apiHelper.waitForDirectService('auth', 'http://localhost:3001/', 60000);
-    await apiHelper.waitForDirectService('club', 'http://localhost:3002/health', 60000);
-    await apiHelper.waitForDirectService('event', 'http://localhost:3003/health', 60000);
+    await apiHelper.waitForDirectService('auth', authUrl, 60000);
+    await apiHelper.waitForDirectService('club', clubUrl, 60000);
+    await apiHelper.waitForDirectService('event', eventUrl, 60000);
     console.log('✅ All microservices are ready');
 
     // Sanity-check gateway service routes (ensures Kong loaded declarative config)

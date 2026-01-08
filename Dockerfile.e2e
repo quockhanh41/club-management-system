@@ -1,7 +1,7 @@
 # E2E Test Runner Dockerfile
 # Builds an image with code and Playwright for running E2E tests in CI
 
-FROM mcr.microsoft.com/playwright:v1.48.0-jammy
+FROM mcr.microsoft.com/playwright:v1.57.0-jammy
 
 WORKDIR /app
 

@@ -16,7 +16,7 @@
     "install:services": "cd services/auth && npm install && cd ../club && npm install && cd ../event && npm install && cd ../notify && npm install && cd ../../frontend && npm install"
   },
   "devDependencies": {
-    "@playwright/test": "^1.40.0",
+    "@playwright/test": "^1.57.0",
     "@types/node": "^20.0.0",
     "dotenv": "^17.2.1"
   },

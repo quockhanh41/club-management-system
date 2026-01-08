@@ -246,7 +246,7 @@ pipeline {
                     
                     # Build E2E runner image with code baked in (avoids volume mount issues)
                     echo "Building E2E runner image..."
-                    docker compose -f docker-compose.e2e-runner.yml build e2e-runner
+                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml build e2e-runner
                     
                     # Run Playwright tests in Docker container on same network
                     echo "Running E2E tests in Docker container..."

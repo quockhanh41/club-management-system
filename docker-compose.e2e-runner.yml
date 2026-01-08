@@ -1,0 +1,31 @@
+services:
+  # E2E test runner service
+  # Runs Playwright tests inside Docker on same network as services
+  e2e-runner:
+    image: mcr.microsoft.com/playwright:v1.48.0-jammy
+    working_dir: /app
+    volumes:
+      - .:/app
+    networks:
+      - club_network
+    environment:
+      - CI=true
+      - API_GATEWAY_URL=http://kong:8000
+      - API_GATEWAY_SECRET=test-secret-e2e
+    # Override command in Jenkinsfile
+    command: sh -c "npm install && npx playwright test --reporter=html,junit"
+    depends_on:
+      frontend:
+        condition: service_healthy
+      kong:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      club-service:
+        condition: service_healthy
+      event-service:
+        condition: service_healthy
+
+networks:
+  club_network:
+    external: false

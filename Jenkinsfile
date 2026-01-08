@@ -244,18 +244,11 @@ pipeline {
                     # Show service status
                     docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
                     
-                    # Run Playwright tests inside Docker container on same network as services
-                    # This allows tests to use Docker service names (frontend, auth-service, etc.)
+                    # Run Playwright tests inside Docker container using docker-compose
+                    # This properly handles volume mounts and runs on same network as services
                     echo "Running E2E tests in Docker container..."
-                    docker run --rm \
-                        --network club-management-system_club_network \
-                        -v ${WORKSPACE}:/workspace \
-                        -w /workspace \
-                        -e CI=true \
-                        -e API_GATEWAY_URL=http://kong:8000 \
-                        -e API_GATEWAY_SECRET=test-secret-e2e \
-                        mcr.microsoft.com/playwright:v1.48.0-jammy \
-                        sh -c "npm install && npx playwright test --reporter=html,junit"
+                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
+                        run --rm e2e-runner
                 '''
             }
             

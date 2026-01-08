@@ -174,10 +174,11 @@ pipeline {
                 sh """
                     # Build services with CI configuration (production targets, no volume mounts)
                     # Using --no-cache to ensure fresh builds without stale layers
-                    docker compose -f docker-compose.yml -f docker-compose.ci.yml build --no-cache \
-                        --build-arg GIT_COMMIT=${env.GIT_COMMIT} \
-                        --build-arg BUILD_NUMBER=${env.BUILD_NUMBER} \
-                        --build-arg BUILD_TIME=${env.BUILD_TIME} \
+                    # Include docker-compose.e2e.yml for E2E-specific build args (e.g. NEXT_PUBLIC_API_BASE_URL)
+                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml build --no-cache \\
+                        --build-arg GIT_COMMIT=${env.GIT_COMMIT} \\
+                        --build-arg BUILD_NUMBER=${env.BUILD_NUMBER} \\
+                        --build-arg BUILD_TIME=${env.BUILD_TIME} \\
                         auth-service club-service event-service notify-service image-service frontend
                 """
             }

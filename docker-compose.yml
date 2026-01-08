@@ -163,7 +163,7 @@ services:
       IMAGE_SERVICE_URL: ${IMAGE_SERVICE_URL:-http://image-service:3004}
       API_GATEWAY_SECRET: ${API_GATEWAY_SECRET:-test-secret-e2e}
       # CORS Configuration
-      KONG_CORS_ORIGINS: '["http://localhost:3000", "https://club-frontend-hq5d.onrender.com"]'
+      KONG_CORS_ORIGINS: '[\"http://localhost:3000\", \"http://frontend:3000\", \"https://club-frontend-hq5d.onrender.com\"]'
       # JWT Public Key
       JWT_RSA_PUBLIC_KEY: |
         -----BEGIN PUBLIC KEY-----

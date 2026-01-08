@@ -366,10 +366,26 @@ export default function ClubDetailPage() {
     setError(null);
 
     try {
+      console.log(`[ClubDetail] Fetching club data for ID: ${clubId}`);
       const response = await clubService.getClubDetail(clubId);
+      console.log(`[ClubDetail] Response received:`, {
+        success: response.success,
+        hasData: !!response.data,
+        message: response.message,
+        dataKeys: response.data ? Object.keys(response.data) : [],
+      });
+      
       if (response.success && response.data) {
         // Validate and sanitize the received data
         const clubData = response.data;
+        console.log(`[ClubDetail] Club data loaded successfully:`, {
+          id: clubData.id,
+          name: clubData.name,
+          category: clubData.category,
+          member_count: clubData.member_count || clubData.size || 0,
+          published_events_count: clubData.published_events?.length || 0,
+          current_recruitments_count: clubData.current_recruitments?.length || 0,
+        });
 
         // Ensure required fields exist with fallbacks
         const sanitizedClub: ClubDetail = {
@@ -397,11 +413,24 @@ export default function ClubDetailPage() {
         setClub(sanitizedClub);
 
       } else {
-        setError(response.message || "Failed to fetch club data");
+        const errorMsg = response.message || "Failed to fetch club data";
+        console.error(`[ClubDetail] Failed to load club:`, {
+          success: response.success,
+          message: errorMsg,
+          clubId,
+        });
+        setError(errorMsg);
       }
-    } catch (error) {
-      console.error("Error fetching club data:", error);
-      setError("Failed to fetch club data. Please try again later.");
+    } catch (error: any) {
+      console.error("[ClubDetail] Error fetching club data:", {
+        error,
+        message: error?.message,
+        response: error?.response?.data,
+        status: error?.response?.status,
+        clubId,
+      });
+      const errorMsg = error?.response?.data?.message || error?.message || "Failed to fetch club data. Please try again later.";
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }

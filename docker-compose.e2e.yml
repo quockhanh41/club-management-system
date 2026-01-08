@@ -77,6 +77,8 @@ services:
       NODE_ENV: development
       DB_DIALECT: postgres
       AUTO_MIGRATE: "true"
+      JWT_EXPIRES_IN: "2h"
+      REFRESH_TOKEN_EXPIRES_IN: "7d"
     depends_on:
       postgres:
         condition: service_healthy

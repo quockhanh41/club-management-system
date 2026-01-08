@@ -84,22 +84,50 @@ test.describe('Basic UI Tests', () => {
   });
 
   test('Navigation between pages works', async ({ page }) => {
+    // Helper function to click navigation link (handles both desktop and mobile)
+    const clickNavLink = async (linkText: string) => {
+      const viewport = page.viewportSize();
+      const isMobile = viewport && viewport.width < 768; // md breakpoint
+      
+      if (isMobile) {
+        // On mobile, navigation is inside Sheet - need to open hamburger menu first
+        const menuButton = page.locator('button:has(svg.lucide-menu)');
+        const isMenuVisible = await menuButton.isVisible();
+        
+        if (isMenuVisible) {
+          await menuButton.click();
+          // Wait for Sheet to open
+          await page.waitForTimeout(500);
+        }
+        
+        // Click the link inside the Sheet
+        const linkInSheet = page.locator('[role="dialog"]').locator(`a:has-text("${linkText}")`);
+        await linkInSheet.click();
+        
+        // Wait for navigation
+        await page.waitForTimeout(300);
+      } else {
+        // On desktop, navigation is in header
+        await page.click(`header a:has-text("${linkText}")`);
+      }
+    };
+    
     // Start at home
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     
     // Navigate to clubs
-    await page.click('a:has-text("Câu lạc bộ")');
+    await clickNavLink('Câu lạc bộ');
     await page.waitForLoadState('networkidle');
     await expect(page).toHaveURL('/clubs');
     
     // Navigate to events
-    await page.click('a:has-text("Sự kiện")');
+    await clickNavLink('Sự kiện');
     await page.waitForLoadState('networkidle');
     await expect(page).toHaveURL('/events');
     
     // Navigate back to home
-    await page.click('a:has-text("Trang chủ")');
+    await clickNavLink('Trang chủ');
     await page.waitForLoadState('networkidle');
     await expect(page).toHaveURL('/');
   });

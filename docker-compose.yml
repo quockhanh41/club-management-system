@@ -55,9 +55,7 @@ services:
       API_GATEWAY_SECRET: ${API_GATEWAY_SECRET:-test-secret-e2e}
     ports:
       - "3002:3002"
-    volumes:
-      - ./services/club:/app
-      - /app/node_modules
+    # volumes removed - use docker-compose.override.yml for local development
     networks:
       - club_network
     healthcheck:
@@ -87,9 +85,7 @@ services:
       API_GATEWAY_SECRET: ${API_GATEWAY_SECRET:-test-secret-e2e}
     ports:
       - "3003:3003"
-    volumes:
-      - ./services/event:/app
-      - /app/node_modules
+    # volumes removed - use docker-compose.override.yml for local development
     networks:
       - club_network
     healthcheck:
@@ -132,9 +128,7 @@ services:
       AUTO_VERIFY_EMAILS: ${AUTO_VERIFY_EMAILS:-false}
     ports:
       - "3001:3001"
-    volumes:
-      - ./services/auth:/app
-      - /app/node_modules
+    # volumes removed - use docker-compose.override.yml for local development
     networks:
       - club_network
     restart: unless-stopped
@@ -220,9 +214,7 @@ services:
       EVENT_SERVICE_URL: http://event-service:3003
     ports:
       - "3004:3004"
-    volumes:
-      - ./services/image:/app
-      - /app/node_modules
+    # volumes removed - use docker-compose.override.yml for local development
     networks:
       - club_network
     restart: unless-stopped
@@ -249,8 +241,7 @@ services:
     ports:
       - "3005:3005"
     volumes:
-      - ./services/notify:/app
-      - /app/node_modules
+      # Source code volume removed - use docker-compose.override.yml for local development
       - notify_logs:/app/logs
     networks:
       - club_network

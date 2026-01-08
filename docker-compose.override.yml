@@ -1,0 +1,33 @@
+# Docker Compose override for local development
+# This file is automatically loaded when running `docker compose up` locally
+# It re-adds volume mounts for hot-reload during development
+
+services:
+  auth-service:
+    volumes:
+      - ./services/auth:/app
+      - /app/node_modules
+
+  club-service:
+    volumes:
+      - ./services/club:/app
+      - /app/node_modules
+
+  event-service:
+    volumes:
+      - ./services/event:/app
+      - /app/node_modules
+
+  notify-service:
+    volumes:
+      - ./services/notify:/app
+      - /app/node_modules
+      - notify_logs:/app/logs
+
+  image-service:
+    volumes:
+      - ./services/image:/app
+      - /app/node_modules
+
+volumes:
+  notify_logs:

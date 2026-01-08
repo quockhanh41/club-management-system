@@ -11,6 +11,7 @@ services:
       - CI=true
       - BASE_URL=http://frontend:3000
       - API_GATEWAY_URL=http://kong:8000
+      - NEXT_PUBLIC_API_BASE_URL=http://kong:8000
       - API_GATEWAY_SECRET=test-secret-e2e
     depends_on:
       frontend:

@@ -173,7 +173,8 @@ pipeline {
                 
                 sh """
                     # Build services with CI configuration (production targets, no volume mounts)
-                    docker compose -f docker-compose.yml -f docker-compose.ci.yml build \
+                    # Using --no-cache to ensure fresh builds without stale layers
+                    docker compose -f docker-compose.yml -f docker-compose.ci.yml build --no-cache \
                         --build-arg GIT_COMMIT=${env.GIT_COMMIT} \
                         --build-arg BUILD_NUMBER=${env.BUILD_NUMBER} \
                         --build-arg BUILD_TIME=${env.BUILD_TIME} \
@@ -215,9 +216,9 @@ pipeline {
                         fi
                     done
                     
-                    # Start application services
+                    # Start application services (use pre-built images from previous stage)
                     echo "Starting application services..."
-                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --force-recreate auth-service club-service event-service notify-service image-service frontend
+                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --no-build --force-recreate auth-service club-service event-service notify-service image-service frontend
                     
                     # Wait for services to be healthy (increased timeout for notify-service)
                     echo "Waiting for application services to be healthy..."

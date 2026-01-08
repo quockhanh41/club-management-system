@@ -244,17 +244,18 @@ pipeline {
                     # Show service status
                     docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
                     
-                    # Debug: Test frontend connectivity before E2E tests
-                    echo "🔍 Testing frontend connectivity..."
-                    curl -v http://localhost:3000/api/health || echo "⚠️  Frontend health check failed"
-                    
-                    # Debug: Show frontend logs to diagnose startup issues
-                    echo "📋 Frontend logs (last 50 lines):"
-                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs --tail=50 frontend
-                    
-                    # Run Playwright tests
-                    echo "Running E2E tests..."
-                    npx playwright test --reporter=html,junit
+                    # Run Playwright tests inside Docker container on same network as services
+                    # This allows tests to use Docker service names (frontend, auth-service, etc.)
+                    echo "Running E2E tests in Docker container..."
+                    docker run --rm \
+                        --network club-management-system_club_network \
+                        -v ${WORKSPACE}:/workspace \
+                        -w /workspace \
+                        -e CI=true \
+                        -e API_GATEWAY_URL=http://kong:8000 \
+                        -e API_GATEWAY_SECRET=test-secret-e2e \
+                        mcr.microsoft.com/playwright:v1.48.0-jammy \
+                        sh -c "npm install && npx playwright test --reporter=html,junit"
                 '''
             }
             

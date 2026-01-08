@@ -7,15 +7,20 @@ import { TestDataManager } from './utils/test-data-manager';
 async function globalSetup(config: FullConfig) {
   console.log('🚀 Starting E2E Global Setup...');
   
-  // In CI, services expose ports to host, so we use localhost
-  // All services expose their ports (3000, 3001, 3002, 3003, etc)
-  const frontendUrl = 'http://localhost:3000/api/health';
-  const authUrl = 'http://localhost:3001/';
-  const clubUrl = 'http://localhost:3002/health';
-  const eventUrl = 'http://localhost:3003/health';
-  
+  // In CI (Jenkins), services run in Docker containers on Docker network
+  // Tests must use Docker service names instead of localhost
+  // In local development, services expose ports to host, so use localhost
   const isCI = process.env.CI === 'true';
+  const host = isCI ? '' : 'localhost:';  // In CI: use service names, Local: use localhost:port
+  
   console.log(`🌍 Environment: ${isCI ? 'CI' : 'Local'}`);
+  console.log(`🔗 Using host: ${isCI ? 'Docker service names' : 'localhost'}`);
+  
+  // Service URLs
+  const frontendUrl = isCI ? 'http://frontend:3000/api/health' : 'http://localhost:3000/api/health';
+  const authUrl = isCI ? 'http://auth-service:3001/' : 'http://localhost:3001/';
+  const clubUrl = isCI ? 'http://club-service:3002/health' : 'http://localhost:3002/health';
+  const eventUrl = isCI ? 'http://event-service:3003/health' : 'http://localhost:3003/health';
   
   // Wait for services to be ready
   const browser = await chromium.launch();

@@ -29,7 +29,19 @@ EXPOSE 3001
 CMD ["npm", "run", "dev"]
 
 # Production stage
-FROM base AS production
+FROM node:18-alpine AS production
+
+# Install curl for health checks
+RUN apk add --no-cache curl wget
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install production dependencies only
+RUN npm ci --only=production && npm cache clean --force
 
 # Copy source code
 COPY . .

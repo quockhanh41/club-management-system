@@ -1,5 +1,8 @@
 FROM node:18-alpine
 
+# Install health check tools
+RUN apk add --no-cache wget curl
+
 # Set working directory
 WORKDIR /app
 

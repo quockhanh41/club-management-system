@@ -22,10 +22,14 @@ services:
       target: production
     volumes: []  # Remove volume mounts, use code from image
   
-  # Override notify-service to use production target
+  # Override notify-service (single-stage Dockerfile, no target needed)
   notify-service:
     volumes: []  # Remove volume mounts, use code from image
   
-  # Override image-service to use production target
+  # Override image-service (single-stage Dockerfile, no target needed)
   image-service:
+    volumes: []  # Remove volume mounts, use code from image
+
+  # Override frontend (uses runner target by default)
+  frontend:
     volumes: []  # Remove volume mounts, use code from image

@@ -244,6 +244,14 @@ pipeline {
                     # Show service status
                     docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
                     
+                    # Debug: Test frontend connectivity before E2E tests
+                    echo "🔍 Testing frontend connectivity..."
+                    curl -v http://localhost:3000/api/health || echo "⚠️  Frontend health check failed"
+                    
+                    # Debug: Show frontend logs to diagnose startup issues
+                    echo "📋 Frontend logs (last 50 lines):"
+                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs --tail=50 frontend
+                    
                     # Run Playwright tests
                     echo "Running E2E tests..."
                     npx playwright test --reporter=html,junit

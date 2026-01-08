@@ -62,7 +62,8 @@ test.describe('Club Management Journey', () => {
       targetId = (seeded[0] as any).id as string;
     } else {
       // Fallback: fetch first club via API directly
-      const res = await fetch((process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000') + '/api/clubs', {
+      const apiUrl = process.env.API_GATEWAY_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+      const res = await fetch(apiUrl + '/api/clubs', {
         headers: { 'x-api-gateway-secret': process.env.API_GATEWAY_SECRET || 'c44d002c75b696ba2200d49c6fadb8f3' },
       });
       const json = await res.json();
@@ -125,7 +126,8 @@ test.describe('Club Management Journey', () => {
     if (seeded && seeded.length > 0 && (seeded[0] as any).id) {
       targetId = (seeded[0] as any).id as string;
     } else {
-      const res = await fetch((process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000') + '/api/clubs', {
+      const apiUrl = process.env.API_GATEWAY_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+      const res = await fetch(apiUrl + '/api/clubs', {
         headers: { 'x-api-gateway-secret': process.env.API_GATEWAY_SECRET || 'c44d002c75b696ba2200d49c6fadb8f3' },
       });
       const json = await res.json();

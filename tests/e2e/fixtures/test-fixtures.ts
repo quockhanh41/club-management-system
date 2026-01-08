@@ -11,12 +11,14 @@ import {
   ProfilePage 
 } from '../utils/page-objects';
 
-// Define fixture types
-interface TestFixtures {
-  // API helpers
+// Define worker-scoped fixture types
+interface WorkerFixtures {
   apiHelper: APIHelper;
   testDataManager: TestDataManager;
-  
+}
+
+// Define test-scoped fixture types
+interface TestFixtures {
   // Page objects
   loginPage: LoginPage;
   signupPage: SignupPage;
@@ -32,7 +34,7 @@ interface TestFixtures {
 }
 
 // Extend the base test with our fixtures
-export const test = base.extend<TestFixtures>({
+export const test = base.extend<TestFixtures, WorkerFixtures>({
   // API Helper fixture (worker-scoped) – shared across tests in a worker
   apiHelper: [async ({}, use) => {
     const apiHelper = new APIHelper();

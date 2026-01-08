@@ -1,8 +1,9 @@
 import { test, expect } from '../fixtures/test-fixtures';
+import { ProfilePage } from '../utils/page-objects';
 
 test.describe('User Profile Management Journey', () => {
   test('View and update user profile', async ({ authenticatedPage, profilePage }) => {
-    const profile = new profilePage.constructor(authenticatedPage);
+    const profile = new ProfilePage(authenticatedPage);
     await profile.goto();
     // Resilient assertions
     const userEmail = await profile.getUserEmail();
@@ -10,7 +11,7 @@ test.describe('User Profile Management Journey', () => {
   });
 
   test('Profile displays user activity and memberships', async ({ authenticatedPage, profilePage }) => {
-    const profile = new profilePage.constructor(authenticatedPage);
+    const profile = new ProfilePage(authenticatedPage);
     
     await profile.goto();
     
@@ -32,20 +33,20 @@ test.describe('User Profile Management Journey', () => {
   });
 
   test('Profile navigation and accessibility', async ({ authenticatedPage, profilePage }) => {
-    const profile = new profilePage.constructor(authenticatedPage);
+    const profile = new ProfilePage(authenticatedPage);
     await profile.goto();
     await expect(authenticatedPage).toHaveURL(/profile/);
   });
 
   test('Profile validation and error handling', async ({ authenticatedPage, profilePage }) => {
-    const profile = new profilePage.constructor(authenticatedPage);
+    const profile = new ProfilePage(authenticatedPage);
     await profile.goto();
     // Smoke check only
     await expect(authenticatedPage).toHaveURL(/profile/);
   });
 
   test('Password change functionality', async ({ authenticatedPage, profilePage }) => {
-    const profile = new profilePage.constructor(authenticatedPage);
+    const profile = new ProfilePage(authenticatedPage);
     
     await profile.goto();
     
@@ -85,7 +86,7 @@ test.describe('User Profile Management Journey', () => {
   });
 
   test('Profile picture upload and display', async ({ authenticatedPage, profilePage }) => {
-    const profile = new profilePage.constructor(authenticatedPage);
+    const profile = new ProfilePage(authenticatedPage);
     
     await profile.goto();
     
@@ -104,7 +105,7 @@ test.describe('User Profile Management Journey', () => {
   });
 
   test('User preferences and settings', async ({ authenticatedPage, profilePage }) => {
-    const profile = new profilePage.constructor(authenticatedPage);
+    const profile = new ProfilePage(authenticatedPage);
     
     await profile.goto();
     
@@ -153,7 +154,7 @@ test.describe('User Profile Management Journey', () => {
         localStorage.setItem('club_management_user', JSON.stringify(authTokens.user));
       }, tokens);
       
-      const profile = new profilePage.constructor(page);
+      const profile = new ProfilePage(page);
       
       // Navigate to profile (smoke check only here to save time)
       await profile.goto();
@@ -174,7 +175,7 @@ test.describe('User Profile Management Journey', () => {
         localStorage.setItem('club_management_user', JSON.stringify(authTokens.user));
       }, newTokens);
       
-      const newProfile = new profilePage.constructor(newPage);
+      const newProfile = new ProfilePage(newPage);
       
       // Navigate to profile and verify page loads
       await newProfile.goto();

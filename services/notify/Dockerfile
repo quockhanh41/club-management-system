@@ -1,39 +1,88 @@
-# --- Base Image ---
-FROM node:18-alpine
+# ============================================
+# Stage 1: Base image with system dependencies
+# ============================================
+FROM node:18-alpine AS base
 
-# --- Install health check tools ---
-RUN apk add --no-cache wget curl
+# Install health check tools
+RUN apk add --no-cache curl
 
-# --- Set working directory ---
+# Set working directory
 WORKDIR /app
 
-# --- Install dependencies ---
+# ============================================
+# Stage 2: Production dependencies
+# ============================================
+FROM base AS deps
+
+# Copy package files
 COPY package*.json ./
-RUN npm install --only=production && npm cache clean --force
 
-# --- Copy source code ---
-COPY . .
+# Install production dependencies only
+RUN npm ci --only=production && npm cache clean --force
 
-# --- Create logs directory ---
-RUN mkdir -p logs
+# ============================================
+# Stage 3: Development dependencies
+# ============================================
+FROM deps AS deps-dev
 
-# --- Add non-root user for better security ---
+# Install all dependencies (including dev)
+RUN npm ci && npm cache clean --force
+
+# ============================================
+# Stage 4: Production runtime
+# ============================================
+FROM base AS production
+
+# Install wget for health checks
+RUN apk add --no-cache wget
+
+# Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
-  adduser -S nodejs -u 1001 && \
-  chown -R nodejs:nodejs /app
+  adduser -S nodejs -u 1001
 
+# Copy production dependencies from deps stage
+COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
+
+# Copy source code
+COPY --chown=nodejs:nodejs . .
+
+# Create logs directory with correct permissions
+RUN mkdir -p logs && chown -R nodejs:nodejs logs
+
+# Switch to non-root user
 USER nodejs
 
-# --- Set environment variables ---
+# Set environment variables
 ENV NODE_ENV=production
 ENV PORT=3005
 
-# --- Expose port ---
+# Expose port
 EXPOSE 3005
 
-# --- Healthcheck (for Render and Docker compatibility) ---
+# Healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
   CMD node -e "require('http').get('http://127.0.0.1:3005/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
 
-# --- Start application ---
+# Start application
 CMD ["npm", "start"]
+
+# ============================================
+# Stage 5: Development runtime
+# ============================================
+FROM deps-dev AS development
+
+# Copy source code
+COPY . .
+
+# Create logs directory
+RUN mkdir -p logs
+
+# Set environment
+ENV NODE_ENV=development
+ENV PORT=3005
+
+# Expose port
+EXPOSE 3005
+
+# Start development server
+CMD ["npm", "run", "dev"]

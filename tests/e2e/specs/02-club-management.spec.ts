@@ -1,4 +1,5 @@
 import { test, expect } from '../fixtures/test-fixtures';
+import { ClubsPage, ClubDetailsPage, HomePage } from '../utils/page-objects';
 
 test.describe('Club Management Journey', () => {
   test('Complete club creation and management flow', async ({ 
@@ -8,8 +9,8 @@ test.describe('Club Management Journey', () => {
     apiHelper,
     testDataManager,
   }) => {
-    const clubs = new clubsPage.constructor(adminPage);
-    const clubDetails = new clubDetailsPage.constructor(adminPage);
+    const clubs = new ClubsPage(adminPage);
+    const clubDetails = new ClubDetailsPage(adminPage);
     
     // Navigate to clubs page
     await clubs.goto();
@@ -35,7 +36,7 @@ test.describe('Club Management Journey', () => {
   });
 
   test('Club search and filtering functionality', async ({ authenticatedPage, clubsPage }) => {
-    const clubs = new clubsPage.constructor(authenticatedPage);
+    const clubs = new ClubsPage(authenticatedPage);
     
     await clubs.goto();
     
@@ -55,7 +56,7 @@ test.describe('Club Management Journey', () => {
   });
 
   test('Club membership flow', async ({ authenticatedPage, clubDetailsPage, testDataManager }) => {
-    const clubDetails = new clubDetailsPage.constructor(authenticatedPage);
+    const clubDetails = new ClubDetailsPage(authenticatedPage);
     let targetId: string | undefined;
     const seeded = testDataManager.getTestClubs();
     if (seeded && seeded.length > 0 && (seeded[0] as any).id) {
@@ -80,8 +81,8 @@ test.describe('Club Management Journey', () => {
   });
 
   test('Club listing displays correctly', async ({ authenticatedPage, clubsPage, homePage }) => {
-    const home = new homePage.constructor(authenticatedPage);
-    const clubs = new clubsPage.constructor(authenticatedPage);
+    const home = new HomePage(authenticatedPage);
+    const clubs = new ClubsPage(authenticatedPage);
     
     // Check clubs on home page
     await home.goto();
@@ -95,7 +96,7 @@ test.describe('Club Management Journey', () => {
   });
 
   test('Club categories are properly displayed', async ({ authenticatedPage, clubsPage }) => {
-    const clubs = new clubsPage.constructor(authenticatedPage);
+    const clubs = new ClubsPage(authenticatedPage);
     
     await clubs.goto();
     
@@ -117,8 +118,8 @@ test.describe('Club Management Journey', () => {
     clubDetailsPage,
     testDataManager,
   }) => {
-    const clubs = new clubsPage.constructor(authenticatedPage);
-    const clubDetails = new clubDetailsPage.constructor(authenticatedPage);
+    const clubs = new ClubsPage(authenticatedPage);
+    const clubDetails = new ClubDetailsPage(authenticatedPage);
     
     // Navigate directly using seeded club id or fallback to first club via API
     let targetId: string | undefined;
@@ -142,8 +143,8 @@ test.describe('Club Management Journey', () => {
     expect(clubTitle.length).toBeGreaterThan(0);
     
     // Sections may not be present depending on data; assert title and description
-    const eventsSection = clubDetails.page.locator('.events-section, [data-testid="events-section"]');
-    const membersSection = clubDetails.page.locator('.members-section, [data-testid="members-section"]');
-    await expect(clubDetails.page.locator('h1, [data-testid="club-title"]')).toBeVisible();
+    const eventsSection = authenticatedPage.locator('.events-section, [data-testid="events-section"]');
+    const membersSection = authenticatedPage.locator('.members-section, [data-testid="members-section"]');
+    await expect(authenticatedPage.locator('h1, [data-testid="club-title"]')).toBeVisible();
   });
 });

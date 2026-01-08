@@ -1,5 +1,6 @@
 import { test, expect } from '../fixtures/test-fixtures';
 import { APIHelper } from '../utils/api-helper';
+import { HomePage } from '../utils/page-objects';
 
 test.describe('User Authentication Journey', () => {
   test.beforeEach(async ({ page }) => {
@@ -76,7 +77,7 @@ test.describe('User Authentication Journey', () => {
   });
 
   test('User logout flow', async ({ authenticatedPage, homePage, testDataManager }) => {
-    const home = new homePage.constructor(authenticatedPage);
+    const home = new HomePage(authenticatedPage);
     const regular = testDataManager.getRegularUser();
     if (!regular?.tokens) throw new Error('Regular test user tokens not available');
     // Ensure tokens are present (idempotent)
@@ -147,7 +148,7 @@ test.describe('User Authentication Journey', () => {
   });
 
   test('Session persistence across page refreshes', async ({ authenticatedPage, homePage, testDataManager }) => {
-    const home = new homePage.constructor(authenticatedPage);
+    const home = new HomePage(authenticatedPage);
     const regular = testDataManager.getRegularUser();
     if (!regular?.tokens) throw new Error('Regular test user tokens not available');
 

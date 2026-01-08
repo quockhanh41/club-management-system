@@ -7,7 +7,7 @@ test.describe('Event Management Journey', () => {
     testDataManager,
     apiHelper,
   }) => {
-    const events = new eventsPage.constructor(adminPage);
+    // eventsPage fixture is already initialized for adminPage context
     
     // Get test club
     const testClubs = testDataManager.getTestClubs();
@@ -39,23 +39,20 @@ test.describe('Event Management Journey', () => {
   });
 
   test('Event search and filtering functionality', async ({ authenticatedPage, eventsPage }) => {
-    const events = new eventsPage.constructor(authenticatedPage);
-    await events.goto();
+    await eventsPage.goto();
     // Simply validate the listing renders or is empty without failing
-    const count = await events.getEventsCount();
+    const count = await eventsPage.getEventsCount();
     expect(count).toBeGreaterThanOrEqual(0);
   });
 
   test('Event registration flow', async ({ authenticatedPage, eventsPage }) => {
-    const events = new eventsPage.constructor(authenticatedPage);
-    
-    await events.goto();
+    await eventsPage.goto();
     
     // Find a test event and click on it
     // Click the first test event if specific title is not present
     const fallbackEvent = eventsPage.page.locator('[data-testid="event-card"]');
     if (await eventsPage.page.locator('[data-testid="event-card"]:has-text("E2E Test Workshop")').count()) {
-      await events.clickEvent('E2E Test Workshop');
+      await eventsPage.clickEvent('E2E Test Workshop');
     } else if (await fallbackEvent.first().isVisible().catch(() => false)) {
       await fallbackEvent.first().click();
     }
@@ -82,24 +79,20 @@ test.describe('Event Management Journey', () => {
   });
 
   test('Event listing displays correctly', async ({ authenticatedPage, eventsPage, homePage }) => {
-    const home = new homePage.constructor(authenticatedPage);
-    const events = new eventsPage.constructor(authenticatedPage);
-    
     // Check events on home page
-    await home.goto();
-    const homeEventsCount = await home.getEventsCount();
+    await homePage.goto();
+    const homeEventsCount = await homePage.getEventsCount();
     expect(homeEventsCount).toBeGreaterThanOrEqual(0);
     
     // Check events on dedicated events page
-    await events.goto();
-    const eventsPageCount = await events.getEventsCount();
+    await eventsPage.goto();
+    const eventsPageCount = await eventsPage.getEventsCount();
     expect(eventsPageCount).toBeGreaterThanOrEqual(homeEventsCount);
   });
 
   test('Event categories are properly displayed', async ({ authenticatedPage, eventsPage }) => {
-    const events = new eventsPage.constructor(authenticatedPage);
-    await events.goto();
-    const listCount = await events.getEventsCount();
+    await eventsPage.goto();
+    const listCount = await eventsPage.getEventsCount();
     expect(listCount).toBeGreaterThanOrEqual(0);
   });
 
@@ -158,9 +151,7 @@ test.describe('Event Management Journey', () => {
   });
 
   test('Event time filtering works correctly', async ({ authenticatedPage, eventsPage }) => {
-    const events = new eventsPage.constructor(authenticatedPage);
-    
-    await events.goto();
+    await eventsPage.goto();
     
     // Test upcoming events filter
     const upcomingFilter = authenticatedPage.locator('button:has-text("Upcoming"), [data-testid="upcoming-filter"]');
@@ -168,7 +159,7 @@ test.describe('Event Management Journey', () => {
       await upcomingFilter.click();
       await authenticatedPage.waitForLoadState('networkidle');
       
-      const upcomingResults = await events.getEventsCount();
+      const upcomingResults = await eventsPage.getEventsCount();
       expect(upcomingResults).toBeGreaterThanOrEqual(0);
     }
     
@@ -178,7 +169,7 @@ test.describe('Event Management Journey', () => {
       await pastFilter.click();
       await authenticatedPage.waitForLoadState('networkidle');
       
-      const pastResults = await events.getEventsCount();
+      const pastResults = await eventsPage.getEventsCount();
       expect(pastResults).toBeGreaterThanOrEqual(0);
     }
   });

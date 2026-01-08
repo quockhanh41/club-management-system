@@ -22,12 +22,13 @@ async function globalSetup(config: FullConfig) {
   const clubUrl = isCI ? 'http://club-service:3002/health' : 'http://localhost:3002/health';
   const eventUrl = isCI ? 'http://event-service:3003/health' : 'http://localhost:3003/health';
   
-  // Wait for services to be ready
-  const browser = await chromium.launch();
-  const context = await browser.newContext();
-  const page = await context.newPage();
-  
   try {
+    // Wait for services to be ready
+    console.log('⏳ Launching browser...');
+    const browser = await chromium.launch();
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    
     // Generate a run id available to fixtures to align emails
     (global as any).__E2E_RUN_ID__ = `+e2e${Date.now()}`;
     // Wait for frontend to be accessible
@@ -79,11 +80,14 @@ async function globalSetup(config: FullConfig) {
 
     console.log('🎉 E2E Global Setup Complete!');
     
-  } catch (error) {
-    console.error('❌ Global Setup Failed:', error);
-    throw error;
-  } finally {
     await browser.close();
+  } catch (error) {
+    console.error('❌ Global Setup Failed:');
+    console.error('Error type:', typeof error);
+    console.error('Error message:', error instanceof Error ? error.message : String(error));
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('Full error:', error);
+    throw error;
   }
 }
 

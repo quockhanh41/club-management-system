@@ -1,0 +1,21 @@
+# E2E Test Runner Dockerfile
+# Builds an image with code and Playwright for running E2E tests in CI
+
+FROM mcr.microsoft.com/playwright:v1.48.0-jammy
+
+WORKDIR /app
+
+# Copy package files  
+COPY package*.json ./
+
+# Install all dependencies (including dev dependencies for tests)
+RUN npm ci
+
+# Copy all source code and tests
+COPY . .
+
+# Set environment
+ENV CI=true
+
+# Default command runs E2E tests
+CMD ["npx", "playwright", "test", "--reporter=html,junit"]

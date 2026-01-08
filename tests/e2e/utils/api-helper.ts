@@ -45,7 +45,8 @@ export class APIHelper {
     while (Date.now() - startTime < timeout) {
       try {
         // Test Kong proxy API to verify it's running
-        const response = await fetch('http://localhost:8000');
+        // Use baseURL instead of hardcoded localhost to support both CI and local environments
+        const response = await fetch(this.baseURL);
         // Kong will return 404 if no route matches, which means it's working
         if (response.status === 404 || response.ok) {
           return;

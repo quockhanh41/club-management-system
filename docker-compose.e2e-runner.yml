@@ -9,6 +9,7 @@ services:
       - club_network
     environment:
       - CI=true
+      - BASE_URL=http://frontend:3000
       - API_GATEWAY_URL=http://kong:8000
       - API_GATEWAY_SECRET=test-secret-e2e
     depends_on:

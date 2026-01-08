@@ -149,6 +149,9 @@ services:
       start_period: 30s
 
   frontend:
+    build:
+      args:
+        - NEXT_PUBLIC_API_BASE_URL=http://kong:8000
     deploy:
       resources:
         limits:

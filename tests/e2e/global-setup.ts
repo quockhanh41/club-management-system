@@ -9,7 +9,7 @@ async function globalSetup(config: FullConfig) {
   
   // In CI, services expose ports to host, so we use localhost
   // All services expose their ports (3000, 3001, 3002, 3003, etc)
-  const frontendUrl = 'http://localhost:3000/';
+  const frontendUrl = 'http://localhost:3000/api/health';
   const authUrl = 'http://localhost:3001/';
   const clubUrl = 'http://localhost:3002/health';
   const eventUrl = 'http://localhost:3003/health';

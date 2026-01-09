@@ -11,9 +11,11 @@ let mongoServer;
 
 beforeAll(async () => {
   process.env.API_GATEWAY_SECRET = process.env.API_GATEWAY_SECRET || 'test-secret';
+  // Force using Ubuntu 22.04 binaries as Debian 13 ARM64 requires MongoDB >= 7.0.3
+  process.env.MONGOMS_DISTRO = 'ubuntu-22.04';
   mongoServer = await MongoMemoryServer.create({
     binary: {
-      version: '6.0.16',
+      version: '7.0.3',
     },
   });
   const uri = mongoServer.getUri();

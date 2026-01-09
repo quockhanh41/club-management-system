@@ -27,6 +27,8 @@ jest.mock('../src/utils/eventServiceClient', () => ({
 let mongoServer;
 
 beforeAll(async () => {
+  // Force using Ubuntu 22.04 binaries as Debian 12/13 ARM64 support in fastdl is spotty
+  process.env.MONGOMS_DISTRO = 'ubuntu-22.04';
   mongoServer = await MongoMemoryServer.create({
     binary: {
       version: '7.0.3',

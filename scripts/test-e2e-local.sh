@@ -103,7 +103,7 @@ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose
 
 # Step 8: Run Playwright E2E tests
 log_info "🎭 Running Playwright E2E tests..."
-if npx playwright test --reporter=html,junit; then
+if npx playwright test --reporter=list,html,junit; then
     log_info "✅ E2E tests passed!"
     
     # Show report location

@@ -14,6 +14,9 @@ export interface TestClub {
   category: string;
   contact_email: string;
   created_by?: string;
+  manager_full_name: string;
+  manager_user_id: string;
+  manager_email: string;
 }
 
 export interface TestEvent {

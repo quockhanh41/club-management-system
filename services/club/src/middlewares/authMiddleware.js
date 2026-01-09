@@ -22,7 +22,11 @@ const validateApiGatewaySecret = (req, res, next) => {
     });
 
     // ALLOW request to proceed in ALB architecture
-    // return res.status(401).json({ ... });
+    return res.status(401).json({
+      success: false,
+      message: "Unauthorized: Request must come through API Gateway",
+      code: "INVALID_GATEWAY",
+    });
   }
 
   console.debug("CLUB SERVICE: Gateway validation passed", {

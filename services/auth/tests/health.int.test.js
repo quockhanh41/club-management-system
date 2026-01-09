@@ -4,9 +4,16 @@ const Application = require('../src/app');
 let app;
 
 beforeAll(async () => {
+  // Set up test environment
+  process.env.API_GATEWAY_SECRET = process.env.API_GATEWAY_SECRET || 'test-secret';
+  
   // Application.initialize() tests DB connection; we will not call it for health
   const application = new Application();
   app = application.getApp();
+  
+  // Sync database schema for tests
+  const { sequelize } = require('../src/models');
+  await sequelize.sync({ force: true });
 });
 
 describe('Auth service health endpoints', () => {

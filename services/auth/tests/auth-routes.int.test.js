@@ -4,9 +4,16 @@ const Application = require('../src/app');
 let app;
 
 beforeAll(async () => {
+  // Set up test environment
+  process.env.API_GATEWAY_SECRET = process.env.API_GATEWAY_SECRET || 'test-secret';
+  
   // Create application without full database initialization
   const application = new Application();
   app = application.getApp();
+  
+  // Sync database schema for tests
+  const { sequelize } = require('../src/models');
+  await sequelize.sync({ force: true });
 });
 
 describe('Auth Service - Route Validation and Middleware', () => {

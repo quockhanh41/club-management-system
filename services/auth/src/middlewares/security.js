@@ -47,7 +47,12 @@ const validateApiGatewaySecret = (req, res, next) => {
       hasSecret: !!gatewaySecret,
     });
 
-    // ALLOW request to proceed in ALB architecture
+    // In test/CI environment or when explicitly required, enforce gateway secret
+    if (process.env.NODE_ENV === 'test' || process.env.CI === 'true' || process.env.ENFORCE_GATEWAY_SECRET === 'true') {
+      throw new AuthenticationError('Unauthorized: Request must come through API Gateway');
+    }
+
+    // ALLOW request to proceed in ALB architecture for development
   }
 
   logger.debug("Gateway secret validation passed", {

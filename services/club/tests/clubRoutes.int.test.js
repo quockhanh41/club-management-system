@@ -13,7 +13,11 @@ let mongoServer;
 
 beforeAll(async () => {
   process.env.API_GATEWAY_SECRET = 'test-secret';
-  mongoServer = await MongoMemoryServer.create();
+  mongoServer = await MongoMemoryServer.create({
+    binary: {
+      version: '6.0.16',
+    },
+  });
   const uri = mongoServer.getUri();
   process.env.MONGODB_URI = uri;
   await mongoose.connect(uri);

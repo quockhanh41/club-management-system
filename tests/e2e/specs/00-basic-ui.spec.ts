@@ -101,7 +101,7 @@ test.describe('Basic UI Tests', () => {
         }
         
         // Click the link inside the Sheet
-        const linkInSheet = page.locator('[role="dialog"]').locator(`a:has-text("${linkText}")`);
+        const linkInSheet = page.locator('[role="dialog"]').getByRole('link', { name: linkText, exact: true });
         await linkInSheet.click();
         
         // Wait for navigation

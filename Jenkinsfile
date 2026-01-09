@@ -143,10 +143,17 @@ pipeline {
                         echo "Testing $service service..."
                         cd services/$service
                         
-                        if [ -f package.json ] && grep -q '"test"' package.json; then
-                            npm test || echo "Tests failed for $service"
+                        if [ -f package.json ]; then
+                            echo "Installing dependencies for $service..."
+                            npm ci
+                            
+                            if grep -q '"test"' package.json; then
+                                npm test || echo "Tests failed for $service"
+                            else
+                                echo "No tests configured for $service"
+                            fi
                         else
-                            echo "No tests configured for $service"
+                            echo "No package.json found for $service"
                         fi
                         
                         cd ../..

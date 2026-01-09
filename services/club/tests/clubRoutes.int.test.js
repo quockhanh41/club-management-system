@@ -15,7 +15,7 @@ beforeAll(async () => {
   process.env.API_GATEWAY_SECRET = 'test-secret';
   mongoServer = await MongoMemoryServer.create({
     binary: {
-      version: '6.0.16',
+      version: '7.0.3',
     },
   });
   const uri = mongoServer.getUri();

@@ -28,7 +28,7 @@ beforeAll(async () => {
   app.use(bodyParser.json());
   app.use('/api', clubRoutes);
   app.use(errorHandler);
-});
+}, 60000);
 
 afterAll(async () => {
   await mongoose.disconnect();

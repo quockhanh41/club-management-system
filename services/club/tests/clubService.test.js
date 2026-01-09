@@ -40,7 +40,7 @@ beforeAll(async () => {
   // Load DB module after setting env
   require('../src/config/database');
   await mongoose.connect(uri);
-});
+}, 60000);
 
 afterAll(async () => {
   await mongoose.disconnect();

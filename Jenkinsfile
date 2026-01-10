@@ -305,7 +305,7 @@ pipeline {
                     '''
                     
                     // Run E2E tests and capture exit code (don't fail immediately)
-                    def e2eExitCode = sh(
+                    def e2eOutput = sh(
                         script: '''
                             set +e  # Don't exit on error
                             docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
@@ -315,11 +315,15 @@ pipeline {
                             exit 0
                         ''',
                         returnStdout: true
-                    )
+                    ).trim()
                     
-                    // Extract exit code from output
-                    def exitCodeMatch = (e2eExitCode =~ /E2E_EXIT_CODE:(\d+)/)
-                    def actualExitCode = exitCodeMatch ? exitCodeMatch[0][1].toInteger() : 1
+                    // Extract exit code from output (use simple string parsing to avoid serialization issues)
+                    def actualExitCode = 1 // default to failure
+                    e2eOutput.eachLine { line ->
+                        if (line.startsWith('E2E_EXIT_CODE:')) {
+                            actualExitCode = line.split(':')[1].toInteger()
+                        }
+                    }
                     
                     echo "E2E tests finished with exit code: ${actualExitCode}"
                     

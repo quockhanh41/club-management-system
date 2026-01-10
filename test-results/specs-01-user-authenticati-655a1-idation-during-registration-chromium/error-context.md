@@ -1,0 +1,174 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e5]:
+        - link "UniVibe" [ref=e7] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=e8]:
+          - link "Trang chủ" [ref=e9] [cursor=pointer]:
+            - /url: /
+            - img [ref=e10]
+            - generic [ref=e13]: Trang chủ
+          - link "Câu lạc bộ" [ref=e14] [cursor=pointer]:
+            - /url: /clubs
+            - img [ref=e15]
+            - generic [ref=e20]: Câu lạc bộ
+          - link "Sự kiện" [ref=e21] [cursor=pointer]:
+            - /url: /events
+            - img [ref=e22]
+            - generic [ref=e24]: Sự kiện
+          - link "Câu lạc bộ của tôi" [ref=e25] [cursor=pointer]:
+            - /url: /club-space
+            - img [ref=e26]
+            - generic [ref=e28]: Câu lạc bộ của tôi
+        - generic [ref=e29]:
+          - link "Đăng nhập" [ref=e30] [cursor=pointer]:
+            - /url: /login
+          - link "Đăng ký" [ref=e31] [cursor=pointer]:
+            - /url: /signup
+    - main [ref=e32]:
+      - generic [ref=e35]:
+        - generic [ref=e36]:
+          - generic [ref=e37]: Create your account
+          - generic [ref=e38]: Join UniVibe and start connecting with your community
+        - generic [ref=e40]:
+          - generic [ref=e41]:
+            - text: Full Name
+            - generic [ref=e42]:
+              - img [ref=e43]
+              - textbox "Full Name" [ref=e46]:
+                - /placeholder: Enter your full name
+          - generic [ref=e47]:
+            - text: Email
+            - generic [ref=e48]:
+              - img [ref=e49]
+              - textbox "Email" [ref=e52]:
+                - /placeholder: Enter your email
+          - generic [ref=e53]:
+            - text: Password
+            - generic [ref=e54]:
+              - img [ref=e55]
+              - textbox "Password" [ref=e58]:
+                - /placeholder: Create a password
+              - button [ref=e59] [cursor=pointer]:
+                - img [ref=e60]
+          - generic [ref=e63]:
+            - text: Confirm Password
+            - generic [ref=e64]:
+              - img [ref=e65]
+              - textbox "Confirm Password" [ref=e68]:
+                - /placeholder: Confirm your password
+              - button [ref=e69] [cursor=pointer]:
+                - img [ref=e70]
+          - generic [ref=e73]:
+            - checkbox "I agree to the Terms of Service and Privacy Policy" [ref=e74] [cursor=pointer]
+            - checkbox
+            - generic [ref=e75]:
+              - text: I agree to the
+              - link "Terms of Service" [ref=e76] [cursor=pointer]:
+                - /url: /terms
+              - text: and
+              - link "Privacy Policy" [ref=e77] [cursor=pointer]:
+                - /url: /privacy
+          - button "Create Account" [ref=e78] [cursor=pointer]
+        - paragraph [ref=e80]:
+          - text: Already have an account?
+          - link "Sign in" [ref=e81] [cursor=pointer]:
+            - /url: /login
+    - contentinfo [ref=e82]:
+      - generic [ref=e83]:
+        - generic [ref=e84]:
+          - generic [ref=e85]:
+            - generic [ref=e86]: UniVibe
+            - paragraph [ref=e87]: Nền tảng kết nối cộng đồng sinh viên hàng đầu Việt Nam. Tham gia, khám phá và tạo nên những trải nghiệm đáng nhớ.
+            - generic [ref=e88]:
+              - generic [ref=e89]:
+                - img [ref=e90]
+                - generic [ref=e93]: contact@univibe.edu.vn
+              - generic [ref=e94]:
+                - img [ref=e95]
+                - generic [ref=e97]: +84 123 456 789
+              - generic [ref=e98]:
+                - img [ref=e99]
+                - generic [ref=e102]: Hà Nội, Việt Nam
+          - generic [ref=e103]:
+            - heading "Nền tảng" [level=3] [ref=e104]
+            - list [ref=e105]:
+              - listitem [ref=e106]:
+                - link "Trang chủ" [ref=e107] [cursor=pointer]:
+                  - /url: /
+              - listitem [ref=e108]:
+                - link "Câu lạc bộ" [ref=e109] [cursor=pointer]:
+                  - /url: /clubs
+              - listitem [ref=e110]:
+                - link "Sự kiện" [ref=e111] [cursor=pointer]:
+                  - /url: /events
+              - listitem [ref=e112]:
+                - link "Thành viên" [ref=e113] [cursor=pointer]:
+                  - /url: /profile
+          - generic [ref=e114]:
+            - heading "Hỗ trợ" [level=3] [ref=e115]
+            - list [ref=e116]:
+              - listitem [ref=e117]:
+                - link "Trung tâm trợ giúp" [ref=e118] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e119]:
+                - link "Liên hệ" [ref=e120] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e121]:
+                - link "Báo cáo sự cố" [ref=e122] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e123]:
+                - link "FAQ" [ref=e124] [cursor=pointer]:
+                  - /url: "#"
+          - generic [ref=e125]:
+            - heading "Tài nguyên" [level=3] [ref=e126]
+            - list [ref=e127]:
+              - listitem [ref=e128]:
+                - link "Blog" [ref=e129] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e130]:
+                - link "Hướng dẫn" [ref=e131] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e132]:
+                - link "Tài nguyên" [ref=e133] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e134]:
+                - link "API" [ref=e135] [cursor=pointer]:
+                  - /url: "#"
+          - generic [ref=e136]:
+            - heading "Pháp lý" [level=3] [ref=e137]
+            - list [ref=e138]:
+              - listitem [ref=e139]:
+                - link "Điều khoản sử dụng" [ref=e140] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e141]:
+                - link "Chính sách bảo mật" [ref=e142] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e143]:
+                - link "Cookie Policy" [ref=e144] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e145]:
+                - link "Bản quyền" [ref=e146] [cursor=pointer]:
+                  - /url: "#"
+        - generic [ref=e147]:
+          - generic [ref=e148]: © 2024 UniVibe. Tất cả quyền được bảo lưu.
+          - generic [ref=e149]:
+            - link "Facebook" [ref=e150] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e151]
+            - link "Instagram" [ref=e153] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e154]
+            - link "Twitter" [ref=e157] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e158]
+            - link "YouTube" [ref=e160] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e161]
+  - region "Notifications (F8)":
+    - list
+```

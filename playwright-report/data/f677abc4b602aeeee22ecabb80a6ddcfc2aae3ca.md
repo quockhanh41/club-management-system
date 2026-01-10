@@ -1,0 +1,258 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e5]:
+        - link "UniVibe" [ref=e7] [cursor=pointer]:
+          - /url: /
+        - navigation [ref=e8]:
+          - link "Trang chủ" [ref=e9] [cursor=pointer]:
+            - /url: /
+            - img [ref=e10]
+            - generic [ref=e13]: Trang chủ
+          - link "Câu lạc bộ" [ref=e14] [cursor=pointer]:
+            - /url: /clubs
+            - img [ref=e15]
+            - generic [ref=e20]: Câu lạc bộ
+          - link "Sự kiện" [ref=e21] [cursor=pointer]:
+            - /url: /events
+            - img [ref=e22]
+            - generic [ref=e27]: Sự kiện
+          - link "Câu lạc bộ của tôi" [ref=e28] [cursor=pointer]:
+            - /url: /club-space
+            - img [ref=e29]
+            - generic [ref=e32]: Câu lạc bộ của tôi
+        - generic [ref=e33]:
+          - button "3" [ref=e34] [cursor=pointer]:
+            - img
+            - generic [ref=e35]: "3"
+          - button "Test User One" [ref=e36] [cursor=pointer]:
+            - img "Test User One" [ref=e38]
+    - main [ref=e39]:
+      - generic [ref=e41]:
+        - navigation "breadcrumb" [ref=e42]:
+          - list [ref=e43]:
+            - listitem [ref=e44]:
+              - link "Trang chủ" [ref=e45] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=e46]:
+              - img [ref=e47]
+            - listitem [ref=e49]:
+              - link "Câu lạc bộ" [disabled] [ref=e50]
+        - generic [ref=e51]:
+          - heading "Khám phá câu lạc bộ" [level=1] [ref=e52]
+          - paragraph [ref=e53]: Tìm hiểu các câu lạc bộ phù hợp với sở thích và kết nối với những sinh viên cùng đam mê.
+        - generic [ref=e55]:
+          - generic [ref=e56]:
+            - img [ref=e57]
+            - textbox "Tìm kiếm câu lạc bộ theo tên hoặc mô tả..." [ref=e60]
+          - combobox [ref=e62] [cursor=pointer]:
+            - img [ref=e63]
+            - generic: Tất cả
+            - img [ref=e65]
+        - generic [ref=e67]:
+          - paragraph [ref=e68]: Tìm thấy 8 câu lạc bộ
+          - paragraph [ref=e69]: Trang 1 / 2
+        - generic [ref=e70]:
+          - link "API Test Club 1768012527208 Công nghệ Phổ biến API Test Club 1768012527208 API Test Club 1768012527208 A club created through API testing 1 thành viên" [ref=e71] [cursor=pointer]:
+            - /url: /clubs/6961baef9033430d46880a90
+            - generic [ref=e72]:
+              - generic [ref=e73]:
+                - img "API Test Club 1768012527208" [ref=e75]
+                - generic [ref=e76]:
+                  - generic [ref=e77]: Công nghệ
+                  - generic [ref=e78]:
+                    - img [ref=e79]
+                    - text: Phổ biến
+                - img "API Test Club 1768012527208" [ref=e83]
+              - generic [ref=e84]:
+                - generic [ref=e85]:
+                  - heading "API Test Club 1768012527208" [level=3] [ref=e86]
+                  - paragraph [ref=e87]: A club created through API testing
+                - generic [ref=e89]:
+                  - img [ref=e90]
+                  - generic [ref=e95]: 1 thành viên
+          - link "E2E Auto Club 1768012523767-146 Công nghệ Phổ biến E2E Auto Club 1768012523767-146 E2E Auto Club 1768012523767-146 Auto-created for event tests 1 thành viên" [ref=e96] [cursor=pointer]:
+            - /url: /clubs/6961baeb9033430d46880a64
+            - generic [ref=e97]:
+              - generic [ref=e98]:
+                - img "E2E Auto Club 1768012523767-146" [ref=e100]
+                - generic [ref=e101]:
+                  - generic [ref=e102]: Công nghệ
+                  - generic [ref=e103]:
+                    - img [ref=e104]
+                    - text: Phổ biến
+                - img "E2E Auto Club 1768012523767-146" [ref=e108]
+              - generic [ref=e109]:
+                - generic [ref=e110]:
+                  - heading "E2E Auto Club 1768012523767-146" [level=3] [ref=e111]
+                  - paragraph [ref=e112]: Auto-created for event tests
+                - generic [ref=e114]:
+                  - img [ref=e115]
+                  - generic [ref=e120]: 1 thành viên
+          - link "E2E Auto Club 1768012524869-549 Công nghệ Phổ biến E2E Auto Club 1768012524869-549 E2E Auto Club 1768012524869-549 Auto-created for event tests 1 thành viên" [ref=e121] [cursor=pointer]:
+            - /url: /clubs/6961baec9033430d46880a70
+            - generic [ref=e122]:
+              - generic [ref=e123]:
+                - img "E2E Auto Club 1768012524869-549" [ref=e125]
+                - generic [ref=e126]:
+                  - generic [ref=e127]: Công nghệ
+                  - generic [ref=e128]:
+                    - img [ref=e129]
+                    - text: Phổ biến
+                - img "E2E Auto Club 1768012524869-549" [ref=e133]
+              - generic [ref=e134]:
+                - generic [ref=e135]:
+                  - heading "E2E Auto Club 1768012524869-549" [level=3] [ref=e136]
+                  - paragraph [ref=e137]: Auto-created for event tests
+                - generic [ref=e139]:
+                  - img [ref=e140]
+                  - generic [ref=e145]: 1 thành viên
+          - link "E2E Test Art Club 1768012473263 Nghệ thuật E2E Test Art Club 1768012473263 E2E Test Art Club 1768012473263 An art club for E2E testing 1 thành viên" [ref=e146] [cursor=pointer]:
+            - /url: /clubs/6961bab99033430d468809d2
+            - generic [ref=e147]:
+              - generic [ref=e148]:
+                - img "E2E Test Art Club 1768012473263" [ref=e150]
+                - generic [ref=e152]: Nghệ thuật
+                - img "E2E Test Art Club 1768012473263" [ref=e155]
+              - generic [ref=e156]:
+                - generic [ref=e157]:
+                  - heading "E2E Test Art Club 1768012473263" [level=3] [ref=e158]
+                  - paragraph [ref=e159]: An art club for E2E testing
+                - generic [ref=e161]:
+                  - img [ref=e162]
+                  - generic [ref=e167]: 1 thành viên
+          - link "E2E Test Club 1768012517956 Công nghệ E2E Test Club 1768012517956 E2E Test Club 1768012517956 A test club created during E2E testing 1 thành viên" [ref=e168] [cursor=pointer]:
+            - /url: /clubs/6961bae59033430d46880a01
+            - generic [ref=e169]:
+              - generic [ref=e170]:
+                - img "E2E Test Club 1768012517956" [ref=e172]
+                - generic [ref=e174]: Công nghệ
+                - img "E2E Test Club 1768012517956" [ref=e177]
+              - generic [ref=e178]:
+                - generic [ref=e179]:
+                  - heading "E2E Test Club 1768012517956" [level=3] [ref=e180]
+                  - paragraph [ref=e181]: A test club created during E2E testing
+                - generic [ref=e183]:
+                  - img [ref=e184]
+                  - generic [ref=e189]: 1 thành viên
+          - link "E2E Test Club 1768012543835 Công nghệ E2E Test Club 1768012543835 E2E Test Club 1768012543835 A test club created during E2E testing 1 thành viên" [ref=e190] [cursor=pointer]:
+            - /url: /clubs/6961bb009033430d46880acf
+            - generic [ref=e191]:
+              - generic [ref=e192]:
+                - img "E2E Test Club 1768012543835" [ref=e194]
+                - generic [ref=e196]: Công nghệ
+                - img "E2E Test Club 1768012543835" [ref=e199]
+              - generic [ref=e200]:
+                - generic [ref=e201]:
+                  - heading "E2E Test Club 1768012543835" [level=3] [ref=e202]
+                  - paragraph [ref=e203]: A test club created during E2E testing
+                - generic [ref=e205]:
+                  - img [ref=e206]
+                  - generic [ref=e211]: 1 thành viên
+        - generic [ref=e212]:
+          - button "Trước" [disabled]:
+            - img
+            - text: Trước
+          - button "1" [ref=e214] [cursor=pointer]
+          - button "2" [ref=e216] [cursor=pointer]
+          - button "Sau" [ref=e217] [cursor=pointer]:
+            - text: Sau
+            - img
+    - contentinfo [ref=e218]:
+      - generic [ref=e219]:
+        - generic [ref=e220]:
+          - generic [ref=e221]:
+            - generic [ref=e222]: UniVibe
+            - paragraph [ref=e223]: Nền tảng kết nối cộng đồng sinh viên hàng đầu Việt Nam. Tham gia, khám phá và tạo nên những trải nghiệm đáng nhớ.
+            - generic [ref=e224]:
+              - generic [ref=e225]:
+                - img [ref=e226]
+                - generic [ref=e229]: contact@univibe.edu.vn
+              - generic [ref=e230]:
+                - img [ref=e231]
+                - generic [ref=e233]: +84 123 456 789
+              - generic [ref=e234]:
+                - img [ref=e235]
+                - generic [ref=e238]: Hà Nội, Việt Nam
+          - generic [ref=e239]:
+            - heading "Nền tảng" [level=3] [ref=e240]
+            - list [ref=e241]:
+              - listitem [ref=e242]:
+                - link "Trang chủ" [ref=e243] [cursor=pointer]:
+                  - /url: /
+              - listitem [ref=e244]:
+                - link "Câu lạc bộ" [ref=e245] [cursor=pointer]:
+                  - /url: /clubs
+              - listitem [ref=e246]:
+                - link "Sự kiện" [ref=e247] [cursor=pointer]:
+                  - /url: /events
+              - listitem [ref=e248]:
+                - link "Thành viên" [ref=e249] [cursor=pointer]:
+                  - /url: /profile
+          - generic [ref=e250]:
+            - heading "Hỗ trợ" [level=3] [ref=e251]
+            - list [ref=e252]:
+              - listitem [ref=e253]:
+                - link "Trung tâm trợ giúp" [ref=e254] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e255]:
+                - link "Liên hệ" [ref=e256] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e257]:
+                - link "Báo cáo sự cố" [ref=e258] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e259]:
+                - link "FAQ" [ref=e260] [cursor=pointer]:
+                  - /url: "#"
+          - generic [ref=e261]:
+            - heading "Tài nguyên" [level=3] [ref=e262]
+            - list [ref=e263]:
+              - listitem [ref=e264]:
+                - link "Blog" [ref=e265] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e266]:
+                - link "Hướng dẫn" [ref=e267] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e268]:
+                - link "Tài nguyên" [ref=e269] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e270]:
+                - link "API" [ref=e271] [cursor=pointer]:
+                  - /url: "#"
+          - generic [ref=e272]:
+            - heading "Pháp lý" [level=3] [ref=e273]
+            - list [ref=e274]:
+              - listitem [ref=e275]:
+                - link "Điều khoản sử dụng" [ref=e276] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e277]:
+                - link "Chính sách bảo mật" [ref=e278] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e279]:
+                - link "Cookie Policy" [ref=e280] [cursor=pointer]:
+                  - /url: "#"
+              - listitem [ref=e281]:
+                - link "Bản quyền" [ref=e282] [cursor=pointer]:
+                  - /url: "#"
+        - generic [ref=e283]:
+          - generic [ref=e284]: © 2024 UniVibe. Tất cả quyền được bảo lưu.
+          - generic [ref=e285]:
+            - link "Facebook" [ref=e286] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e287]
+            - link "Instagram" [ref=e289] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e290]
+            - link "Twitter" [ref=e294] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e295]
+            - link "YouTube" [ref=e297] [cursor=pointer]:
+              - /url: "#"
+              - img [ref=e298]
+  - region "Notifications (F8)":
+    - list
+  - alert [ref=e301]
+```

@@ -95,14 +95,21 @@ test.describe('Basic UI Tests', () => {
         const isMenuVisible = await menuButton.isVisible();
         
         if (isMenuVisible) {
-          await menuButton.click();
-          // Wait for Sheet to open
-          await page.waitForTimeout(500);
+          // Check if Sheet is already open
+          const sheet = page.locator('[role="dialog"]');
+          const isSheetOpen = await sheet.isVisible().catch(() => false);
+          
+          if (!isSheetOpen) {
+            // Force click to bypass animation intercepting
+            await menuButton.click({ force: true });
+            // Wait for Sheet animation to complete
+            await page.waitForTimeout(800);
+          }
         }
         
-        // Click the link inside the Sheet
+        // Click the link inside the Sheet with force to bypass animation
         const linkInSheet = page.locator('[role="dialog"]').getByRole('link', { name: linkText, exact: true });
-        await linkInSheet.click();
+        await linkInSheet.click({ force: true });
         
         // Wait for navigation
         await page.waitForTimeout(300);

@@ -47,8 +47,8 @@
                   - generic: Tất cả
                   - img
           - generic:
-            - paragraph: Tìm thấy 15 câu lạc bộ
-            - paragraph: Trang 1 / 3
+            - paragraph: Tìm thấy 19 câu lạc bộ
+            - paragraph: Trang 1 / 4
           - generic:
             - link:
               - /url: /clubs/6961baef9033430d46880a90
@@ -117,6 +117,25 @@
                       - img
                       - generic: 1 thành viên
             - link:
+              - /url: /clubs/6961bb4e9033430d46880d5e
+              - generic:
+                - generic:
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Công nghệ
+                  - generic:
+                    - generic:
+                      - img
+                - generic:
+                  - generic:
+                    - heading [level=3]: API Test Club 1768012622023
+                    - paragraph: A club created through API testing
+                  - generic:
+                    - generic:
+                      - img
+                      - generic: 1 thành viên
+            - link:
               - /url: /clubs/6961baeb9033430d46880a64
               - generic:
                 - generic:
@@ -154,25 +173,6 @@
                     - generic:
                       - img
                       - generic: 1 thành viên
-            - link:
-              - /url: /clubs/6961bb0a9033430d46880b3b
-              - generic:
-                - generic:
-                  - generic:
-                    - img
-                  - generic:
-                    - generic: Công nghệ
-                  - generic:
-                    - generic:
-                      - img
-                - generic:
-                  - generic:
-                    - heading [level=3]: E2E Auto Club 1768012554107-679
-                    - paragraph: Auto-created for event tests
-                  - generic:
-                    - generic:
-                      - img
-                      - generic: 1 thành viên
           - generic:
             - button [disabled]:
               - img
@@ -183,6 +183,8 @@
               - button: "2"
             - generic:
               - button: "3"
+            - generic:
+              - button: "4"
             - button:
               - text: Sau
               - img
@@ -295,22 +297,22 @@
               - img
   - list
   - alert
-  - dialog "Menu" [ref=e2]:
+  - dialog "Menu" [active] [ref=e2]:
     - heading "Menu" [level=2] [ref=e4]
     - navigation [ref=e5]:
-      - link "Trang chủ" [ref=e6] [cursor=pointer]:
+      - link "Trang chủ" [ref=e6]:
         - /url: /
         - img [ref=e7]
         - generic [ref=e10]: Trang chủ
-      - link "Câu lạc bộ" [active] [ref=e11] [cursor=pointer]:
+      - link "Câu lạc bộ" [ref=e11]:
         - /url: /clubs
         - img [ref=e12]
         - generic [ref=e17]: Câu lạc bộ
-      - link "Sự kiện" [ref=e18] [cursor=pointer]:
+      - link "Sự kiện" [ref=e18]:
         - /url: /events
         - img [ref=e19]
         - generic [ref=e21]: Sự kiện
-      - link "Câu lạc bộ của tôi" [ref=e22] [cursor=pointer]:
+      - link "Câu lạc bộ của tôi" [ref=e22]:
         - /url: /club-space
         - img [ref=e23]
         - generic [ref=e25]: Câu lạc bộ của tôi

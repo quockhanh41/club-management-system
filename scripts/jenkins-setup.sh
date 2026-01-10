@@ -100,6 +100,18 @@ install_docker_in_jenkins() {
     echo -e "${YELLOW}ℹ️  Note: You may need to restart Jenkins for group changes to take effect${NC}"
 }
 
+# Install essential tools (jq, bc) in Jenkins container
+install_essential_tools() {
+    echo "🔧 Installing essential tools (jq, bc) in Jenkins container..."
+    
+    docker exec -u root jenkins-master bash -c '
+        apt-get update && \
+        apt-get install -y jq bc
+    '
+    
+    echo -e "${GREEN}✅ Essential tools (jq, bc) installed in Jenkins${NC}"
+}
+
 # Install Node.js in Jenkins container
 install_nodejs_in_jenkins() {
     echo "📦 Installing Node.js in Jenkins container..."
@@ -173,6 +185,7 @@ main() {
         install-tools)
             install_docker_in_jenkins
             install_nodejs_in_jenkins
+            install_essential_tools
             echo ""
             echo -e "${GREEN}✅ Tools installed successfully${NC}"
             ;;

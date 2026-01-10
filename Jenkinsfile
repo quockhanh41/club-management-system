@@ -96,7 +96,27 @@ pipeline {
             steps {
                 script {
                     echo "🔧 Setting up Node.js environment"
+                    echo "📦 Installing essential tools (jq, bc) if not present"
                 }
+                
+                // Install essential tools (jq and bc) for JSON parsing and calculations
+                sh '''
+                    # Check and install jq if not present
+                    if ! command -v jq &> /dev/null; then
+                        echo "Installing jq..."
+                        apt-get update && apt-get install -y jq
+                    else
+                        echo "✓ jq already installed"
+                    fi
+                    
+                    # Check and install bc if not present
+                    if ! command -v bc &> /dev/null; then
+                        echo "Installing bc..."
+                        apt-get update && apt-get install -y bc
+                    else
+                        echo "✓ bc already installed"
+                    fi
+                '''
                 
                 // Install Node.js using NodeJS plugin or Docker
                 sh '''

@@ -90,16 +90,16 @@ test.describe('User Profile Management Journey', () => {
     
     await profile.goto();
     
-    // Check if profile picture section exists
-    const profilePicture = authenticatedPage.locator('.profile-picture, [data-testid="profile-picture"], img[alt*="profile"], img[alt*="avatar"], button:has-text("Đổi avatar")');
-    const uploadButton = authenticatedPage.locator('input[type="file"], button:has-text("Upload Picture"), button:has-text("Đổi avatar")');
+    // Wait for profile page to fully load
+    await authenticatedPage.waitForLoadState('networkidle');
     
-    // At least one of these should be visible (either picture or upload button)
-    const hasPicture = await profilePicture.first().isVisible().catch(() => false);
-    const hasUploadButton = await uploadButton.first().isVisible().catch(() => false);
+    // Check for avatar button specifically - it's always present based on UI
+    const avatarButton = authenticatedPage.getByRole('button', { name: 'Đổi avatar' });
+    await expect(avatarButton).toBeVisible({ timeout: 10000 });
     
-    // Ensure profile page has profile picture UI (either image or upload button)
-    expect(hasPicture || hasUploadButton).toBe(true);
+    // Also verify the profile image is displayed
+    const profileImage = authenticatedPage.locator('img[alt^="Test User"]').first();
+    await expect(profileImage).toBeVisible();
   });
 
   test('User preferences and settings', async ({ authenticatedPage, profilePage }) => {

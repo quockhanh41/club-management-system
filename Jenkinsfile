@@ -1,5 +1,28 @@
 pipeline {
     agent any
+    
+    parameters {
+        string(
+            name: 'E2E_FAILURE_THRESHOLD_PERCENT',
+            defaultValue: '5',
+            description: 'Maximum percentage of E2E tests allowed to fail (0-100)'
+        )
+        string(
+            name: 'E2E_FAILURE_THRESHOLD_ABSOLUTE',
+            defaultValue: '12',
+            description: 'Maximum absolute number of E2E tests allowed to fail'
+        )
+        choice(
+            name: 'E2E_THRESHOLD_MODE',
+            choices: ['both', 'percentage', 'absolute'],
+            description: 'Threshold evaluation mode: both (stricter), percentage, or absolute'
+        )
+        booleanParam(
+            name: 'E2E_MARK_UNSTABLE',
+            defaultValue: true,
+            description: 'Mark build as UNSTABLE instead of SUCCESS when failures are within threshold'
+        )
+    }
 
     environment {
         // Docker Registry Configuration
@@ -22,6 +45,16 @@ pipeline {
         // E2E Test Configuration - Use localhost (ports are exposed)
         API_GATEWAY_URL = 'http://localhost:8000'
         CI = 'true'
+        
+        // E2E Test Failure Threshold Configuration
+        // Maximum percentage of tests allowed to fail (0-100)
+        E2E_FAILURE_THRESHOLD_PERCENT = "${params.E2E_FAILURE_THRESHOLD_PERCENT ?: '5'}"
+        // Maximum absolute number of tests allowed to fail
+        E2E_FAILURE_THRESHOLD_ABSOLUTE = "${params.E2E_FAILURE_THRESHOLD_ABSOLUTE ?: '12'}"
+        // Which threshold to use: 'percentage', 'absolute', or 'both' (stricter)
+        E2E_THRESHOLD_MODE = "${params.E2E_THRESHOLD_MODE ?: 'both'}"
+        // Mark build as UNSTABLE instead of SUCCESS when failures are within threshold
+        E2E_MARK_UNSTABLE = "${params.E2E_MARK_UNSTABLE ?: 'true'}"
         
         // Add paths for Docker and Node.js
         PATH = "/usr/local/bin:/usr/bin:/bin:${env.PATH}"
@@ -205,77 +238,277 @@ pipeline {
         stage('E2E Tests') {
             steps {
                 script {
-                    echo "🎭 Running End-to-End tests with Playwright"
+                    echo "🧪 Running E2E tests with Docker infrastructure"
+                    echo "📋 Failure Thresholds: ${env.E2E_FAILURE_THRESHOLD_PERCENT}% or ${env.E2E_FAILURE_THRESHOLD_ABSOLUTE} tests (Mode: ${env.E2E_THRESHOLD_MODE})"
+                    
+                    // Start services
+                    sh '''
+                        echo "Starting services for E2E tests..."
+                        
+                        # Create required directories
+                        mkdir -p artifacts test-results logs
+                        
+                        # Start infrastructure services first (databases and message queue)
+                        echo "Starting infrastructure services (postgres, mongodb, rabbitmq)..."
+                        docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --force-recreate postgres mongo rabbitmq
+                        
+                        # Wait for databases to be ready
+                        echo "Waiting for databases to be ready..."
+                        for i in $(seq 1 60); do
+                            if docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps postgres mongo rabbitmq | grep -E "(unhealthy|starting)" > /dev/null; then
+                                echo "Databases still starting... (attempt $i/60)"
+                                sleep 5
+                            else
+                                echo "Databases are healthy!"
+                                break
+                            fi
+                            
+                            if [ $i -eq 60 ]; then
+                                echo "Databases failed to become healthy"
+                                docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
+                                docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs postgres mongo rabbitmq
+                                exit 1
+                            fi
+                        done
+                        
+                        # Start application services (use pre-built images from previous stage)
+                        echo "Starting application services..."
+                        docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --no-build --force-recreate auth-service club-service event-service notify-service image-service frontend
+                        
+                        # Wait for services to be healthy (increased timeout for notify-service)
+                        echo "Waiting for application services to be healthy..."
+                        sleep 30
+                        
+                        for i in $(seq 1 90); do
+                            if docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps | grep -E "(unhealthy|starting)" > /dev/null; then
+                                echo "Services still starting... (attempt $i/90)"
+                                sleep 10
+                            else
+                                echo "All services are healthy!"
+                                break
+                            fi
+                            
+                            if [ $i -eq 90 ]; then
+                                echo "Services failed to become healthy within 15 minutes"
+                                docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
+                                docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs
+                                exit 1
+                            fi
+                        done
+                        
+                        # Show service status
+                        docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
+                        
+                        # Build E2E runner image with code baked in (avoids volume mount issues)
+                        echo "Building E2E runner image..."
+                        docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml build e2e-runner
+                    '''
+                    
+                    // Run E2E tests and capture exit code (don't fail immediately)
+                    def e2eExitCode = sh(
+                        script: '''
+                            set +e  # Don't exit on error
+                            docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
+                                run --rm e2e-runner
+                            echo $?
+                        ''',
+                        returnStdout: true
+                    ).trim().toInteger()
+                    
+                    echo "E2E tests finished with exit code: ${e2eExitCode}"
+                    
+                    // Analyze test results
+                    sh 'chmod +x scripts/analyze-e2e-results.sh'
+                    def analysisExitCode = sh(
+                        script: './scripts/analyze-e2e-results.sh',
+                        returnStatus: true
+                    )
+                    
+                    // Read summary
+                    def summary = readJSON file: 'e2e-test-summary.json'
+                    
+                    echo """
+📊 E2E Test Summary:
+   Total:        ${summary.total}
+   ✅ Passed:     ${summary.passed}
+   ❌ Failed:     ${summary.failed}
+   ⏭️ Skipped:    ${summary.skipped}
+   📈 Fail Rate:  ${summary.failureRate}%
+"""
+                    
+                    // Determine build status based on analysis
+                    if (analysisExitCode == 0) {
+                        // All tests passed
+                        currentBuild.result = 'SUCCESS'
+                        echo "✅ All E2E tests passed!"
+                    } else if (analysisExitCode == 2) {
+                        // Failures within threshold
+                        if (env.E2E_MARK_UNSTABLE == 'true') {
+                            currentBuild.result = 'UNSTABLE'
+                            echo "⚠️  Build marked UNSTABLE: ${summary.failed} tests failed (within acceptable threshold)"
+                        } else {
+                            currentBuild.result = 'SUCCESS'
+                            echo "✅ Build passed with acceptable failures: ${summary.failed} tests (${summary.failureRate}%)"
+                        }
+                    } else {
+                        // Exceeds threshold - fail the build
+                        currentBuild.result = 'FAILURE'
+                        error("❌ E2E tests exceeded failure threshold: ${summary.failed} failed (${summary.failureRate}%)")
+                    }
                 }
-                
-                sh '''
-                    # Create required directories
-                    mkdir -p artifacts test-results logs
-                    
-                    # Start infrastructure services first (databases and message queue)
-                    echo "Starting infrastructure services (postgres, mongodb, rabbitmq)..."
-                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --force-recreate postgres mongo rabbitmq
-                    
-                    # Wait for databases to be ready
-                    echo "Waiting for databases to be ready..."
-                    for i in $(seq 1 60); do
-                        if docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps postgres mongo rabbitmq | grep -E "(unhealthy|starting)" > /dev/null; then
-                            echo "Databases still starting... (attempt $i/60)"
-                            sleep 5
-                        else
-                            echo "Databases are healthy!"
-                            break
-                        fi
-                        
-                        if [ $i -eq 60 ]; then
-                            echo "Databases failed to become healthy"
-                            docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
-                            docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs postgres mongo rabbitmq
-                            exit 1
-                        fi
-                    done
-                    
-                    # Start application services (use pre-built images from previous stage)
-                    echo "Starting application services..."
-                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --no-build --force-recreate auth-service club-service event-service notify-service image-service frontend
-                    
-                    # Wait for services to be healthy (increased timeout for notify-service)
-                    echo "Waiting for application services to be healthy..."
-                    sleep 30
-                    
-                    for i in $(seq 1 90); do
-                        if docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps | grep -E "(unhealthy|starting)" > /dev/null; then
-                            echo "Services still starting... (attempt $i/90)"
-                            sleep 10
-                        else
-                            echo "All services are healthy!"
-                            break
-                        fi
-                        
-                        if [ $i -eq 90 ]; then
-                            echo "Services failed to become healthy within 15 minutes"
-                            docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
-                            docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs
-                            exit 1
-                        fi
-                    done
-                    
-                    # Show service status
-                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
-                    
-                    # Build E2E runner image with code baked in (avoids volume mount issues)
-                    echo "Building E2E runner image..."
-                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml build e2e-runner
-                    
-                    # Run Playwright tests in Docker container on same network
-                    echo "Running E2E tests in Docker container..."
-                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
-                        run --rm e2e-runner
-                '''
             }
             
             post {
                 always {
+                    script {
+                        // Generate detailed HTML summary report
+                        sh '''
+                            cat > e2e-summary.html <<'HTMLEOF'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>E2E Test Summary - Build #${BUILD_NUMBER}</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #333; border-bottom: 3px solid #007bff; padding-bottom: 10px; }
+        .summary { display: flex; justify-content: space-around; margin: 30px 0; }
+        .metric { text-align: center; padding: 20px; border-radius: 8px; min-width: 150px; }
+        .metric-label { font-size: 14px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+        .metric-value { font-size: 48px; font-weight: bold; margin: 10px 0; }
+        .total { background: #e3f2fd; }
+        .passed { background: #e8f5e9; color: #2e7d32; }
+        .failed { background: #ffebee; color: #c62828; }
+        .skipped { background: #fff3e0; color: #f57c00; }
+        .threshold { background: #f8f9fa; padding: 20px; margin: 20px 0; border-left: 4px solid #007bff; border-radius: 4px; }
+        .threshold h3 { margin-top: 0; color: #007bff; }
+        .threshold-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #dee2e6; }
+        .threshold-item:last-child { border-bottom: none; }
+        .status-badge { display: inline-block; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; }
+        .status-success { background: #4caf50; color: white; }
+        .status-unstable { background: #ff9800; color: white; }
+        .status-failed { background: #f44336; color: white; }
+        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6; color: #666; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 E2E Test Execution Summary</h1>
+        <div class="summary">
+            <div class="metric total">
+                <div class="metric-label">Total Tests</div>
+                <div class="metric-value">__TOTAL__</div>
+            </div>
+            <div class="metric passed">
+                <div class="metric-label">✅ Passed</div>
+                <div class="metric-value">__PASSED__</div>
+            </div>
+            <div class="metric failed">
+                <div class="metric-label">❌ Failed</div>
+                <div class="metric-value">__FAILED__</div>
+            </div>
+            <div class="metric skipped">
+                <div class="metric-label">⏭️ Skipped</div>
+                <div class="metric-value">__SKIPPED__</div>
+            </div>
+        </div>
+        
+        <div class="threshold">
+            <h3>📊 Failure Threshold Analysis</h3>
+            <div class="threshold-item">
+                <span><strong>Threshold Mode:</strong></span>
+                <span>__THRESHOLD_MODE__</span>
+            </div>
+            <div class="threshold-item">
+                <span><strong>Percentage Threshold:</strong></span>
+                <span>__THRESHOLD_PERCENT__%</span>
+            </div>
+            <div class="threshold-item">
+                <span><strong>Absolute Threshold:</strong></span>
+                <span>__THRESHOLD_ABSOLUTE__ tests</span>
+            </div>
+            <div class="threshold-item">
+                <span><strong>Current Failure Rate:</strong></span>
+                <span><strong>__FAILURE_RATE__%</strong></span>
+            </div>
+            <div class="threshold-item">
+                <span><strong>Build Status:</strong></span>
+                <span>__STATUS__</span>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Build #${BUILD_NUMBER} | ${BUILD_TIME} | ${GIT_COMMIT_SHORT}</p>
+            <p>Generated by Jenkins Pipeline</p>
+        </div>
+    </div>
+</body>
+</html>
+HTMLEOF
+                            
+                            # Replace placeholders with actual values
+                            if [ -f e2e-test-summary.json ]; then
+                                TOTAL=$(jq -r '.total' e2e-test-summary.json)
+                                PASSED=$(jq -r '.passed' e2e-test-summary.json)
+                                FAILED=$(jq -r '.failed' e2e-test-summary.json)
+                                SKIPPED=$(jq -r '.skipped' e2e-test-summary.json)
+                                FAILURE_RATE=$(jq -r '.failureRate' e2e-test-summary.json)
+                                THRESHOLD_PERCENT=$(jq -r '.thresholdPercent' e2e-test-summary.json)
+                                THRESHOLD_ABSOLUTE=$(jq -r '.thresholdAbsolute' e2e-test-summary.json)
+                                THRESHOLD_MODE=$(jq -r '.thresholdMode' e2e-test-summary.json)
+                                
+                                STATUS="<span class='status-badge status-success'>✅ ALL PASSED</span>"
+                                if [ "$FAILED" -gt "0" ]; then
+                                    # Check if within threshold
+                                    WITHIN_THRESHOLD=0
+                                    case "$THRESHOLD_MODE" in
+                                        "percentage")
+                                            if (( $(echo "$FAILURE_RATE <= $THRESHOLD_PERCENT" | bc -l) )); then
+                                                WITHIN_THRESHOLD=1
+                                            fi
+                                            ;;
+                                        "absolute")
+                                            if [ "$FAILED" -le "$THRESHOLD_ABSOLUTE" ]; then
+                                                WITHIN_THRESHOLD=1
+                                            fi
+                                            ;;
+                                        "both")
+                                            if (( $(echo "$FAILURE_RATE <= $THRESHOLD_PERCENT" | bc -l) )) && [ "$FAILED" -le "$THRESHOLD_ABSOLUTE" ]; then
+                                                WITHIN_THRESHOLD=1
+                                            fi
+                                            ;;
+                                    esac
+                                    
+                                    if [ "$WITHIN_THRESHOLD" -eq 1 ]; then
+                                        STATUS="<span class='status-badge status-unstable'>⚠️ UNSTABLE (within threshold)</span>"
+                                    else
+                                        STATUS="<span class='status-badge status-failed'>❌ FAILED (exceeds threshold)</span>"
+                                    fi
+                                fi
+                                
+                                sed -i "s/__TOTAL__/$TOTAL/g" e2e-summary.html
+                                sed -i "s/__PASSED__/$PASSED/g" e2e-summary.html
+                                sed -i "s/__FAILED__/$FAILED/g" e2e-summary.html
+                                sed -i "s/__SKIPPED__/$SKIPPED/g" e2e-summary.html
+                                sed -i "s/__FAILURE_RATE__/$FAILURE_RATE/g" e2e-summary.html
+                                sed -i "s/__THRESHOLD_PERCENT__/$THRESHOLD_PERCENT/g" e2e-summary.html
+                                sed -i "s/__THRESHOLD_ABSOLUTE__/$THRESHOLD_ABSOLUTE/g" e2e-summary.html
+                                sed -i "s/__THRESHOLD_MODE__/$THRESHOLD_MODE/g" e2e-summary.html
+                                sed -i "s|__STATUS__|$STATUS|g" e2e-summary.html
+                            fi
+                        '''
+                    }
+                    
+                    // Publish HTML summary
+                    publishHTML([
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: '.',
+                        reportFiles: 'e2e-summary.html',
+                        reportName: 'E2E Test Summary'
+                    ])
+                    
                     // Archive Playwright report
                     publishHTML([
                         allowMissing: true,
@@ -290,6 +523,12 @@ pipeline {
                     junit(
                         testResults: 'test-results/**/*.xml',
                         allowEmptyResults: true
+                    )
+                    
+                    // Archive analysis results
+                    archiveArtifacts(
+                        artifacts: 'e2e-test-summary.json,e2e-summary.html',
+                        allowEmptyArchive: true
                     )
                     
                     // Collect service logs

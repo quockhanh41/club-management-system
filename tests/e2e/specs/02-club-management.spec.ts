@@ -86,11 +86,15 @@ test.describe('Club Management Journey', () => {
     
     // Check clubs on home page
     await home.goto();
+    await authenticatedPage.waitForLoadState('networkidle');
+    await authenticatedPage.waitForTimeout(1000); // Wait for clubs to load
     const homeClubsCount = await home.getClubsCount();
     expect(homeClubsCount).toBeGreaterThanOrEqual(0);
     
     // Check clubs on dedicated clubs page
     await clubs.goto();
+    await authenticatedPage.waitForLoadState('networkidle');
+    await authenticatedPage.waitForTimeout(1000); // Wait for clubs to load
     const clubsPageCount = await clubs.getClubsCount();
     expect(clubsPageCount).toBeGreaterThanOrEqual(homeClubsCount);
   });

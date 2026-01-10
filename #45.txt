@@ -1,0 +1,3689 @@
+Started by user unknown or anonymous
+Obtained Jenkinsfile from git https://github.com/quockhanh41/club-management-system
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in /var/jenkins_home/workspace/club-management-pipeline
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Declarative: Checkout SCM)
+[Pipeline] checkout
+The recommended git tool is: git
+No credentials specified
+ > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/club-management-pipeline/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/quockhanh41/club-management-system # timeout=10
+Fetching upstream changes from https://github.com/quockhanh41/club-management-system
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+ > git fetch --tags --force --progress -- https://github.com/quockhanh41/club-management-system +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git rev-parse refs/remotes/origin/main^{commit} # timeout=10
+Checking out Revision c04e8e34bd921d6a03298cbade4980fd6bce447f (refs/remotes/origin/main)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f c04e8e34bd921d6a03298cbade4980fd6bce447f # timeout=10
+Commit message: "fix: resolve exit code parsing error in E2E stage"
+ > git rev-list --no-walk cf5d47fda8552aa62f21a050bd4150e0891770b8 # timeout=10
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] withCredentials
+Masking supported pattern matches of $DOCKER_REGISTRY
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] timeout
+Timeout set to expire in 1 hr 0 min
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Checkout)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] echo
+🔄 Checking out code from origin/main
+[Pipeline] checkout
+The recommended git tool is: git
+No credentials specified
+ > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/club-management-pipeline/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/quockhanh41/club-management-system # timeout=10
+Fetching upstream changes from https://github.com/quockhanh41/club-management-system
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+ > git fetch --tags --force --progress -- https://github.com/quockhanh41/club-management-system +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git rev-parse refs/remotes/origin/main^{commit} # timeout=10
+Checking out Revision c04e8e34bd921d6a03298cbade4980fd6bce447f (refs/remotes/origin/main)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f c04e8e34bd921d6a03298cbade4980fd6bce447f # timeout=10
+Commit message: "fix: resolve exit code parsing error in E2E stage"
+[Pipeline] sh
++ git rev-parse --short HEAD
+[Pipeline] sh
++ date -u +%Y-%m-%dT%H:%M:%SZ
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Setup Environment)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] echo
+🔧 Setting up Node.js environment
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] sh
++ node --version
+v18.20.8
++ npm --version
+10.8.2
+[Pipeline] echo
+📦 Installing root dependencies
+[Pipeline] sh
++ npm ci
+
+added 6 packages, and audited 14 packages in 915ms
+
+1 package is looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+[Pipeline] echo
+📦 Installing frontend dependencies
+[Pipeline] sh
++ cd frontend
++ npm ci
+
+added 289 packages, and audited 290 packages in 11s
+
+47 packages are looking for funding
+  run `npm fund` for details
+
+2 vulnerabilities (1 high, 1 critical)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues, run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+[Pipeline] echo
+🎭 Installing Playwright and dependencies
+[Pipeline] sh
++ npm install --save-dev @playwright/test
+
+up to date, audited 14 packages in 940ms
+
+1 package is looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
++ mkdir -p /var/jenkins_home/workspace/club-management-pipeline/playwright-browsers
++ npx playwright install chromium --with-deps
+Installing dependencies...
+Hit:1 https://download.docker.com/linux/debian trixie InRelease
+Hit:2 http://deb.debian.org/debian trixie InRelease
+Hit:3 https://deb.nodesource.com/node_18.x nodistro InRelease
+Hit:4 http://deb.debian.org/debian trixie-updates InRelease
+Hit:5 http://deb.debian.org/debian-security trixie-security InRelease
+Reading package lists...
+W: https://deb.nodesource.com/node_18.x/dists/nodistro/InRelease: Policy will reject signature within a year, see --audit for details
+Reading package lists...
+Building dependency tree...
+Reading state information...
+libasound2t64 is already the newest version (1.2.14-1).
+libatk-bridge2.0-0t64 is already the newest version (2.56.2-1).
+libatk1.0-0t64 is already the newest version (2.56.2-1).
+libatspi2.0-0t64 is already the newest version (2.56.2-1).
+libcairo2 is already the newest version (1.18.4-1+b1).
+libcups2t64 is already the newest version (2.4.10-3+deb13u2).
+libdbus-1-3 is already the newest version (1.16.2-2).
+libdrm2 is already the newest version (2.4.124-2).
+libgbm1 is already the newest version (25.0.7-2).
+libglib2.0-0t64 is already the newest version (2.84.4-3~deb13u1).
+libnspr4 is already the newest version (2:4.36-1).
+libnss3 is already the newest version (2:3.110-1).
+libpango-1.0-0 is already the newest version (1.56.3-1).
+libx11-6 is already the newest version (2:1.8.12-1).
+libxcb1 is already the newest version (1.17.0-2+b1).
+libxcomposite1 is already the newest version (1:0.4.6-1).
+libxdamage1 is already the newest version (1:1.1.6-1+b2).
+libxext6 is already the newest version (2:1.3.4-1+b3).
+libxfixes3 is already the newest version (1:6.0.0-2+b4).
+libxkbcommon0 is already the newest version (1.7.0-2).
+libxrandr2 is already the newest version (2:1.5.4-1+b3).
+xvfb is already the newest version (2:21.1.16-1.3+deb13u1).
+fonts-noto-color-emoji is already the newest version (2.051-0+deb13u1).
+fonts-unifont is already the newest version (1:15.1.01-1).
+libfontconfig1 is already the newest version (2.15.0-2.3).
+libfreetype6 is already the newest version (2.13.3+dfsg-1).
+xfonts-scalable is already the newest version (1:1.0.3-1.3).
+fonts-liberation is already the newest version (1:2.1.5-3).
+fonts-ipafont-gothic is already the newest version (00303-23).
+fonts-wqy-zenhei is already the newest version (0.9.45-8).
+fonts-tlwg-loma-otf is already the newest version (1:0.7.3-1).
+fonts-freefont-ttf is already the newest version (20211204+svn4273-2).
+0 upgraded, 0 newly installed, 0 to remove and 4 not upgraded.
+Downloading Chromium 143.0.7499.4 (playwright build v1200) from https://cdn.playwright.dev/dbazure/download/playwright/builds/chromium/1200/chromium-linux-arm64.zip
+|                                                                                |   0% of 176 MiB
+|■■■■■■■■                                                                        |  10% of 176 MiB
+|■■■■■■■■■■■■■■■■                                                                |  20% of 176 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 176 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 176 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 176 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 176 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 176 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 176 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 176 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 176 MiB
+Chromium 143.0.7499.4 (playwright build v1200) downloaded to /var/jenkins_home/workspace/club-management-pipeline/playwright-browsers/chromium-1200
+Downloading FFMPEG playwright build v1011 from https://cdn.playwright.dev/dbazure/download/playwright/builds/ffmpeg/1011/ffmpeg-linux-arm64.zip
+|                                                                                |   0% of 1.6 MiB
+|■■■■■■■■                                                                        |  10% of 1.6 MiB
+|■■■■■■■■■■■■■■■■                                                                |  20% of 1.6 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 1.6 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 1.6 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 1.6 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 1.6 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 1.6 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 1.6 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 1.6 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 1.6 MiB
+FFMPEG playwright build v1011 downloaded to /var/jenkins_home/workspace/club-management-pipeline/playwright-browsers/ffmpeg-1011
+Downloading Chromium Headless Shell 143.0.7499.4 (playwright build v1200) from https://cdn.playwright.dev/dbazure/download/playwright/builds/chromium/1200/chromium-headless-shell-linux-arm64.zip
+|                                                                                |   0% of 105 MiB
+|■■■■■■■■                                                                        |  10% of 105 MiB
+|■■■■■■■■■■■■■■■■                                                                |  20% of 105 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 105 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 105 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 105 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 105 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 105 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 105 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 105 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 105 MiB
+Chromium Headless Shell 143.0.7499.4 (playwright build v1200) downloaded to /var/jenkins_home/workspace/club-management-pipeline/playwright-browsers/chromium_headless_shell-1200
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Lint & Code Quality)
+[Pipeline] parallel
+[Pipeline] { (Branch: Lint Backend Services)
+[Pipeline] { (Branch: Lint Frontend)
+[Pipeline] stage
+[Pipeline] { (Lint Backend Services)
+[Pipeline] stage
+[Pipeline] { (Lint Frontend)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] script
+[Pipeline] {
+[Pipeline] echo
+🔍 Running lint checks on backend services
+[Pipeline] echo
+🔍 Running lint checks on frontend
+[Pipeline] sh
+[Pipeline] echo
+Linting auth service...
+[Pipeline] sh
++ cd frontend
++ [ -f package.json ]
++ grep -q "lint" package.json
++ echo Skipping lint (ESLint needs configuration)
+Skipping lint (ESLint needs configuration)
+[Pipeline] }
++ cd services/auth
++ [ -f package.json ]
++ echo Installing dependencies for auth...
+Installing dependencies for auth...
++ npm ci
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+npm warn deprecated crypto@1.0.1: This package is no longer supported. It's now a built-in Node module. If you've depended on crypto, you should switch to the one that's built-in.
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated @npmcli/move-file@1.1.2: This functionality has been moved to @npmcli/fs
+npm warn deprecated lodash.get@4.4.2: This package is deprecated. Use the optional chaining (?.) operator instead.
+npm warn deprecated npmlog@6.0.2: This package is no longer supported.
+npm warn deprecated lodash.isequal@4.5.0: This package is deprecated. Use require('node:util').isDeepStrictEqual instead.
+npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+npm warn deprecated are-we-there-yet@3.0.1: This package is no longer supported.
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated glob@7.1.6: Glob versions prior to v9 are no longer supported
+npm warn deprecated gauge@4.0.4: This package is no longer supported.
+
+added 656 packages, and audited 657 packages in 4s
+
+80 packages are looking for funding
+  run `npm fund` for details
+
+9 vulnerabilities (1 moderate, 8 high)
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
++ grep -q "lint" package.json
++ echo No lint script configured for auth
+No lint script configured for auth
+[Pipeline] echo
+Linting club service...
+[Pipeline] sh
++ cd services/club
++ [ -f package.json ]
++ echo Installing dependencies for club...
+Installing dependencies for club...
++ npm ci
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: 'joi@18.0.2',
+npm warn EBADENGINE   required: { node: '>= 20' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+
+added 448 packages, and audited 449 packages in 3s
+
+57 packages are looking for funding
+  run `npm fund` for details
+
+4 vulnerabilities (1 moderate, 3 high)
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
++ grep -q "lint" package.json
++ npm run lint
+
+> club-service@1.0.0 lint
+> echo 'no linter configured yet'
+
+no linter configured yet
+[Pipeline] echo
+Linting event service...
+[Pipeline] sh
++ cd services/event
++ [ -f package.json ]
++ echo Installing dependencies for event...
+Installing dependencies for event...
++ npm ci
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: 'joi@18.0.2',
+npm warn EBADENGINE   required: { node: '>= 20' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+
+added 522 packages, and audited 523 packages in 3s
+
+71 packages are looking for funding
+  run `npm fund` for details
+
+6 vulnerabilities (2 moderate, 4 high)
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
++ grep -q "lint" package.json
++ echo No lint script configured for event
+No lint script configured for event
+[Pipeline] echo
+Linting notify service...
+[Pipeline] sh
++ cd services/notify
++ [ -f package.json ]
++ echo Installing dependencies for notify...
+Installing dependencies for notify...
++ npm ci
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+
+added 258 packages, and audited 259 packages in 2s
+
+47 packages are looking for funding
+  run `npm fund` for details
+
+5 vulnerabilities (2 moderate, 3 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
++ grep -q "lint" package.json
++ npm run lint
+
+> notification-service@1.0.0 lint
+> eslint src/**/*.js
+
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // parallel
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Unit Tests)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] echo
+🧪 Running unit tests for all services
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] sh
++ mkdir -p test-results/unit
++ echo Testing auth service...
+Testing auth service...
++ cd services/auth
++ [ -f package.json ]
++ echo Installing dependencies for auth...
+Installing dependencies for auth...
++ npm ci
+npm warn deprecated crypto@1.0.1: This package is no longer supported. It's now a built-in Node module. If you've depended on crypto, you should switch to the one that's built-in.
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated @npmcli/move-file@1.1.2: This functionality has been moved to @npmcli/fs
+npm warn deprecated lodash.get@4.4.2: This package is deprecated. Use the optional chaining (?.) operator instead.
+npm warn deprecated npmlog@6.0.2: This package is no longer supported.
+npm warn deprecated lodash.isequal@4.5.0: This package is deprecated. Use require('node:util').isDeepStrictEqual instead.
+npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+npm warn deprecated are-we-there-yet@3.0.1: This package is no longer supported.
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated glob@7.1.6: Glob versions prior to v9 are no longer supported
+npm warn deprecated gauge@4.0.4: This package is no longer supported.
+
+added 656 packages, and audited 657 packages in 5s
+
+80 packages are looking for funding
+  run `npm fund` for details
+
+9 vulnerabilities (1 moderate, 8 high)
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
++ grep -q "test" package.json
++ npm test
+
+> auth-service@1.0.0 test
+> jest
+
+PASS tests/health.int.test.js
+  ● Console
+
+    console.log
+      Configuration loaded successfully: {
+        "environment": "test",
+        "port": 3001,
+        "database": {
+          "host": "dpg-d1mo3ladbo4c73c69s4g-a.singapore-postgres.render.com",
+          "port": 5432,
+          "dialect": "postgres"
+        },
+        "rabbitmq": {
+          "exchange": "club_events",
+          "queue": "auth_events"
+        },
+        "logLevel": "info"
+      }
+
+      at ConfigManager.log [as loadAndValidateConfig] (src/config/index.js:312:13)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: RSA private key loaded from file system
+      {
+        "service": "auth-service",
+        "environment": "test"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: RSA public key loaded from file system
+      {
+        "service": "auth-service",
+        "environment": "test"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Incoming request
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "GET",
+        "url": "/",
+        "ip": "::ffff:127.0.0.1"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Request completed
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "GET",
+        "url": "/",
+        "statusCode": 200,
+        "duration": 12
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Incoming request
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "GET",
+        "url": "/api/auth/liveness",
+        "ip": "::ffff:127.0.0.1"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: 🔍 DEBUG: Incoming headers from Kong (Public Route)
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "path": "/liveness",
+        "method": "GET",
+        "allHeaders": {
+          "host": "127.0.0.1:39957",
+          "accept-encoding": "gzip, deflate",
+          "connection": "close"
+        }
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[31merror[39m]: Error details: Unauthorized: Request must come through API Gateway
+      Error: Unauthorized: Request must come through API Gateway
+          at validateApiGatewaySecret (/var/jenkins_home/workspace/club-management-pipeline/services/auth/src/middlewares/security.js:52:13)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/route.js:149:13)
+          at Route.dispatch (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/route.js:119:3)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:284:15
+          at Function.process_params (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:346:12)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:280:10)
+          at Function.handle (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:175:3)
+          at router (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:47:12)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at trim_prefix (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:328:13)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:286:9
+          at Function.process_params (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:346:12)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:280:10)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-rate-limit/dist/index.cjs:706:9
+          at processTicksAndRejections (node:internal/process/task_queues:95:5)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-rate-limit/dist/index.cjs:691:5
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "statusCode": 401,
+        "code": "AUTH_FAILED"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Request completed
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "GET",
+        "url": "/api/auth/liveness",
+        "statusCode": 401,
+        "duration": 9
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Incoming request
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "GET",
+        "url": "/api/auth/liveness",
+        "ip": "::ffff:127.0.0.1"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: 🔍 DEBUG: Incoming headers from Kong (Public Route)
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "path": "/liveness",
+        "method": "GET",
+        "allHeaders": {
+          "host": "127.0.0.1:46593",
+          "accept-encoding": "gzip, deflate",
+          "x-api-gateway-secret": "test-secret",
+          "connection": "close"
+        }
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Request completed
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "GET",
+        "url": "/liveness",
+        "statusCode": 200,
+        "duration": 2
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+PASS tests/auth-routes.int.test.js
+  ● Console
+
+    console.log
+      Configuration loaded successfully: {
+        "environment": "test",
+        "port": 3001,
+        "database": {
+          "host": "dpg-d1mo3ladbo4c73c69s4g-a.singapore-postgres.render.com",
+          "port": 5432,
+          "dialect": "postgres"
+        },
+        "rabbitmq": {
+          "exchange": "club_events",
+          "queue": "auth_events"
+        },
+        "logLevel": "info"
+      }
+
+      at ConfigManager.log [as loadAndValidateConfig] (src/config/index.js:312:13)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: RSA private key loaded from file system
+      {
+        "service": "auth-service",
+        "environment": "test"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: RSA public key loaded from file system
+      {
+        "service": "auth-service",
+        "environment": "test"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Incoming request
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "POST",
+        "url": "/api/auth/register",
+        "ip": "::ffff:127.0.0.1"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: 🔍 DEBUG: Incoming headers from Kong (Public Route)
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "path": "/register",
+        "method": "POST",
+        "allHeaders": {
+          "host": "127.0.0.1:45673",
+          "accept-encoding": "gzip, deflate",
+          "content-type": "application/json",
+          "content-length": "82",
+          "connection": "close"
+        }
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[31merror[39m]: Error details: Unauthorized: Request must come through API Gateway
+      Error: Unauthorized: Request must come through API Gateway
+          at validateApiGatewaySecret (/var/jenkins_home/workspace/club-management-pipeline/services/auth/src/middlewares/security.js:52:13)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/route.js:149:13)
+          at Route.dispatch (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/route.js:119:3)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:284:15
+          at Function.process_params (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:346:12)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:280:10)
+          at Function.handle (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:175:3)
+          at router (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:47:12)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at trim_prefix (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:328:13)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:286:9
+          at Function.process_params (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:346:12)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:280:10)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-rate-limit/dist/index.cjs:706:9
+          at processTicksAndRejections (node:internal/process/task_queues:95:5)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-rate-limit/dist/index.cjs:691:5
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "statusCode": 401,
+        "code": "AUTH_FAILED"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Request completed
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "POST",
+        "url": "/api/auth/register",
+        "statusCode": 401,
+        "duration": 15
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Incoming request
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "POST",
+        "url": "/api/auth/register",
+        "ip": "::ffff:127.0.0.1"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: 🔍 DEBUG: Incoming headers from Kong (Public Route)
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "path": "/register",
+        "method": "POST",
+        "allHeaders": {
+          "host": "127.0.0.1:46149",
+          "accept-encoding": "gzip, deflate",
+          "x-api-gateway-secret": "test-secret",
+          "content-type": "application/json",
+          "content-length": "42",
+          "connection": "close"
+        }
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Request completed
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "POST",
+        "url": "/register",
+        "statusCode": 400,
+        "duration": 3
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Incoming request
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "POST",
+        "url": "/api/auth/login",
+        "ip": "::ffff:127.0.0.1"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: 🔍 DEBUG: Incoming headers from Kong (Public Route)
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "path": "/login",
+        "method": "POST",
+        "allHeaders": {
+          "host": "127.0.0.1:35905",
+          "accept-encoding": "gzip, deflate",
+          "content-type": "application/json",
+          "content-length": "58",
+          "connection": "close"
+        }
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[31merror[39m]: Error details: Unauthorized: Request must come through API Gateway
+      Error: Unauthorized: Request must come through API Gateway
+          at validateApiGatewaySecret (/var/jenkins_home/workspace/club-management-pipeline/services/auth/src/middlewares/security.js:52:13)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/route.js:149:13)
+          at Route.dispatch (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/route.js:119:3)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:284:15
+          at Function.process_params (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:346:12)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:280:10)
+          at Function.handle (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:175:3)
+          at router (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:47:12)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at trim_prefix (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:328:13)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:286:9
+          at Function.process_params (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:346:12)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:280:10)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-rate-limit/dist/index.cjs:706:9
+          at processTicksAndRejections (node:internal/process/task_queues:95:5)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-rate-limit/dist/index.cjs:691:5
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "statusCode": 401,
+        "code": "AUTH_FAILED"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Request completed
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "POST",
+        "url": "/api/auth/login",
+        "statusCode": 401,
+        "duration": 3
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Incoming request
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "POST",
+        "url": "/api/auth/login",
+        "ip": "::ffff:127.0.0.1"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: 🔍 DEBUG: Incoming headers from Kong (Public Route)
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "path": "/login",
+        "method": "POST",
+        "allHeaders": {
+          "host": "127.0.0.1:33575",
+          "accept-encoding": "gzip, deflate",
+          "x-api-gateway-secret": "test-secret",
+          "content-type": "application/json",
+          "content-length": "46",
+          "connection": "close"
+        }
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Request completed
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "POST",
+        "url": "/login",
+        "statusCode": 400,
+        "duration": 2
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Incoming request
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "POST",
+        "url": "/api/auth/refresh",
+        "ip": "::ffff:127.0.0.1"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: 🔍 DEBUG: Incoming headers from Kong (Public Route)
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "path": "/refresh",
+        "method": "POST",
+        "allHeaders": {
+          "host": "127.0.0.1:40795",
+          "accept-encoding": "gzip, deflate",
+          "connection": "close",
+          "content-length": "0"
+        }
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[31merror[39m]: Error details: Unauthorized: Request must come through API Gateway
+      Error: Unauthorized: Request must come through API Gateway
+          at validateApiGatewaySecret (/var/jenkins_home/workspace/club-management-pipeline/services/auth/src/middlewares/security.js:52:13)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/route.js:149:13)
+          at Route.dispatch (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/route.js:119:3)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:284:15
+          at Function.process_params (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:346:12)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:280:10)
+          at Function.handle (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:175:3)
+          at router (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:47:12)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at trim_prefix (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:328:13)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:286:9
+          at Function.process_params (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:346:12)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:280:10)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-rate-limit/dist/index.cjs:706:9
+          at processTicksAndRejections (node:internal/process/task_queues:95:5)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-rate-limit/dist/index.cjs:691:5
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "statusCode": 401,
+        "code": "AUTH_FAILED"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Request completed
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "POST",
+        "url": "/api/auth/refresh",
+        "statusCode": 401,
+        "duration": 3
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Incoming request
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "POST",
+        "url": "/api/auth/refresh",
+        "ip": "::ffff:127.0.0.1"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: 🔍 DEBUG: Incoming headers from Kong (Public Route)
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "path": "/refresh",
+        "method": "POST",
+        "allHeaders": {
+          "host": "127.0.0.1:41979",
+          "accept-encoding": "gzip, deflate",
+          "x-api-gateway-secret": "test-secret",
+          "connection": "close",
+          "content-length": "0"
+        }
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[31merror[39m]: Token refresh failed: Refresh token not provided
+      Error: Refresh token not provided
+          at AuthService.refreshToken (/var/jenkins_home/workspace/club-management-pipeline/services/auth/src/services/authService.js:290:15)
+          at refreshToken (/var/jenkins_home/workspace/club-management-pipeline/services/auth/src/controllers/authController.js:116:38)
+          at fn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/src/middlewares/errorHandler.js:73:21)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/route.js:149:13)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/src/utils/validation.js:247:5)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/route.js:149:13)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-rate-limit/dist/index.cjs:706:9
+          at processTicksAndRejections (node:internal/process/task_queues:95:5)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-rate-limit/dist/index.cjs:691:5
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "statusCode": 401,
+        "status": "fail",
+        "isOperational": true,
+        "code": "REFRESH_TOKEN_EXPIRED"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[31merror[39m]: Error details: Refresh token not provided
+      Error: Refresh token not provided
+          at AuthService.refreshToken (/var/jenkins_home/workspace/club-management-pipeline/services/auth/src/services/authService.js:290:15)
+          at refreshToken (/var/jenkins_home/workspace/club-management-pipeline/services/auth/src/controllers/authController.js:116:38)
+          at fn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/src/middlewares/errorHandler.js:73:21)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/route.js:149:13)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/src/utils/validation.js:247:5)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/route.js:149:13)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-rate-limit/dist/index.cjs:706:9
+          at processTicksAndRejections (node:internal/process/task_queues:95:5)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-rate-limit/dist/index.cjs:691:5
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "statusCode": 401,
+        "code": "REFRESH_TOKEN_EXPIRED"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Request completed
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "POST",
+        "url": "/api/auth/refresh",
+        "statusCode": 401,
+        "duration": 12
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Incoming request
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "POST",
+        "url": "/api/auth/verify-email",
+        "ip": "::ffff:127.0.0.1"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: 🔍 DEBUG: Incoming headers from Kong (Public Route)
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "path": "/verify-email",
+        "method": "POST",
+        "allHeaders": {
+          "host": "127.0.0.1:41693",
+          "accept-encoding": "gzip, deflate",
+          "content-type": "application/json",
+          "content-length": "22",
+          "connection": "close"
+        }
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[31merror[39m]: Error details: Unauthorized: Request must come through API Gateway
+      Error: Unauthorized: Request must come through API Gateway
+          at validateApiGatewaySecret (/var/jenkins_home/workspace/club-management-pipeline/services/auth/src/middlewares/security.js:52:13)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/route.js:149:13)
+          at Route.dispatch (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/route.js:119:3)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:284:15
+          at Function.process_params (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:346:12)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:280:10)
+          at Function.handle (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:175:3)
+          at router (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:47:12)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at trim_prefix (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:328:13)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:286:9
+          at Function.process_params (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:346:12)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:280:10)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-rate-limit/dist/index.cjs:706:9
+          at processTicksAndRejections (node:internal/process/task_queues:95:5)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-rate-limit/dist/index.cjs:691:5
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "statusCode": 401,
+        "code": "AUTH_FAILED"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Request completed
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "POST",
+        "url": "/api/auth/verify-email",
+        "statusCode": 401,
+        "duration": 3
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Incoming request
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "POST",
+        "url": "/api/auth/verify-email",
+        "ip": "::ffff:127.0.0.1"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: 🔍 DEBUG: Incoming headers from Kong (Public Route)
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "path": "/verify-email",
+        "method": "POST",
+        "allHeaders": {
+          "host": "127.0.0.1:41967",
+          "accept-encoding": "gzip, deflate",
+          "x-api-gateway-secret": "test-secret",
+          "content-type": "application/json",
+          "content-length": "12",
+          "connection": "close"
+        }
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Request completed
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "POST",
+        "url": "/verify-email",
+        "statusCode": 400,
+        "duration": 1
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Incoming request
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "POST",
+        "url": "/api/auth/forgot-password",
+        "ip": "::ffff:127.0.0.1"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: 🔍 DEBUG: Incoming headers from Kong (Public Route)
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "path": "/forgot-password",
+        "method": "POST",
+        "allHeaders": {
+          "host": "127.0.0.1:40707",
+          "accept-encoding": "gzip, deflate",
+          "content-type": "application/json",
+          "content-length": "28",
+          "connection": "close"
+        }
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[31merror[39m]: Error details: Unauthorized: Request must come through API Gateway
+      Error: Unauthorized: Request must come through API Gateway
+          at validateApiGatewaySecret (/var/jenkins_home/workspace/club-management-pipeline/services/auth/src/middlewares/security.js:52:13)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/route.js:149:13)
+          at Route.dispatch (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/route.js:119:3)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:284:15
+          at Function.process_params (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:346:12)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:280:10)
+          at Function.handle (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:175:3)
+          at router (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:47:12)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at trim_prefix (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:328:13)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:286:9
+          at Function.process_params (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:346:12)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:280:10)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-rate-limit/dist/index.cjs:706:9
+          at processTicksAndRejections (node:internal/process/task_queues:95:5)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-rate-limit/dist/index.cjs:691:5
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "statusCode": 401,
+        "code": "AUTH_FAILED"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Request completed
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "POST",
+        "url": "/api/auth/forgot-password",
+        "statusCode": 401,
+        "duration": 3
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Incoming request
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "POST",
+        "url": "/api/auth/forgot-password",
+        "ip": "::ffff:127.0.0.1"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: 🔍 DEBUG: Incoming headers from Kong (Public Route)
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "path": "/forgot-password",
+        "method": "POST",
+        "allHeaders": {
+          "host": "127.0.0.1:46665",
+          "accept-encoding": "gzip, deflate",
+          "x-api-gateway-secret": "test-secret",
+          "content-type": "application/json",
+          "content-length": "32",
+          "connection": "close"
+        }
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Request completed
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "POST",
+        "url": "/forgot-password",
+        "statusCode": 400,
+        "duration": 1
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Incoming request
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "POST",
+        "url": "/api/auth/logout",
+        "ip": "::ffff:127.0.0.1"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: 🔍 DEBUG: Incoming headers from Kong (Protected Route)
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "path": "/logout",
+        "method": "POST",
+        "allHeaders": {
+          "host": "127.0.0.1:44781",
+          "accept-encoding": "gzip, deflate",
+          "connection": "close",
+          "content-length": "0"
+        }
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[33mwarn[39m]: Request rejected: Invalid or missing gateway secret
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "ip": "::ffff:127.0.0.1",
+        "path": "/logout",
+        "method": "POST",
+        "hasSecret": false,
+        "secretMatch": false
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Request completed
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "POST",
+        "url": "/logout",
+        "statusCode": 401,
+        "duration": 3
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Incoming request
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "GET",
+        "url": "/api/auth/profile",
+        "ip": "::ffff:127.0.0.1"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: 🔍 DEBUG: Incoming headers from Kong (Protected Route)
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "path": "/profile",
+        "method": "GET",
+        "allHeaders": {
+          "host": "127.0.0.1:33651",
+          "accept-encoding": "gzip, deflate",
+          "connection": "close"
+        }
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[33mwarn[39m]: Request rejected: Invalid or missing gateway secret
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "ip": "::ffff:127.0.0.1",
+        "path": "/profile",
+        "method": "GET",
+        "hasSecret": false,
+        "secretMatch": false
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Request completed
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "GET",
+        "url": "/profile",
+        "statusCode": 401,
+        "duration": 3
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Incoming request
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "GET",
+        "url": "/api/auth/profile",
+        "ip": "::ffff:127.0.0.1"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: 🔍 DEBUG: Incoming headers from Kong (Protected Route)
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "path": "/profile",
+        "method": "GET",
+        "allHeaders": {
+          "host": "127.0.0.1:41647",
+          "accept-encoding": "gzip, deflate",
+          "x-api-gateway-secret": "test-secret",
+          "connection": "close"
+        }
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[33mwarn[39m]: Missing required headers
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "missing": [
+          "x-user-id",
+          "x-user-role"
+        ],
+        "ip": "::ffff:127.0.0.1",
+        "path": "/profile"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[31merror[39m]: Error details: Missing required authentication headers
+      Error: Missing required authentication headers
+          at validateApiGatewayHeaders (/var/jenkins_home/workspace/club-management-pipeline/services/auth/src/middlewares/security.js:117:7)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/route.js:149:13)
+          at Route.dispatch (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/route.js:119:3)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:284:15
+          at Function.process_params (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:346:12)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:280:10)
+          at Function.handle (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:175:3)
+          at router (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:47:12)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at trim_prefix (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:328:13)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:286:9
+          at Function.process_params (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:346:12)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:280:10)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-rate-limit/dist/index.cjs:706:9
+          at processTicksAndRejections (node:internal/process/task_queues:95:5)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-rate-limit/dist/index.cjs:691:5
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "statusCode": 401,
+        "code": "AUTH_FAILED"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Request completed
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "GET",
+        "url": "/api/auth/profile",
+        "statusCode": 401,
+        "duration": 3
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Incoming request
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "PUT",
+        "url": "/api/auth/profile",
+        "ip": "::ffff:127.0.0.1"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: 🔍 DEBUG: Incoming headers from Kong (Protected Route)
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "path": "/profile",
+        "method": "PUT",
+        "allHeaders": {
+          "host": "127.0.0.1:33037",
+          "accept-encoding": "gzip, deflate",
+          "content-type": "application/json",
+          "content-length": "28",
+          "connection": "close"
+        }
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[33mwarn[39m]: Request rejected: Invalid or missing gateway secret
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "ip": "::ffff:127.0.0.1",
+        "path": "/profile",
+        "method": "PUT",
+        "hasSecret": false,
+        "secretMatch": false
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Request completed
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "PUT",
+        "url": "/profile",
+        "statusCode": 401,
+        "duration": 1
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Incoming request
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "POST",
+        "url": "/api/auth/change-password",
+        "ip": "::ffff:127.0.0.1"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: 🔍 DEBUG: Incoming headers from Kong (Protected Route)
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "path": "/change-password",
+        "method": "POST",
+        "allHeaders": {
+          "host": "127.0.0.1:36335",
+          "accept-encoding": "gzip, deflate",
+          "content-type": "application/json",
+          "content-length": "72",
+          "connection": "close"
+        }
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[33mwarn[39m]: Request rejected: Invalid or missing gateway secret
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "ip": "::ffff:127.0.0.1",
+        "path": "/change-password",
+        "method": "POST",
+        "hasSecret": false,
+        "secretMatch": false
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Request completed
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "POST",
+        "url": "/change-password",
+        "statusCode": 401,
+        "duration": 2
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Incoming request
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "DELETE",
+        "url": "/api/auth/account",
+        "ip": "::ffff:127.0.0.1"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[31merror[39m]: Error details: Cannot find /api/auth/account on this server
+      Error: Cannot find /api/auth/account on this server
+          at notFoundHandler (/var/jenkins_home/workspace/club-management-pipeline/services/auth/src/middlewares/errorHandler.js:107:17)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at trim_prefix (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:328:13)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:286:9
+          at Function.process_params (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:346:12)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:280:10)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:646:15
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:265:14)
+          at Function.handle (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:175:3)
+          at router (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:47:12)
+          at newFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-async-errors/index.js:16:20)
+          at Layer.handle [as handle_request] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/layer.js:95:5)
+          at trim_prefix (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:328:13)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:286:9
+          at Function.process_params (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:346:12)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express/lib/router/index.js:280:10)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-rate-limit/dist/index.cjs:706:9
+          at processTicksAndRejections (node:internal/process/task_queues:95:5)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/express-rate-limit/dist/index.cjs:691:5
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "statusCode": 404,
+        "code": "ROUTE_NOT_FOUND"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: Request completed
+      {
+        "service": "auth-service",
+        "environment": "test",
+        "method": "DELETE",
+        "url": "/api/auth/account",
+        "statusCode": 404,
+        "duration": 1
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+PASS tests/jwt.unit.test.js
+  ● Console
+
+    console.log
+      Configuration loaded successfully: {
+        "environment": "test",
+        "port": 3001,
+        "database": {
+          "host": "dpg-d1mo3ladbo4c73c69s4g-a.singapore-postgres.render.com",
+          "port": 5432,
+          "dialect": "postgres"
+        },
+        "rabbitmq": {
+          "exchange": "club_events",
+          "queue": "auth_events"
+        },
+        "logLevel": "info"
+      }
+
+      at ConfigManager.log [as loadAndValidateConfig] (src/config/index.js:312:13)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: RSA private key loaded from file system
+      {
+        "service": "auth-service",
+        "environment": "test"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:03 [[32minfo[39m]: RSA public key loaded from file system
+      {
+        "service": "auth-service",
+        "environment": "test"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+    console.log
+      2026-01-10 06:50:05 [[31merror[39m]: Error verifying email verification token: Invalid token type
+      Error: Invalid token type
+          at JWTUtil.verifyEmailVerificationToken (/var/jenkins_home/workspace/club-management-pipeline/services/auth/src/utils/jwt.js:194:15)
+          at verifyEmailVerificationToken (/var/jenkins_home/workspace/club-management-pipeline/services/auth/tests/jwt.unit.test.js:127:28)
+          at Object.<anonymous> (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/expect/build/toThrowMatchers.js:74:11)
+          at Object.throwingMatcher [as toThrow] (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/expect/build/index.js:320:21)
+          at Object.toThrow (/var/jenkins_home/workspace/club-management-pipeline/services/auth/tests/jwt.unit.test.js:128:10)
+          at Promise.then.completed (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/jest-circus/build/utils.js:298:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/jest-circus/build/utils.js:231:10)
+          at _callCircusTest (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/jest-circus/build/run.js:316:40)
+          at _runTest (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/jest-circus/build/run.js:252:3)
+          at _runTestsForDescribeBlock (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/jest-circus/build/run.js:126:9)
+          at _runTestsForDescribeBlock (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/jest-circus/build/run.js:121:9)
+          at _runTestsForDescribeBlock (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/jest-circus/build/run.js:121:9)
+          at run (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/jest-circus/build/run.js:71:3)
+          at runAndTransformResultsToJestFormat (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+          at jestAdapter (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+          at runTestInternal (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/jest-runner/build/runTest.js:367:16)
+          at runTest (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/jest-runner/build/runTest.js:444:34)
+          at Object.worker (/var/jenkins_home/workspace/club-management-pipeline/services/auth/node_modules/jest-runner/build/testWorker.js:106:12)
+      {
+        "service": "auth-service",
+        "environment": "test"
+      }
+
+      at Console.log (node_modules/winston/lib/winston/transports/console.js:87:23)
+
+
+Test Suites: 3 passed, 3 total
+Tests:       37 passed, 37 total
+Snapshots:   0 total
+Time:        2.889 s, estimated 3 s
+Ran all test suites.
++ cd ../..
++ echo Testing club service...
+Testing club service...
++ cd services/club
++ [ -f package.json ]
++ echo Installing dependencies for club...
+Installing dependencies for club...
++ npm ci
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: 'joi@18.0.2',
+npm warn EBADENGINE   required: { node: '>= 20' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+
+added 448 packages, and audited 449 packages in 3s
+
+57 packages are looking for funding
+  run `npm fund` for details
+
+4 vulnerabilities (1 moderate, 3 high)
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
++ grep -q "test" package.json
++ npm test
+
+> club-service@1.0.0 test
+> jest
+
+PASS tests/clubService.test.js
+  ● Console
+
+    console.log
+      ✅ Manager user validated: {
+        user_id: '00000000-0000-0000-0000-000000000001',
+        email: 'manager@example.com',
+        full_name: 'Manager User',
+        validated_by: '00000000-0000-0000-0000-000000000099'
+      }
+
+      at ClubService.log [as createClub] (src/services/clubService.js:261:15)
+
+    console.log
+      Creating club with data: {
+        "name": "Chess Club",
+        "category": "Cộng đồng",
+        "status": "ACTIVE",
+        "member_count": 1,
+        "created_by": "00000000-0000-0000-0000-000000000099",
+        "manager": {
+          "user_id": "00000000-0000-0000-0000-000000000001",
+          "full_name": "Alice",
+          "email": "alice@example.com",
+          "assigned_at": "2026-01-10T06:50:10.704Z"
+        },
+        "created_at": "2026-01-10T06:50:10.704Z",
+        "updated_at": "2026-01-10T06:50:10.704Z",
+        "description": "All about chess",
+        "location": "Campus",
+        "type": "Cộng đồng"
+      }
+
+      at ClubService.log [as createClub] (src/services/clubService.js:357:15)
+
+    console.log
+      MongoDB Schema Required Fields Check: {
+        name: true,
+        category: true,
+        status: true,
+        manager: true,
+        created_by: true
+      }
+
+      at ClubService.log [as createClub] (src/services/clubService.js:360:15)
+
+    console.log
+      Optional Fields Present: {
+        description: true,
+        location: true,
+        contact_email: false,
+        contact_phone: false,
+        logo_url: false,
+        website_url: false,
+        social_links: false,
+        settings: false
+      }
+
+      at ClubService.log [as createClub] (src/services/clubService.js:368:15)
+
+    console.log
+      Manager Object Details: { user_id: true, full_name: true, email: true, assigned_at: true }
+
+      at ClubService.log [as createClub] (src/services/clubService.js:379:15)
+
+    console.log
+      ✅ Club created successfully: {
+        club_id: new ObjectId("6961f6a262f9cdf47cae25b6"),
+        name: 'Chess Club',
+        category: 'Cộng đồng',
+        manager: '00000000-0000-0000-0000-000000000001',
+        member_count: 1,
+        created_by: '00000000-0000-0000-0000-000000000099'
+      }
+
+      at ClubService.log [as createClub] (src/services/clubService.js:388:15)
+
+    console.log
+      Creating membership with data: {
+        club_id: new ObjectId("6961f6a262f9cdf47cae25b6"),
+        user_id: '00000000-0000-0000-0000-000000000099',
+        role: 'club_manager',
+        status: 'active'
+      }
+
+      at ClubService.log [as createClub] (src/services/clubService.js:421:17)
+
+    console.log
+      ✅ Membership created for club creator: {
+        membership_id: new ObjectId("6961f6a262f9cdf47cae25bb"),
+        club_id: new ObjectId("6961f6a262f9cdf47cae25b6"),
+        user_id: '00000000-0000-0000-0000-000000000099',
+        role: 'club_manager',
+        status: 'active'
+      }
+
+      at ClubService.log [as createClub] (src/services/clubService.js:430:17)
+
+    console.log
+      ✅ Manager user validated: {
+        user_id: '00000000-0000-0000-0000-000000000002',
+        email: 'manager@example.com',
+        full_name: 'Manager User',
+        validated_by: '00000000-0000-0000-0000-000000000099'
+      }
+
+      at ClubService.log [as createClub] (src/services/clubService.js:261:15)
+
+    console.log
+      Creating club with data: {
+        "name": "Robotics",
+        "category": "Công nghệ",
+        "status": "ACTIVE",
+        "member_count": 1,
+        "created_by": "00000000-0000-0000-0000-000000000099",
+        "manager": {
+          "user_id": "00000000-0000-0000-0000-000000000002",
+          "full_name": "Bob",
+          "email": "bob@example.com",
+          "assigned_at": "2026-01-10T06:50:10.736Z"
+        },
+        "created_at": "2026-01-10T06:50:10.736Z",
+        "updated_at": "2026-01-10T06:50:10.736Z",
+        "type": "Công nghệ"
+      }
+
+      at ClubService.log [as createClub] (src/services/clubService.js:357:15)
+
+    console.log
+      MongoDB Schema Required Fields Check: {
+        name: true,
+        category: true,
+        status: true,
+        manager: true,
+        created_by: true
+      }
+
+      at ClubService.log [as createClub] (src/services/clubService.js:360:15)
+
+    console.log
+      Optional Fields Present: {
+        description: false,
+        location: false,
+        contact_email: false,
+        contact_phone: false,
+        logo_url: false,
+        website_url: false,
+        social_links: false,
+        settings: false
+      }
+
+      at ClubService.log [as createClub] (src/services/clubService.js:368:15)
+
+    console.log
+      Manager Object Details: { user_id: true, full_name: true, email: true, assigned_at: true }
+
+      at ClubService.log [as createClub] (src/services/clubService.js:379:15)
+
+    console.log
+      ✅ Club created successfully: {
+        club_id: new ObjectId("6961f6a262f9cdf47cae25c3"),
+        name: 'Robotics',
+        category: 'Công nghệ',
+        manager: '00000000-0000-0000-0000-000000000002',
+        member_count: 1,
+        created_by: '00000000-0000-0000-0000-000000000099'
+      }
+
+      at ClubService.log [as createClub] (src/services/clubService.js:388:15)
+
+    console.log
+      Creating membership with data: {
+        club_id: new ObjectId("6961f6a262f9cdf47cae25c3"),
+        user_id: '00000000-0000-0000-0000-000000000099',
+        role: 'club_manager',
+        status: 'active'
+      }
+
+      at ClubService.log [as createClub] (src/services/clubService.js:421:17)
+
+    console.log
+      ✅ Membership created for club creator: {
+        membership_id: new ObjectId("6961f6a262f9cdf47cae25c7"),
+        club_id: new ObjectId("6961f6a262f9cdf47cae25c3"),
+        user_id: '00000000-0000-0000-0000-000000000099',
+        role: 'club_manager',
+        status: 'active'
+      }
+
+      at ClubService.log [as createClub] (src/services/clubService.js:430:17)
+
+PASS tests/clubRoutes.int.test.js
+  ● Console
+
+    console.log
+      ✅ Configuration loaded successfully
+
+      at ConfigManager.log [as loadAndValidateConfig] (src/config/index.js:72:13)
+
+    console.log
+      Event service configured: http://event-service:3003
+
+      at new log (src/utils/eventServiceClient.js:18:13)
+
+    console.debug
+      CLUB SERVICE: Public request (No Gateway Secret) {
+        ip: '::ffff:127.0.0.1',
+        path: '/clubs/categories',
+        method: 'GET',
+        userAgent: undefined,
+        hasSecret: false
+      }
+
+      at debug (src/middlewares/authMiddleware.js:16:13)
+
+    console.debug
+      CLUB SERVICE: Gateway validation passed { path: '/clubs/categories', method: 'GET' }
+
+      at debug (src/middlewares/authMiddleware.js:32:11)
+
+    console.debug
+      CLUB SERVICE: Gateway validation passed { path: '/clubs', method: 'GET' }
+
+      at debug (src/middlewares/authMiddleware.js:32:11)
+
+    console.log
+      Fetching event statistics for club: 6961f6a2bff07168fa4bf31d
+
+      at EventServiceClient.log [as getEventStatistics] (src/utils/eventServiceClient.js:154:15)
+          at Array.map (<anonymous>)
+
+    console.log
+      Making request to: http://event-service:3003/api/clubs/6961f6a2bff07168fa4bf31d/events?status=published&page=1&limit=100
+
+      at log (src/utils/eventServiceClient.js:37:15)
+          at Array.map (<anonymous>)
+
+    console.log
+      Making request to: http://event-service:3003/api/clubs/6961f6a2bff07168fa4bf31d/events?status=completed&page=1&limit=100
+
+      at log (src/utils/eventServiceClient.js:37:15)
+          at Array.map (<anonymous>)
+
+    console.log
+      Fetching event statistics for club: 6961f6a2bff07168fa4bf321
+
+      at EventServiceClient.log [as getEventStatistics] (src/utils/eventServiceClient.js:154:15)
+          at Array.map (<anonymous>)
+
+    console.log
+      Making request to: http://event-service:3003/api/clubs/6961f6a2bff07168fa4bf321/events?status=published&page=1&limit=100
+
+      at log (src/utils/eventServiceClient.js:37:15)
+          at Array.map (<anonymous>)
+
+    console.log
+      Making request to: http://event-service:3003/api/clubs/6961f6a2bff07168fa4bf321/events?status=completed&page=1&limit=100
+
+      at log (src/utils/eventServiceClient.js:37:15)
+          at Array.map (<anonymous>)
+
+    console.error
+      Request error: getaddrinfo ENOTFOUND event-service
+
+    [0m [90m 76 |[39m
+     [90m 77 |[39m       req[33m.[39mon([32m'error'[39m[33m,[39m (error) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 78 |[39m         console[33m.[39merror([32m`Request error: ${error.message}`[39m)[33m;[39m
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 79 |[39m         reject(error)[33m;[39m
+     [90m 80 |[39m       })[33m;[39m
+     [90m 81 |[39m[0m
+
+      at ClientRequest.error (src/utils/eventServiceClient.js:78:17)
+
+    console.error
+      Request error: getaddrinfo ENOTFOUND event-service
+
+    [0m [90m 76 |[39m
+     [90m 77 |[39m       req[33m.[39mon([32m'error'[39m[33m,[39m (error) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 78 |[39m         console[33m.[39merror([32m`Request error: ${error.message}`[39m)[33m;[39m
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 79 |[39m         reject(error)[33m;[39m
+     [90m 80 |[39m       })[33m;[39m
+     [90m 81 |[39m[0m
+
+      at ClientRequest.error (src/utils/eventServiceClient.js:78:17)
+
+    console.error
+      Request error: getaddrinfo ENOTFOUND event-service
+
+    [0m [90m 76 |[39m
+     [90m 77 |[39m       req[33m.[39mon([32m'error'[39m[33m,[39m (error) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 78 |[39m         console[33m.[39merror([32m`Request error: ${error.message}`[39m)[33m;[39m
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 79 |[39m         reject(error)[33m;[39m
+     [90m 80 |[39m       })[33m;[39m
+     [90m 81 |[39m[0m
+
+      at ClientRequest.error (src/utils/eventServiceClient.js:78:17)
+
+    console.error
+      Request error: getaddrinfo ENOTFOUND event-service
+
+    [0m [90m 76 |[39m
+     [90m 77 |[39m       req[33m.[39mon([32m'error'[39m[33m,[39m (error) [33m=>[39m {
+    [31m[1m>[22m[39m[90m 78 |[39m         console[33m.[39merror([32m`Request error: ${error.message}`[39m)[33m;[39m
+     [90m    |[39m                 [31m[1m^[22m[39m
+     [90m 79 |[39m         reject(error)[33m;[39m
+     [90m 80 |[39m       })[33m;[39m
+     [90m 81 |[39m[0m
+
+      at ClientRequest.error (src/utils/eventServiceClient.js:78:17)
+
+    console.debug
+      CLUB SERVICE: Gateway validation passed { path: '/clubs/invalid-id', method: 'GET' }
+
+      at debug (src/middlewares/authMiddleware.js:32:11)
+
+    console.error
+      Error finding club by ID: CastError: Cast to ObjectId failed for value "invalid-id" (type string) at path "_id" for model "Club"
+          at ObjectId.Object.<anonymous>.ObjectId.cast (/var/jenkins_home/workspace/club-management-pipeline/services/club/node_modules/mongoose/lib/schema/objectid.js:250:11)
+          at ObjectId.Object.<anonymous>.SchemaType.applySetters (/var/jenkins_home/workspace/club-management-pipeline/services/club/node_modules/mongoose/lib/schematype.js:1219:12)
+          at ObjectId.Object.<anonymous>.SchemaType.castForQuery (/var/jenkins_home/workspace/club-management-pipeline/services/club/node_modules/mongoose/lib/schematype.js:1633:15)
+          at cast (/var/jenkins_home/workspace/club-management-pipeline/services/club/node_modules/mongoose/lib/cast.js:389:32)
+          at model.Query.Object.<anonymous>.Query.cast (/var/jenkins_home/workspace/club-management-pipeline/services/club/node_modules/mongoose/lib/query.js:4927:12)
+          at model.Query.Object.<anonymous>.Query._castConditions (/var/jenkins_home/workspace/club-management-pipeline/services/club/node_modules/mongoose/lib/query.js:2237:10)
+          at model.Query._findOne (/var/jenkins_home/workspace/club-management-pipeline/services/club/node_modules/mongoose/lib/query.js:2533:8)
+          at model.Query.exec (/var/jenkins_home/workspace/club-management-pipeline/services/club/node_modules/mongoose/lib/query.js:4447:28)
+          at processTicksAndRejections (node:internal/process/task_queues:95:5)
+          at Function.findById (/var/jenkins_home/workspace/club-management-pipeline/services/club/src/models/club.js:140:20)
+          at ClubService.getClubById (/var/jenkins_home/workspace/club-management-pipeline/services/club/src/services/clubService.js:130:20)
+          at getClubById (/var/jenkins_home/workspace/club-management-pipeline/services/club/src/controllers/clubController.js:14:20) {
+        stringValue: '"invalid-id"',
+        messageFormat: undefined,
+        kind: 'ObjectId',
+        value: 'invalid-id',
+        path: '_id',
+        reason: BSONError: Argument passed in must be a string of 12 bytes or a string of 24 hex characters or an integer
+            at new ObjectId (/var/jenkins_home/workspace/club-management-pipeline/services/club/node_modules/mongoose/node_modules/bson/src/objectid.ts:88:15)
+            at castObjectId (/var/jenkins_home/workspace/club-management-pipeline/services/club/node_modules/mongoose/lib/cast/objectid.js:25:12)
+            at ObjectId.Object.<anonymous>.ObjectId.cast (/var/jenkins_home/workspace/club-management-pipeline/services/club/node_modules/mongoose/lib/schema/objectid.js:248:12)
+            at ObjectId.Object.<anonymous>.SchemaType.applySetters (/var/jenkins_home/workspace/club-management-pipeline/services/club/node_modules/mongoose/lib/schematype.js:1219:12)
+            at ObjectId.Object.<anonymous>.SchemaType.castForQuery (/var/jenkins_home/workspace/club-management-pipeline/services/club/node_modules/mongoose/lib/schematype.js:1633:15)
+            at cast (/var/jenkins_home/workspace/club-management-pipeline/services/club/node_modules/mongoose/lib/cast.js:389:32)
+            at model.Query.Object.<anonymous>.Query.cast (/var/jenkins_home/workspace/club-management-pipeline/services/club/node_modules/mongoose/lib/query.js:4927:12)
+            at model.Query.Object.<anonymous>.Query._castConditions (/var/jenkins_home/workspace/club-management-pipeline/services/club/node_modules/mongoose/lib/query.js:2237:10)
+            at model.Query._findOne (/var/jenkins_home/workspace/club-management-pipeline/services/club/node_modules/mongoose/lib/query.js:2533:8)
+            at model.Query.exec (/var/jenkins_home/workspace/club-management-pipeline/services/club/node_modules/mongoose/lib/query.js:4447:28)
+            at processTicksAndRejections (node:internal/process/task_queues:95:5)
+            at Function.findById (/var/jenkins_home/workspace/club-management-pipeline/services/club/src/models/club.js:140:20)
+            at ClubService.getClubById (/var/jenkins_home/workspace/club-management-pipeline/services/club/src/services/clubService.js:130:20)
+            at getClubById (/var/jenkins_home/workspace/club-management-pipeline/services/club/src/controllers/clubController.js:14:20),
+        valueType: 'string',
+        model: Model { Club }
+      }
+
+    [0m [90m 164 |[39m       }[33m;[39m
+     [90m 165 |[39m     } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 166 |[39m       console[33m.[39merror([32m'Error finding club by ID:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 167 |[39m       [36mthrow[39m error[33m;[39m
+     [90m 168 |[39m     }
+     [90m 169 |[39m   }[0m
+
+      at Function.error [as findById] (src/models/club.js:166:15)
+      at ClubService.getClubById (src/services/clubService.js:130:20)
+      at getClubById (src/controllers/clubController.js:14:20)
+
+    console.error
+      Error: VALIDATION_ERROR: Invalid club ID format
+          at ClubService.getClubById (/var/jenkins_home/workspace/club-management-pipeline/services/club/src/services/clubService.js:165:27)
+          at processTicksAndRejections (node:internal/process/task_queues:95:5)
+          at getClubById (/var/jenkins_home/workspace/club-management-pipeline/services/club/src/controllers/clubController.js:14:20) {
+        status: 400
+      }
+
+    [0m [90m  7 |[39m [90m */[39m
+     [90m  8 |[39m [36mconst[39m errorHandler [33m=[39m (err[33m,[39m req[33m,[39m res[33m,[39m next) [33m=>[39m {
+    [31m[1m>[22m[39m[90m  9 |[39m   console[33m.[39merror([32m'Error:'[39m[33m,[39m err)[33m;[39m
+     [90m    |[39m           [31m[1m^[22m[39m
+     [90m 10 |[39m   
+     [90m 11 |[39m   [90m// Handle MongoDB duplicate key error[39m
+     [90m 12 |[39m   [36mif[39m (err[33m.[39mname [33m===[39m [32m'MongoServerError'[39m [33m&&[39m err[33m.[39mcode [33m===[39m [35m11000[39m) {[0m
+
+      at error (src/middlewares/errorMiddleware.js:9:11)
+      at Layer.handle_error (node_modules/express/lib/router/layer.js:71:5)
+      at trim_prefix (node_modules/express/lib/router/index.js:326:13)
+      at node_modules/express/lib/router/index.js:286:9
+      at Function.process_params (node_modules/express/lib/router/index.js:346:12)
+      at next (node_modules/express/lib/router/index.js:280:10)
+      at node_modules/express/lib/router/index.js:646:15
+      at next (node_modules/express/lib/router/index.js:265:14)
+      at Layer.handle_error (node_modules/express/lib/router/layer.js:67:12)
+      at trim_prefix (node_modules/express/lib/router/index.js:326:13)
+      at node_modules/express/lib/router/index.js:286:9
+      at Function.process_params (node_modules/express/lib/router/index.js:346:12)
+      at next (node_modules/express/lib/router/index.js:280:10)
+      at Layer.handle_error (node_modules/express/lib/router/layer.js:67:12)
+      at trim_prefix (node_modules/express/lib/router/index.js:326:13)
+      at node_modules/express/lib/router/index.js:286:9
+      at Function.process_params (node_modules/express/lib/router/index.js:346:12)
+      at next (node_modules/express/lib/router/index.js:280:10)
+      at next (node_modules/express/lib/router/route.js:141:14)
+      at next (src/controllers/clubController.js:17:5)
+
+    console.debug
+      CLUB SERVICE: Gateway validation passed { path: '/clubs/6961f6a2bff07168fa4bf32a', method: 'GET' }
+
+      at debug (src/middlewares/authMiddleware.js:32:11)
+
+    console.error
+      Error: NOT_FOUND: Club not found
+          at ClubService.getClubById (/var/jenkins_home/workspace/club-management-pipeline/services/club/src/services/clubService.js:133:23)
+          at processTicksAndRejections (node:internal/process/task_queues:95:5)
+          at getClubById (/var/jenkins_home/workspace/club-management-pipeline/services/club/src/controllers/clubController.js:14:20) {
+        status: 404
+      }
+
+    [0m [90m  7 |[39m [90m */[39m
+     [90m  8 |[39m [36mconst[39m errorHandler [33m=[39m (err[33m,[39m req[33m,[39m res[33m,[39m next) [33m=>[39m {
+    [31m[1m>[22m[39m[90m  9 |[39m   console[33m.[39merror([32m'Error:'[39m[33m,[39m err)[33m;[39m
+     [90m    |[39m           [31m[1m^[22m[39m
+     [90m 10 |[39m   
+     [90m 11 |[39m   [90m// Handle MongoDB duplicate key error[39m
+     [90m 12 |[39m   [36mif[39m (err[33m.[39mname [33m===[39m [32m'MongoServerError'[39m [33m&&[39m err[33m.[39mcode [33m===[39m [35m11000[39m) {[0m
+
+      at error (src/middlewares/errorMiddleware.js:9:11)
+      at Layer.handle_error (node_modules/express/lib/router/layer.js:71:5)
+      at trim_prefix (node_modules/express/lib/router/index.js:326:13)
+      at node_modules/express/lib/router/index.js:286:9
+      at Function.process_params (node_modules/express/lib/router/index.js:346:12)
+      at next (node_modules/express/lib/router/index.js:280:10)
+      at node_modules/express/lib/router/index.js:646:15
+      at next (node_modules/express/lib/router/index.js:265:14)
+      at Layer.handle_error (node_modules/express/lib/router/layer.js:67:12)
+      at trim_prefix (node_modules/express/lib/router/index.js:326:13)
+      at node_modules/express/lib/router/index.js:286:9
+      at Function.process_params (node_modules/express/lib/router/index.js:346:12)
+      at next (node_modules/express/lib/router/index.js:280:10)
+      at Layer.handle_error (node_modules/express/lib/router/layer.js:67:12)
+      at trim_prefix (node_modules/express/lib/router/index.js:326:13)
+      at node_modules/express/lib/router/index.js:286:9
+      at Function.process_params (node_modules/express/lib/router/index.js:346:12)
+      at next (node_modules/express/lib/router/index.js:280:10)
+      at next (node_modules/express/lib/router/route.js:141:14)
+      at next (src/controllers/clubController.js:17:5)
+
+
+Test Suites: 2 passed, 2 total
+Tests:       8 passed, 8 total
+Snapshots:   0 total
+Time:        2.073 s
+Ran all test suites.
++ cd ../..
++ echo Testing event service...
+Testing event service...
++ cd services/event
++ [ -f package.json ]
++ echo Installing dependencies for event...
+Installing dependencies for event...
++ npm ci
+npm warn EBADENGINE Unsupported engine {
+npm warn EBADENGINE   package: 'joi@18.0.2',
+npm warn EBADENGINE   required: { node: '>= 20' },
+npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+npm warn EBADENGINE }
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+
+added 522 packages, and audited 523 packages in 3s
+
+71 packages are looking for funding
+  run `npm fund` for details
+
+6 vulnerabilities (2 moderate, 4 high)
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
++ grep -q "test" package.json
++ npm test
+
+> event-service@1.0.0 test
+> node --experimental-vm-modules ./node_modules/jest/bin/jest.js
+
+(node:38364) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:38365) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS tests/getEventsOfClub.test.js
+  ● Console
+
+    console.debug
+      EVENT SERVICE: Gateway validation passed for public route { path: '/api/clubs/invalid-club-id/events', method: 'GET' }
+
+      at validateApiGatewaySecret (src/middlewares/authMiddleware.js:43:11)
+
+    console.error
+      Error: Error: Invalid club ID format
+          at getEventsOfClubService (/var/jenkins_home/workspace/club-management-pipeline/services/event/src/services/eventService.js:598:15)
+          at getEventsOfClub (/var/jenkins_home/workspace/club-management-pipeline/services/event/src/controllers/eventController.js:368:26)
+          at Layer.handleRequest (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/lib/layer.js:152:17)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/lib/route.js:157:13)
+          at validateApiGatewaySecret (/var/jenkins_home/workspace/club-management-pipeline/services/event/src/middlewares/authMiddleware.js:48:3)
+          at Layer.handleRequest (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/lib/layer.js:152:17)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/lib/route.js:157:13)
+          at Route.dispatch (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/lib/route.js:117:3)
+          at handle (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/index.js:435:11)
+          at Layer.handleRequest (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/lib/layer.js:152:17)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/index.js:295:15
+          at param (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/index.js:600:14)
+          at param (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/index.js:610:14)
+          at processParams (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/index.js:664:3)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/index.js:291:5)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/event/src/routes/eventRoutes.js:40:3
+          at Layer.handleRequest (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/lib/layer.js:152:17)
+          at trimPrefix (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/index.js:342:13)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/index.js:297:9
+          at processParams (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/index.js:582:12)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/index.js:291:5)
+          at Function.handle (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/index.js:186:3)
+          at router (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/index.js:60:12)
+          at Layer.handleRequest (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/lib/layer.js:152:17)
+          at trimPrefix (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/index.js:342:13)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/index.js:297:9
+          at processParams (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/index.js:582:12)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/index.js:291:5)
+          at jsonParser (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/body-parser/lib/types/json.js:100:7)
+          at Layer.handleRequest (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/lib/layer.js:152:17)
+          at trimPrefix (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/index.js:342:13)
+          at /var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/index.js:297:9
+          at processParams (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/index.js:582:12)
+          at next (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/index.js:291:5)
+          at Function.handle (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/router/index.js:186:3)
+          at Function.handle (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/express/lib/application.js:177:15)
+          at Server.app (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/express/lib/express.js:38:9)
+          at Server.emit (node:events:517:28)
+          at parserOnIncoming (node:_http_server:1130:12)
+          at HTTPParser.parserOnHeadersComplete (node:_http_common:119:17)
+
+    [0m [90m  7 |[39m [90m */[39m
+     [90m  8 |[39m [36mexport[39m [36mconst[39m errorHandler [33m=[39m (err[33m,[39m req[33m,[39m res[33m,[39m next) [33m=>[39m {
+    [31m[1m>[22m[39m[90m  9 |[39m   console[33m.[39merror([32m'Error:'[39m[33m,[39m err)[33m;[39m
+     [90m    |[39m           [31m[1m^[22m[39m
+     [90m 10 |[39m   
+     [90m 11 |[39m   [90m// Handle MongoDB duplicate key error[39m
+     [90m 12 |[39m   [36mif[39m (err[33m.[39mname [33m===[39m [32m'MongoServerError'[39m [33m&&[39m err[33m.[39mcode [33m===[39m [35m11000[39m) {[0m
+
+      at errorHandler (src/middlewares/errorMiddleware.js:9:11)
+      at Layer.handleError (node_modules/router/lib/layer.js:116:17)
+      at trimPrefix (node_modules/router/index.js:340:13)
+      at node_modules/router/index.js:297:9
+      at processParams (node_modules/router/index.js:582:12)
+      at next (node_modules/router/index.js:291:5)
+      at node_modules/router/index.js:688:15
+      at next (node_modules/router/index.js:276:14)
+      at next (node_modules/router/lib/route.js:132:14)
+      at getEventsOfClub (src/controllers/eventController.js:386:5)
+
+    console.debug
+      EVENT SERVICE: Gateway validation passed for public route { path: '/api/clubs/6961f6a840b44ab5de303186/events', method: 'GET' }
+
+      at validateApiGatewaySecret (src/middlewares/authMiddleware.js:43:11)
+
+    console.debug
+      EVENT SERVICE: Gateway validation passed for public route { path: '/api/clubs/6961f6a840b44ab5de30318c/events', method: 'GET' }
+
+      at validateApiGatewaySecret (src/middlewares/authMiddleware.js:43:11)
+
+    console.debug
+      EVENT SERVICE: Gateway validation passed for public route { path: '/api/clubs/6961f6a840b44ab5de30319b/events', method: 'GET' }
+
+      at validateApiGatewaySecret (src/middlewares/authMiddleware.js:43:11)
+
+PASS tests/eventRoutes.int.test.js
+  ● Console
+
+    console.debug
+      EVENT SERVICE: Public request (No Gateway Secret) {
+        ip: '::ffff:127.0.0.1',
+        path: '/api/events',
+        method: 'GET',
+        userAgent: undefined,
+        hasSecret: false
+      }
+
+      at validateApiGatewaySecret (src/middlewares/authMiddleware.js:24:13)
+
+    console.debug
+      EVENT SERVICE: Gateway validation passed for public route { path: '/api/events', method: 'GET' }
+
+      at validateApiGatewaySecret (src/middlewares/authMiddleware.js:43:11)
+
+    console.debug
+      EVENT SERVICE: Gateway validation passed for public route { path: '/api/events/categories', method: 'GET' }
+
+      at validateApiGatewaySecret (src/middlewares/authMiddleware.js:43:11)
+
+    console.debug
+      EVENT SERVICE: Gateway validation passed for public route { path: '/api/events/invalid-id', method: 'GET' }
+
+      at validateApiGatewaySecret (src/middlewares/authMiddleware.js:43:11)
+
+    console.error
+      getEventByIdService error: CastError: Cast to ObjectId failed for value "invalid-id" (type string) at path "_id" for model "Event"
+          at SchemaObjectId.cast (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/schema/objectId.js:251:11)
+          at SchemaObjectId.SchemaType.applySetters (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/schemaType.js:1258:12)
+          at SchemaObjectId.SchemaType.castForQuery (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/schemaType.js:1680:17)
+          at cast (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/cast.js:390:32)
+          at model.Query.Query.cast (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/query.js:5060:12)
+          at model.Query.Query._castConditions (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/query.js:2374:10)
+          at model.Query._findOne (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/query.js:2697:8)
+          at model.Query.exec (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/query.js:4627:80)
+          at processTicksAndRejections (node:internal/process/task_queues:95:5)
+          at getEventByIdService (/var/jenkins_home/workspace/club-management-pipeline/services/event/src/services/eventService.js:774:19)
+          at getEventById (/var/jenkins_home/workspace/club-management-pipeline/services/event/src/controllers/eventController.js:397:19) {
+        stringValue: '"invalid-id"',
+        messageFormat: undefined,
+        kind: 'ObjectId',
+        value: 'invalid-id',
+        path: '_id',
+        reason: BSONError: input must be a 24 character hex string, 12 byte Uint8Array, or an integer
+            at new ObjectId (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/bson/src/objectid.ts:120:15)
+            at castObjectId (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/cast/objectid.js:25:12)
+            at SchemaObjectId.cast (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/schema/objectId.js:249:12)
+            at SchemaObjectId.SchemaType.applySetters (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/schemaType.js:1258:12)
+            at SchemaObjectId.SchemaType.castForQuery (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/schemaType.js:1680:17)
+            at cast (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/cast.js:390:32)
+            at model.Query.Query.cast (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/query.js:5060:12)
+            at model.Query.Query._castConditions (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/query.js:2374:10)
+            at model.Query._findOne (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/query.js:2697:8)
+            at model.Query.exec (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/query.js:4627:80)
+            at processTicksAndRejections (node:internal/process/task_queues:95:5)
+            at getEventByIdService (/var/jenkins_home/workspace/club-management-pipeline/services/event/src/services/eventService.js:774:19)
+            at getEventById (/var/jenkins_home/workspace/club-management-pipeline/services/event/src/controllers/eventController.js:397:19),
+        valueType: 'string'
+      }
+
+    [0m [90m 818 |[39m     }[33m;[39m
+     [90m 819 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 820 |[39m     console[33m.[39merror([32m'getEventByIdService error:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 821 |[39m     [36mthrow[39m error[33m;[39m
+     [90m 822 |[39m   }
+     [90m 823 |[39m }[33m;[39m[0m
+
+      at getEventByIdService (src/services/eventService.js:820:13)
+      at getEventById (src/controllers/eventController.js:397:19)
+
+    console.error
+      getEventById error: CastError: Cast to ObjectId failed for value "invalid-id" (type string) at path "_id" for model "Event"
+          at SchemaObjectId.cast (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/schema/objectId.js:251:11)
+          at SchemaObjectId.SchemaType.applySetters (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/schemaType.js:1258:12)
+          at SchemaObjectId.SchemaType.castForQuery (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/schemaType.js:1680:17)
+          at cast (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/cast.js:390:32)
+          at model.Query.Query.cast (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/query.js:5060:12)
+          at model.Query.Query._castConditions (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/query.js:2374:10)
+          at model.Query._findOne (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/query.js:2697:8)
+          at model.Query.exec (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/query.js:4627:80)
+          at processTicksAndRejections (node:internal/process/task_queues:95:5)
+          at getEventByIdService (/var/jenkins_home/workspace/club-management-pipeline/services/event/src/services/eventService.js:774:19)
+          at getEventById (/var/jenkins_home/workspace/club-management-pipeline/services/event/src/controllers/eventController.js:397:19) {
+        stringValue: '"invalid-id"',
+        messageFormat: undefined,
+        kind: 'ObjectId',
+        value: 'invalid-id',
+        path: '_id',
+        reason: BSONError: input must be a 24 character hex string, 12 byte Uint8Array, or an integer
+            at new ObjectId (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/bson/src/objectid.ts:120:15)
+            at castObjectId (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/cast/objectid.js:25:12)
+            at SchemaObjectId.cast (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/schema/objectId.js:249:12)
+            at SchemaObjectId.SchemaType.applySetters (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/schemaType.js:1258:12)
+            at SchemaObjectId.SchemaType.castForQuery (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/schemaType.js:1680:17)
+            at cast (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/cast.js:390:32)
+            at model.Query.Query.cast (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/query.js:5060:12)
+            at model.Query.Query._castConditions (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/query.js:2374:10)
+            at model.Query._findOne (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/query.js:2697:8)
+            at model.Query.exec (/var/jenkins_home/workspace/club-management-pipeline/services/event/node_modules/mongoose/lib/query.js:4627:80)
+            at processTicksAndRejections (node:internal/process/task_queues:95:5)
+            at getEventByIdService (/var/jenkins_home/workspace/club-management-pipeline/services/event/src/services/eventService.js:774:19)
+            at getEventById (/var/jenkins_home/workspace/club-management-pipeline/services/event/src/controllers/eventController.js:397:19),
+        valueType: 'string'
+      }
+
+    [0m [90m 410 |[39m     })[33m;[39m
+     [90m 411 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 412 |[39m     console[33m.[39merror([32m'getEventById error:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 413 |[39m     res[33m.[39mstatus([35m500[39m)[33m.[39mjson({ 
+     [90m 414 |[39m       success[33m:[39m [36mfalse[39m[33m,[39m
+     [90m 415 |[39m       message[33m:[39m [32m'Internal server error'[39m[33m,[39m[0m
+
+      at getEventById (src/controllers/eventController.js:412:13)
+
+    console.debug
+      EVENT SERVICE: Gateway validation passed for public route { path: '/api/events/6961f6a806199985240bd4d9', method: 'GET' }
+
+      at validateApiGatewaySecret (src/middlewares/authMiddleware.js:43:11)
+
+
+Test Suites: 2 passed, 2 total
+Tests:       9 passed, 9 total
+Snapshots:   0 total
+Time:        1.795 s, estimated 2 s
+Ran all test suites.
++ cd ../..
++ echo Testing notify service...
+Testing notify service...
++ cd services/notify
++ [ -f package.json ]
++ echo Installing dependencies for notify...
+Installing dependencies for notify...
++ npm ci
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+
+added 258 packages, and audited 259 packages in 1s
+
+47 packages are looking for funding
+  run `npm fund` for details
+
+5 vulnerabilities (2 moderate, 3 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
++ grep -q "test" package.json
++ echo No tests configured for notify
+No tests configured for notify
++ cd ../..
+Post stage
+[Pipeline] junit
+Recording test results
+No test report files were found. Configuration error?
+None of the test reports contained any result
+[Checks API] No suitable checks publisher found.
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Build Docker Images)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] echo
+🐳 Building Docker images for all services
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] sh
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml build --no-cache --build-arg GIT_COMMIT=c04e8e34bd921d6a03298cbade4980fd6bce447f --build-arg BUILD_NUMBER=45 --build-arg BUILD_TIME=2026-01-10T06:49:10Z auth-service club-service event-service notify-service image-service frontend
+ Image club-management-pipeline-image-service Building 
+ Image club-management-pipeline-club-service Building 
+ Image club-management-pipeline-kong Building 
+ Image club-management-pipeline-event-service Building 
+ Image club-management-pipeline-auth-service Building 
+ Image club-management-pipeline-frontend Building 
+ Image club-management-pipeline-notify-service Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 5.76kB done
+#1 DONE 0.0s
+
+#2 [image-service internal] load build definition from Dockerfile
+#2 transferring dockerfile: 2.07kB done
+#2 DONE 0.0s
+
+#3 [notify-service internal] load build definition from Dockerfile
+#3 transferring dockerfile: 2.20kB done
+#3 DONE 0.0s
+
+#4 [frontend internal] load build definition from Dockerfile
+#4 transferring dockerfile: 2.37kB done
+#4 DONE 0.0s
+
+#5 [event-service internal] load build definition from Dockerfile
+#5 transferring dockerfile: 1.97kB done
+#5 DONE 0.0s
+
+#6 [club-service internal] load build definition from Dockerfile
+#6 transferring dockerfile: 2.08kB done
+#6 DONE 0.0s
+
+#7 [auth-service internal] load build definition from Dockerfile
+#7 transferring dockerfile: 1.97kB done
+#7 DONE 0.0s
+
+#8 [notify-service internal] load metadata for docker.io/library/node:18-alpine
+#8 DONE 0.0s
+
+#9 [auth-service internal] load .dockerignore
+#9 transferring context: 243B done
+#9 DONE 0.0s
+
+#10 [club-service internal] load .dockerignore
+#10 transferring context: 304B done
+#10 DONE 0.0s
+
+#11 [event-service internal] load .dockerignore
+#11 transferring context: 607B done
+#11 DONE 0.0s
+
+#12 [image-service internal] load .dockerignore
+#12 transferring context: 2B done
+#12 DONE 0.0s
+
+#13 [frontend internal] load .dockerignore
+#13 transferring context: 491B done
+#13 DONE 0.0s
+
+#14 [notify-service internal] load .dockerignore
+#14 transferring context: 264B done
+#14 DONE 0.0s
+
+#15 [frontend builder 1/4] WORKDIR /app
+#15 CACHED
+
+#16 [image-service base 1/3] FROM docker.io/library/node:18-alpine@sha256:8d6421d663b4c28fd3ebc498332f249011d118945588d0a35cb9bc4b8ca09d9e
+#16 resolve docker.io/library/node:18-alpine@sha256:8d6421d663b4c28fd3ebc498332f249011d118945588d0a35cb9bc4b8ca09d9e 0.0s done
+#16 CACHED
+
+#17 [image-service internal] load build context
+#17 transferring context: 819B done
+#17 DONE 0.0s
+
+#18 [notify-service internal] load build context
+#18 transferring context: 1.36kB 0.0s done
+#18 DONE 0.0s
+
+#19 [auth-service internal] load build context
+#19 transferring context: 3.12kB 0.0s done
+#19 DONE 0.0s
+
+#20 [image-service base 2/3] RUN apk add --no-cache curl
+#20 ...
+
+#21 [event-service internal] load build context
+#21 transferring context: 2.27kB 0.0s done
+#21 DONE 0.0s
+
+#22 [club-service internal] load build context
+#22 transferring context: 2.53kB 0.0s done
+#22 DONE 0.1s
+
+#23 [frontend internal] load build context
+#23 transferring context: 10.84kB 0.0s done
+#23 DONE 0.1s
+
+#20 [image-service base 2/3] RUN apk add --no-cache curl
+#20 0.291 fetch https://dl-cdn.alpinelinux.org/alpine/v3.21/main/aarch64/APKINDEX.tar.gz
+#20 ...
+
+#24 [frontend runner 2/8] RUN addgroup --system --gid 1001 nodejs
+#24 DONE 0.8s
+
+#25 [frontend runner 3/8] RUN adduser --system --uid 1001 nextjs
+#25 DONE 0.1s
+
+#26 [frontend deps 1/4] RUN apk add --no-cache libc6-compat
+#26 0.291 fetch https://dl-cdn.alpinelinux.org/alpine/v3.21/main/aarch64/APKINDEX.tar.gz
+#26 1.040 fetch https://dl-cdn.alpinelinux.org/alpine/v3.21/community/aarch64/APKINDEX.tar.gz
+#26 1.591 (1/3) Installing musl-obstack (1.2.3-r2)
+#26 1.639 (2/3) Installing libucontext (1.3.2-r0)
+#26 1.685 (3/3) Installing gcompat (1.1.0-r4)
+#26 1.733 OK: 10 MiB in 20 packages
+#26 DONE 1.8s
+
+#27 [frontend deps 2/4] WORKDIR /app
+#27 DONE 0.0s
+
+#28 [frontend deps 3/4] COPY package.json package-lock.json* ./
+#28 DONE 0.0s
+
+#29 [frontend deps 4/4] RUN npm install --no-audit --no-fund
+#29 ...
+
+#20 [auth-service base 2/3] RUN apk add --no-cache curl
+#20 1.096 fetch https://dl-cdn.alpinelinux.org/alpine/v3.21/community/aarch64/APKINDEX.tar.gz
+#20 1.677 (1/9) Installing brotli-libs (1.1.0-r2)
+#20 1.768 (2/9) Installing c-ares (1.34.6-r0)
+#20 1.907 (3/9) Installing libunistring (1.2-r0)
+#20 2.030 (4/9) Installing libidn2 (2.3.7-r0)
+#20 2.101 (5/9) Installing nghttp2-libs (1.64.0-r0)
+#20 2.171 (6/9) Installing libpsl (0.21.5-r3)
+#20 2.238 (7/9) Installing zstd-libs (1.5.6-r2)
+#20 2.325 (8/9) Installing libcurl (8.14.1-r2)
+#20 2.436 (9/9) Installing curl (8.14.1-r2)
+#20 2.520 Executing busybox-1.37.0-r12.trigger
+#20 2.571 OK: 15 MiB in 26 packages
+#20 DONE 2.8s
+
+#30 [notify-service base 3/3] WORKDIR /app
+#30 DONE 0.0s
+
+#31 [notify-service deps 1/2] COPY package*.json ./
+#31 DONE 0.1s
+
+#32 [club-service deps 1/2] COPY package*.json ./
+#32 DONE 0.1s
+
+#33 [event-service deps 1/2] COPY package*.json ./
+#33 DONE 0.1s
+
+#34 [image-service deps 1/2] COPY package*.json ./
+#34 DONE 0.1s
+
+#35 [auth-service deps 1/2] COPY package*.json ./
+#35 DONE 0.1s
+
+#36 [club-service production 1/5] RUN apk add --no-cache wget
+#36 0.243 fetch https://dl-cdn.alpinelinux.org/alpine/v3.21/main/aarch64/APKINDEX.tar.gz
+#36 0.565 fetch https://dl-cdn.alpinelinux.org/alpine/v3.21/community/aarch64/APKINDEX.tar.gz
+#36 1.135 (1/2) Installing pcre2 (10.43-r0)
+#36 1.309 (2/2) Installing wget (1.25.0-r0)
+#36 1.366 Executing busybox-1.37.0-r12.trigger
+#36 1.419 OK: 16 MiB in 28 packages
+#36 DONE 1.8s
+
+#37 [club-service production 2/5] RUN addgroup -g 1001 -S nodejs &&   adduser -S nodejs -u 1001
+#37 ...
+
+#38 [auth-service production 2/5] RUN addgroup -g 1001 -S nodejs &&     adduser -S nodejs -u 1001
+#38 DONE 0.4s
+
+#37 [club-service production 2/5] RUN addgroup -g 1001 -S nodejs &&   adduser -S nodejs -u 1001
+#37 DONE 0.4s
+
+#39 [image-service deps 2/2] RUN npm ci --only=production && npm cache clean --force
+#39 0.365 npm warn config only Use `--omit=dev` to omit dev dependencies from the install.
+#39 1.043 npm warn EBADENGINE Unsupported engine {
+#39 1.043 npm warn EBADENGINE   package: 'joi@18.0.2',
+#39 1.043 npm warn EBADENGINE   required: { node: '>= 20' },
+#39 1.043 npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+#39 1.043 npm warn EBADENGINE }
+#39 2.209 npm warn deprecated q@1.5.1: You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.
+#39 2.209 npm warn deprecated
+#39 2.209 npm warn deprecated (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)
+#39 2.311 npm warn deprecated multer@1.4.5-lts.2: Multer 1.x is impacted by a number of vulnerabilities, which have been patched in 2.x. You should upgrade to the latest 2.x version.
+#39 ...
+
+#40 [club-service deps 2/2] RUN npm ci --only=production && npm cache clean --force
+#40 0.375 npm warn config only Use `--omit=dev` to omit dev dependencies from the install.
+#40 1.100 npm warn EBADENGINE Unsupported engine {
+#40 1.100 npm warn EBADENGINE   package: 'joi@18.0.2',
+#40 1.100 npm warn EBADENGINE   required: { node: '>= 20' },
+#40 1.100 npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+#40 1.100 npm warn EBADENGINE }
+#40 3.755 
+#40 3.755 added 112 packages, and audited 113 packages in 3s
+#40 3.755 
+#40 3.755 16 packages are looking for funding
+#40 3.755   run `npm fund` for details
+#40 3.767 
+#40 3.767 3 high severity vulnerabilities
+#40 3.767 
+#40 3.767 To address all issues, run:
+#40 3.767   npm audit fix
+#40 3.767 
+#40 3.767 Run `npm audit` for details.
+#40 3.771 npm notice
+#40 3.771 npm notice New major version of npm available! 10.8.2 -> 11.7.0
+#40 3.771 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.7.0
+#40 3.771 npm notice To update run: npm install -g npm@11.7.0
+#40 3.771 npm notice
+#40 4.067 npm warn using --force Recommended protections disabled.
+#40 DONE 5.4s
+
+#41 [notify-service deps 2/2] RUN npm ci --only=production && npm cache clean --force
+#41 0.384 npm warn config only Use `--omit=dev` to omit dev dependencies from the install.
+#41 3.861 
+#41 3.861 added 140 packages, and audited 141 packages in 4s
+#41 3.861 
+#41 3.861 19 packages are looking for funding
+#41 3.861   run `npm fund` for details
+#41 3.877 
+#41 3.877 4 vulnerabilities (1 moderate, 3 high)
+#41 3.877 
+#41 3.877 To address issues that do not require attention, run:
+#41 3.877   npm audit fix
+#41 3.877 
+#41 3.877 To address all issues (including breaking changes), run:
+#41 3.877   npm audit fix --force
+#41 3.877 
+#41 3.877 Run `npm audit` for details.
+#41 3.878 npm notice
+#41 3.878 npm notice New major version of npm available! 10.8.2 -> 11.7.0
+#41 3.878 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.7.0
+#41 3.878 npm notice To update run: npm install -g npm@11.7.0
+#41 3.878 npm notice
+#41 4.160 npm warn using --force Recommended protections disabled.
+#41 DONE 5.4s
+
+#42 [notify-service deps-dev 1/1] RUN npm ci && npm cache clean --force
+#42 ...
+
+#43 [event-service deps 2/2] RUN npm ci --only=production && npm cache clean --force
+#43 0.371 npm warn config only Use `--omit=dev` to omit dev dependencies from the install.
+#43 1.140 npm warn EBADENGINE Unsupported engine {
+#43 1.140 npm warn EBADENGINE   package: 'joi@18.0.2',
+#43 1.140 npm warn EBADENGINE   required: { node: '>= 20' },
+#43 1.140 npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+#43 1.140 npm warn EBADENGINE }
+#43 5.196 
+#43 5.196 added 181 packages, and audited 182 packages in 5s
+#43 5.196 
+#43 5.196 22 packages are looking for funding
+#43 5.196   run `npm fund` for details
+#43 5.198 
+#43 5.198 4 vulnerabilities (1 moderate, 3 high)
+#43 5.198 
+#43 5.198 To address all issues, run:
+#43 5.198   npm audit fix
+#43 5.198 
+#43 5.198 Run `npm audit` for details.
+#43 5.199 npm notice
+#43 5.199 npm notice New major version of npm available! 10.8.2 -> 11.7.0
+#43 5.199 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.7.0
+#43 5.199 npm notice To update run: npm install -g npm@11.7.0
+#43 5.199 npm notice
+#43 5.355 npm warn using --force Recommended protections disabled.
+#43 DONE 6.0s
+
+#44 [auth-service deps 2/2] RUN npm ci --only=production && npm cache clean --force
+#44 0.366 npm warn config only Use `--omit=dev` to omit dev dependencies from the install.
+#44 3.352 npm warn deprecated lodash.get@4.4.2: This package is deprecated. Use the optional chaining (?.) operator instead.
+#44 3.402 npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+#44 3.491 npm warn deprecated lodash.isequal@4.5.0: This package is deprecated. Use require('node:util').isDeepStrictEqual instead.
+#44 3.774 npm warn deprecated crypto@1.0.1: This package is no longer supported. It's now a built-in Node module. If you've depended on crypto, you should switch to the one that's built-in.
+#44 4.238 npm warn deprecated glob@7.1.6: Glob versions prior to v9 are no longer supported
+#44 ...
+
+#39 [image-service deps 2/2] RUN npm ci --only=production && npm cache clean --force
+#39 6.362 
+#39 6.362 added 125 packages, and audited 126 packages in 6s
+#39 6.362 
+#39 6.362 21 packages are looking for funding
+#39 6.362   run `npm fund` for details
+#39 6.363 
+#39 6.363 2 high severity vulnerabilities
+#39 6.363 
+#39 6.363 To address issues that do not require attention, run:
+#39 6.363   npm audit fix
+#39 6.363 
+#39 6.363 To address all issues (including breaking changes), run:
+#39 6.363   npm audit fix --force
+#39 6.363 
+#39 6.363 Run `npm audit` for details.
+#39 6.365 npm notice
+#39 6.365 npm notice New major version of npm available! 10.8.2 -> 11.7.0
+#39 6.365 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.7.0
+#39 6.365 npm notice To update run: npm install -g npm@11.7.0
+#39 6.365 npm notice
+#39 6.551 npm warn using --force Recommended protections disabled.
+#39 DONE 7.1s
+
+#45 [event-service production 3/5] COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
+#45 ...
+
+#46 [club-service production 3/5] COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
+#46 DONE 0.6s
+
+#47 [club-service production 4/5] COPY --chown=nodejs:nodejs . .
+#47 DONE 0.1s
+
+#48 [image-service deps-dev 1/1] RUN npm ci && npm cache clean --force
+#48 ...
+
+#49 [club-service production 5/5] RUN mkdir -p logs && chown -R nodejs:nodejs logs
+#49 DONE 0.2s
+
+#50 [club-service] exporting to image
+#50 exporting layers
+#50 ...
+
+#45 [event-service production 3/5] COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
+#45 DONE 0.9s
+
+#51 [event-service production 4/5] COPY --chown=nodejs:nodejs . .
+#51 DONE 0.2s
+
+#44 [auth-service deps 2/2] RUN npm ci --only=production && npm cache clean --force
+#44 8.077 
+#44 8.077 added 216 packages, and audited 217 packages in 8s
+#44 8.077 
+#44 8.077 22 packages are looking for funding
+#44 8.077   run `npm fund` for details
+#44 8.088 
+#44 8.088 7 vulnerabilities (1 moderate, 6 high)
+#44 8.088 
+#44 8.088 To address all issues, run:
+#44 8.088   npm audit fix
+#44 8.088 
+#44 8.088 Run `npm audit` for details.
+#44 8.090 npm notice
+#44 8.090 npm notice New major version of npm available! 10.8.2 -> 11.7.0
+#44 8.090 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.7.0
+#44 8.090 npm notice To update run: npm install -g npm@11.7.0
+#44 8.090 npm notice
+#44 8.230 npm warn using --force Recommended protections disabled.
+#44 ...
+
+#52 [event-service production 5/5] RUN mkdir -p logs && chown -R nodejs:nodejs logs
+#52 DONE 0.2s
+
+#50 [club-service] exporting to image
+#50 exporting layers 0.9s done
+#50 ...
+
+#44 [auth-service deps 2/2] RUN npm ci --only=production && npm cache clean --force
+#44 DONE 8.7s
+
+#50 [club-service] exporting to image
+#50 exporting manifest sha256:1eb3878efe722b411090f62eb2e884976def611e757635fb67feaec626168773 0.0s done
+#50 exporting config sha256:e2fea38a812684ee01f3dd2a975c4a48ac20fe597f7f641610b9bc0e6046f346 done
+#50 exporting attestation manifest sha256:ad67625457b4f4a9e1963960134b958c6804a61b7d96efd2c94e4f8104737584 0.0s done
+#50 exporting manifest list sha256:e0206e62b6bdab575d1b21214de8222f63c6350b9b5a25c0c336fa28edf672c1 0.0s done
+#50 naming to docker.io/library/club-management-pipeline-club-service:latest done
+#50 unpacking to docker.io/library/club-management-pipeline-club-service:latest
+#50 unpacking to docker.io/library/club-management-pipeline-club-service:latest 0.6s done
+#50 DONE 1.7s
+
+#53 [auth-service production 3/5] COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
+#53 ...
+
+#54 [club-service] resolving provenance for metadata file
+#54 DONE 0.0s
+
+#55 [event-service] exporting to image
+#55 exporting layers 1.1s done
+#55 exporting manifest sha256:6fee48e1805b3c7b164d5552f01a03ebf1d91024ba32c88932d4f8241ecc4bc7 0.0s done
+#55 exporting config sha256:ca573f106b4e0ff7fc39c26a03351ca5fef54921a434d991e210765d786ea4be 0.0s done
+#55 exporting attestation manifest sha256:8a1ed58c6bcdac775d647acc11949024158afa8f13cae9237c433c671fff86eb 0.0s done
+#55 exporting manifest list sha256:506f5c6d6af6df10788043ba8220a0795d739121cff6200da210f67a25b2fc9f 0.0s done
+#55 naming to docker.io/library/club-management-pipeline-event-service:latest done
+#55 unpacking to docker.io/library/club-management-pipeline-event-service:latest
+#55 unpacking to docker.io/library/club-management-pipeline-event-service:latest 1.0s done
+#55 DONE 2.4s
+
+#42 [notify-service deps-dev 1/1] RUN npm ci && npm cache clean --force
+#42 3.703 npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+#42 4.058 npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+#42 4.175 npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+#42 5.137 npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+#42 5.145 npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+#42 ...
+
+#56 [event-service] resolving provenance for metadata file
+#56 DONE 0.0s
+
+#42 [notify-service deps-dev 1/1] RUN npm ci && npm cache clean --force
+#42 5.687 npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+#42 5.999 
+#42 5.999 added 258 packages, and audited 259 packages in 5s
+#42 5.999 
+#42 5.999 47 packages are looking for funding
+#42 5.999   run `npm fund` for details
+#42 6.017 
+#42 6.017 5 vulnerabilities (2 moderate, 3 high)
+#42 6.017 
+#42 6.017 To address issues that do not require attention, run:
+#42 6.017   npm audit fix
+#42 6.017 
+#42 6.017 To address all issues (including breaking changes), run:
+#42 6.017   npm audit fix --force
+#42 6.017 
+#42 6.017 Run `npm audit` for details.
+#42 6.205 npm warn using --force Recommended protections disabled.
+#42 DONE 7.1s
+
+#48 [image-service deps-dev 1/1] RUN npm ci && npm cache clean --force
+#48 0.982 npm warn EBADENGINE Unsupported engine {
+#48 0.982 npm warn EBADENGINE   package: 'joi@18.0.2',
+#48 0.982 npm warn EBADENGINE   required: { node: '>= 20' },
+#48 0.982 npm warn EBADENGINE   current: { node: 'v18.20.8', npm: '10.8.2' }
+#48 0.982 npm warn EBADENGINE }
+#48 4.734 npm warn deprecated q@1.5.1: You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.
+#48 4.734 npm warn deprecated
+#48 4.734 npm warn deprecated (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)
+#48 4.976 npm warn deprecated multer@1.4.5-lts.2: Multer 1.x is impacted by a number of vulnerabilities, which have been patched in 2.x. You should upgrade to the latest 2.x version.
+#48 5.301 npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+#48 5.374 npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+#48 ...
+
+#57 [notify-service development 1/2] COPY . .
+#57 DONE 0.1s
+
+#58 [notify-service development 2/2] RUN mkdir -p logs
+#58 DONE 0.3s
+
+#29 [frontend deps 4/4] RUN npm install --no-audit --no-fund
+#29 ...
+
+#59 [notify-service] exporting to image
+#59 ...
+
+#53 [auth-service production 3/5] COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
+#53 DONE 4.0s
+
+#60 [auth-service production 4/5] COPY --chown=nodejs:nodejs . .
+#60 DONE 0.1s
+
+#48 [image-service deps-dev 1/1] RUN npm ci && npm cache clean --force
+#48 ...
+
+#61 [auth-service production 5/5] RUN mkdir -p logs && chown -R nodejs:nodejs logs
+#61 DONE 0.2s
+
+#48 [image-service deps-dev 1/1] RUN npm ci && npm cache clean --force
+#48 ...
+
+#62 [auth-service] exporting to image
+#62 exporting layers 2.0s done
+#62 exporting manifest sha256:fc689bf01a8041892a1f963758ea48b3f87d4378f952bf1aef0273f2ff55a111 done
+#62 exporting config sha256:75d3ac7354d0db6aacb58efe004baf81630f6da154010e3f5a03c33899ba670a done
+#62 exporting attestation manifest sha256:18b0b4277ca540ab26c9c606e28d185862066de4c6fb4420b485424c7b731c93 done
+#62 exporting manifest list sha256:936b880b8f7eb017dcf7f13c60bf2c6405a839b9c88bca024b7a4adce46a0274 done
+#62 naming to docker.io/library/club-management-pipeline-auth-service:latest done
+#62 unpacking to docker.io/library/club-management-pipeline-auth-service:latest
+#62 ...
+
+#59 [notify-service] exporting to image
+#59 exporting layers 1.8s done
+#59 exporting manifest sha256:a5bdfc3fe957706b695147a397029b3312e575c8c3074829a2a0e10aaad6ae5a done
+#59 exporting config sha256:a6f4e606d3d721437695da6e191a888b582ffb4f7182cb1b316e9762567603b5 done
+#59 exporting attestation manifest sha256:e47eeb85d1c85848558c1f2b685342bd65e094088de478c00b568a4d42ee611d done
+#59 exporting manifest list sha256:4c3f6680d06d5ac3575220ec5799df674dd42258a33fac0bb81f490b9a3ae63d done
+#59 naming to docker.io/library/club-management-pipeline-notify-service:latest done
+#59 unpacking to docker.io/library/club-management-pipeline-notify-service:latest 1.1s done
+#59 DONE 3.0s
+
+#63 [notify-service] resolving provenance for metadata file
+#63 DONE 0.0s
+
+#48 [image-service deps-dev 1/1] RUN npm ci && npm cache clean --force
+#48 ...
+
+#62 [auth-service] exporting to image
+#62 unpacking to docker.io/library/club-management-pipeline-auth-service:latest 0.9s done
+#62 DONE 3.0s
+
+#48 [image-service deps-dev 1/1] RUN npm ci && npm cache clean --force
+#48 9.471 
+#48 9.471 added 410 packages, and audited 411 packages in 9s
+#48 9.471 
+#48 9.471 55 packages are looking for funding
+#48 9.471   run `npm fund` for details
+#48 ...
+
+#64 [auth-service] resolving provenance for metadata file
+#64 DONE 0.0s
+
+#48 [image-service deps-dev 1/1] RUN npm ci && npm cache clean --force
+#48 9.475 
+#48 9.475 2 high severity vulnerabilities
+#48 9.475 
+#48 9.475 To address issues that do not require attention, run:
+#48 9.475   npm audit fix
+#48 9.475 
+#48 9.475 To address all issues (including breaking changes), run:
+#48 9.475   npm audit fix --force
+#48 9.475 
+#48 9.475 Run `npm audit` for details.
+#48 9.648 npm warn using --force Recommended protections disabled.
+#48 DONE 10.4s
+
+#29 [frontend deps 4/4] RUN npm install --no-audit --no-fund
+#29 ...
+
+#65 [image-service development 1/2] COPY . .
+#65 DONE 0.1s
+
+#29 [frontend deps 4/4] RUN npm install --no-audit --no-fund
+#29 18.68 
+#29 18.68 added 289 packages in 18s
+#29 18.69 npm notice
+#29 18.69 npm notice New major version of npm available! 10.8.2 -> 11.7.0
+#29 18.69 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.7.0
+#29 18.69 npm notice To update run: npm install -g npm@11.7.0
+#29 18.69 npm notice
+#29 DONE 18.9s
+
+#66 [image-service development 2/2] RUN mkdir -p uploads
+#66 DONE 0.2s
+
+#67 [image-service] exporting to image
+#67 exporting layers 3.3s done
+#67 exporting manifest sha256:b689d0a78d05c8bc17e448d34800014680306205eceefc5465e9976c5938e87c done
+#67 exporting config sha256:962ac41ddc6022f66e5309e26a93569c0930f813aea06318c87f43de1431719c done
+#67 exporting attestation manifest sha256:e31f0e425a13e02539ddbf940652ca7d1ede865be8f181bf2ccf0b1992f8789a done
+#67 exporting manifest list sha256:c8f44b795c292a305d2443aaf5d388ef09fb523f9b63a7a66ae7589b48b502de done
+#67 naming to docker.io/library/club-management-pipeline-image-service:latest done
+#67 unpacking to docker.io/library/club-management-pipeline-image-service:latest
+#67 unpacking to docker.io/library/club-management-pipeline-image-service:latest 1.6s done
+#67 DONE 4.9s
+
+#68 [image-service] resolving provenance for metadata file
+#68 DONE 0.0s
+
+#69 [frontend builder 2/4] COPY --from=deps /app/node_modules ./node_modules
+#69 DONE 4.4s
+
+#70 [frontend builder 3/4] COPY . .
+#70 DONE 0.2s
+
+#71 [frontend builder 4/4] RUN npm run build
+#71 0.578 
+#71 0.578 > my-v0-project@0.1.0 build
+#71 0.578 > next build
+#71 0.578 
+#71 1.163 Attention: Next.js now collects completely anonymous telemetry regarding usage.
+#71 1.163 This information is used to shape Next.js' roadmap and prioritize features.
+#71 1.163 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+#71 1.163 https://nextjs.org/telemetry
+#71 1.163 
+#71 1.206    ▲ Next.js 15.2.4
+#71 1.206    - Environments: .env.production
+#71 1.206 
+#71 1.260    Creating an optimized production build ...
+#71 22.13  ✓ Compiled successfully
+#71 22.14    Skipping validation of types
+#71 22.14    Skipping linting
+#71 22.34    Collecting page data ...
+#71 24.03    Generating static pages (0/17) ...
+#71 24.36 🔧 Config loading: {
+#71 24.36   NEXT_PUBLIC_API_BASE_URL: 'http://kong:8000',
+#71 24.36   fallback: 'http://localhost:8000'
+#71 24.36 }
+#71 24.53    Generating static pages (4/17) 
+#71 24.53    Generating static pages (8/17) 
+#71 24.78    Generating static pages (12/17) 
+#71 24.78  ✓ Generating static pages (17/17)
+#71 25.20    Finalizing page optimization ...
+#71 25.20    Collecting build traces ...
+#71 33.68 
+#71 33.68 Route (app)                                                          Size  First Load JS
+#71 33.68 ┌ ○ /                                                             8.44 kB         133 kB
+#71 33.68 ├ ○ /_not-found                                                     990 B         102 kB
+#71 33.68 ├ ƒ /api/campaigns/clubs/[club_id]/published                        171 B         101 kB
+#71 33.68 ├ ƒ /api/campaigns/published                                        171 B         101 kB
+#71 33.68 ├ ƒ /api/health                                                     171 B         101 kB
+#71 33.68 ├ ƒ /api/version                                                    171 B         101 kB
+#71 33.68 ├ ○ /check-email                                                  2.29 kB         121 kB
+#71 33.68 ├ ○ /club-space                                                   2.15 kB         114 kB
+#71 33.68 ├ ƒ /club-space/[club_id]/[[...tab]]                                17 kB         159 kB
+#71 33.68 ├ ○ /clubs                                                        11.8 kB         154 kB
+#71 33.68 ├ ƒ /clubs/[club_id]                                              10.6 kB         174 kB
+#71 33.68 ├ ƒ /clubs/[club_id]/manage                                        130 kB         290 kB
+#71 33.68 ├ ƒ /clubs/[club_id]/manage/campaigns/[campaign_id]/applications    171 B         101 kB
+#71 33.68 ├ ƒ /clubs/[club_id]/manage/campaigns/[campaign_id]/edit            171 B         101 kB
+#71 33.68 ├ ƒ /clubs/[club_id]/manage/campaigns/new                         9.74 kB         146 kB
+#71 33.68 ├ ƒ /clubs/[club_id]/manage/events/[event_id]/check-in             118 kB         231 kB
+#71 33.68 ├ ƒ /clubs/[club_id]/manage/events/[event_id]/edit                9.66 kB         153 kB
+#71 33.68 ├ ƒ /clubs/[club_id]/manage/events/[event_id]/registrations       8.77 kB         159 kB
+#71 33.68 ├ ƒ /clubs/[club_id]/manage/events/new                            11.3 kB         157 kB
+#71 33.68 ├ ○ /events                                                       8.93 kB         153 kB
+#71 33.68 ├ ƒ /events/[event_id]                                            15.9 kB         174 kB
+#71 33.68 ├ ○ /login                                                         3.7 kB         125 kB
+#71 33.68 ├ ○ /profile                                                      9.73 kB         158 kB
+#71 33.68 ├ ○ /profile/applications                                         11.1 kB         159 kB
+#71 33.68 ├ ○ /recruitment                                                  5.37 kB         174 kB
+#71 33.68 ├ ○ /signup                                                       7.67 kB         129 kB
+#71 33.68 └ ○ /verify-email                                                 2.52 kB         121 kB
+#71 33.68 + First Load JS shared by all                                      101 kB
+#71 33.68   ├ chunks/1684-02273b7492eee0a8.js                               45.8 kB
+#71 33.68   ├ chunks/4bd1b696-95883890d0c56dfa.js                           53.3 kB
+#71 33.68   └ other shared chunks (total)                                   1.94 kB
+#71 33.68 
+#71 33.68 
+#71 33.68 ○  (Static)   prerendered as static content
+#71 33.68 ƒ  (Dynamic)  server-rendered on demand
+#71 33.68 
+#71 33.70 npm notice
+#71 33.70 npm notice New major version of npm available! 10.8.2 -> 11.7.0
+#71 33.70 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.7.0
+#71 33.70 npm notice To update run: npm install -g npm@11.7.0
+#71 33.70 npm notice
+#71 DONE 33.9s
+
+#72 [frontend runner 4/8] COPY --from=builder /app/public ./public
+#72 DONE 0.1s
+
+#73 [frontend runner 5/8] RUN mkdir .next
+#73 DONE 0.3s
+
+#74 [frontend runner 6/8] RUN chown nextjs:nodejs .next
+#74 DONE 0.2s
+
+#75 [frontend runner 7/8] COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+#75 DONE 0.4s
+
+#76 [frontend runner 8/8] COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+#76 DONE 0.0s
+
+#77 [frontend] exporting to image
+#77 exporting layers
+#77 exporting layers 1.9s done
+#77 exporting manifest sha256:ea03b7c539d13cccf157bd33dac1104638620e9773db5b0a385e682bf1cabb0f done
+#77 exporting config sha256:2253731b5b8ae4b59021ef8ebd3a3ac0bcc4112b99dad9821ba45969530ac25b done
+#77 exporting attestation manifest sha256:739490e374e7367e7e077882f4a274b09d2fbb42f5435afa3d78c5636a39928b done
+#77 exporting manifest list sha256:062c2adebde3c98e2372b94156620b288e61a5dbfcd994182d0decf4386ba475 done
+#77 naming to docker.io/library/club-management-pipeline-frontend:latest done
+#77 unpacking to docker.io/library/club-management-pipeline-frontend:latest
+#77 unpacking to docker.io/library/club-management-pipeline-frontend:latest 0.4s done
+#77 DONE 2.4s
+
+#78 [frontend] resolving provenance for metadata file
+#78 DONE 0.0s
+ Image club-management-pipeline-notify-service Built 
+ Image club-management-pipeline-image-service Built 
+ Image club-management-pipeline-frontend Built 
+ Image club-management-pipeline-auth-service Built 
+ Image club-management-pipeline-club-service Built 
+ Image club-management-pipeline-event-service Built 
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (E2E Tests)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] echo
+🧪 Running E2E tests with Docker infrastructure
+[Pipeline] echo
+📋 Failure Thresholds: 10% or 20 tests (Mode: both)
+[Pipeline] sh
++ echo Starting services for E2E tests...
+Starting services for E2E tests...
++ mkdir -p artifacts test-results logs
++ echo Starting infrastructure services (postgres, mongodb, rabbitmq)...
+Starting infrastructure services (postgres, mongodb, rabbitmq)...
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --force-recreate postgres mongo rabbitmq
+time="2026-01-10T06:51:26Z" level=warning msg="No services to build"
+ Network club-management-pipeline_club_network Creating 
+ Network club-management-pipeline_club_network Created 
+ Volume club-management-pipeline_rabbitmq_e2e_data Creating 
+ Volume club-management-pipeline_rabbitmq_e2e_data Created 
+ Container club_management_mongo_e2e Creating 
+ Container club_management_rabbitmq_e2e Creating 
+ Container club_management_postgres_e2e Creating 
+ Container club_management_mongo_e2e Created 
+ Container club_management_rabbitmq_e2e Created 
+ Container club_management_postgres_e2e Created 
+ Container club_management_mongo_e2e Starting 
+ Container club_management_rabbitmq_e2e Starting 
+ Container club_management_postgres_e2e Starting 
+ Container club_management_postgres_e2e Started 
+ Container club_management_mongo_e2e Started 
+ Container club_management_rabbitmq_e2e Started 
++ echo Waiting for databases to be ready...
+Waiting for databases to be ready...
++ seq 1 60
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps postgres mongo rabbitmq
++ grep -E (unhealthy|starting)
++ echo Databases still starting... (attempt 1/60)
+Databases still starting... (attempt 1/60)
++ sleep 5
++ [ 1 -eq 60 ]
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps postgres mongo rabbitmq
++ grep -E (unhealthy|starting)
++ echo Databases still starting... (attempt 2/60)
+Databases still starting... (attempt 2/60)
++ sleep 5
++ [ 2 -eq 60 ]
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps postgres mongo rabbitmq
++ grep -E (unhealthy|starting)
++ echo Databases still starting... (attempt 3/60)
+Databases still starting... (attempt 3/60)
++ sleep 5
++ [ 3 -eq 60 ]
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps postgres mongo rabbitmq
++ grep -E (unhealthy|starting)
++ echo Databases are healthy!
+Databases are healthy!
++ break
++ echo Starting application services...
+Starting application services...
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --no-build --force-recreate auth-service club-service event-service notify-service image-service frontend
+ Volume club-management-pipeline_notify_logs Creating 
+ Volume club-management-pipeline_notify_logs Created 
+ Container club_management_mongo_e2e Running 
+ Container club_management_club Creating 
+ Container club_management_postgres_e2e Running 
+ Container club_management_kong Creating 
+ Container club_management_event Creating 
+ Container club_management_rabbitmq_e2e Running 
+ Container club_management_notify Creating 
+ Container club_management_auth Creating 
+ Container club_management_image Creating 
+ Container club_management_event Created 
+ Container club_management_notify Created 
+ Container club_management_image Created 
+ Container club_management_auth Created 
+ Container club_management_kong Created 
+ Container club_management_frontend Creating 
+ Container club_management_club Created 
+ Container club_management_frontend Created 
+ Container club_management_kong Starting 
+ Container club_management_rabbitmq_e2e Waiting 
+ Container club_management_rabbitmq_e2e Waiting 
+ Container club_management_postgres_e2e Waiting 
+ Container club_management_mongo_e2e Waiting 
+ Container club_management_rabbitmq_e2e Waiting 
+ Container club_management_mongo_e2e Waiting 
+ Container club_management_kong Started 
+ Container club_management_frontend Starting 
+ Container club_management_postgres_e2e Healthy 
+ Container club_management_mongo_e2e Healthy 
+ Container club_management_event Starting 
+ Container club_management_rabbitmq_e2e Healthy 
+ Container club_management_auth Starting 
+ Container club_management_mongo_e2e Healthy 
+ Container club_management_club Starting 
+ Container club_management_rabbitmq_e2e Healthy 
+ Container club_management_notify Starting 
+ Container club_management_rabbitmq_e2e Healthy 
+ Container club_management_image Starting 
+ Container club_management_frontend Started 
+ Container club_management_club Started 
+ Container club_management_event Started 
+ Container club_management_image Started 
+ Container club_management_auth Started 
+ Container club_management_notify Started 
++ echo Waiting for application services to be healthy...
+Waiting for application services to be healthy...
++ sleep 30
++ seq 1 90
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
++ grep -E (unhealthy|starting)
++ echo All services are healthy!
+All services are healthy!
++ break
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
+NAME                           IMAGE                                     COMMAND                  SERVICE          CREATED          STATUS                    PORTS
+club_management_auth           club-management-pipeline-auth-service     "docker-entrypoint.s…"   auth-service     32 seconds ago   Up 30 seconds (healthy)   0.0.0.0:3001->3001/tcp, [::]:3001->3001/tcp
+club_management_club           club-management-pipeline-club-service     "docker-entrypoint.s…"   club-service     32 seconds ago   Up 30 seconds (healthy)   0.0.0.0:3002->3002/tcp, [::]:3002->3002/tcp
+club_management_event          club-management-pipeline-event-service    "docker-entrypoint.s…"   event-service    32 seconds ago   Up 30 seconds (healthy)   0.0.0.0:3003->3003/tcp, [::]:3003->3003/tcp
+club_management_frontend       club-management-pipeline-frontend         "docker-entrypoint.s…"   frontend         32 seconds ago   Up 30 seconds (healthy)   0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
+club_management_image          club-management-pipeline-image-service    "docker-entrypoint.s…"   image-service    32 seconds ago   Up 30 seconds (healthy)   0.0.0.0:3004->3004/tcp, [::]:3004->3004/tcp
+club_management_kong           club-management-pipeline-kong             "/docker-entrypoint.…"   kong             32 seconds ago   Up 31 seconds (healthy)   0.0.0.0:8000-8001->8000-8001/tcp, [::]:8000-8001->8000-8001/tcp, 0.0.0.0:8443-8444->8443-8444/tcp, [::]:8443-8444->8443-8444/tcp
+club_management_mongo_e2e      mongo:6.0                                 "docker-entrypoint.s…"   mongo            49 seconds ago   Up 47 seconds (healthy)   0.0.0.0:27017->27017/tcp, [::]:27017->27017/tcp
+club_management_notify         club-management-pipeline-notify-service   "docker-entrypoint.s…"   notify-service   32 seconds ago   Up 30 seconds (healthy)   0.0.0.0:3005->3005/tcp, [::]:3005->3005/tcp
+club_management_postgres_e2e   postgres:15-alpine                        "docker-entrypoint.s…"   postgres         48 seconds ago   Up 47 seconds (healthy)   0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
+club_management_rabbitmq_e2e   rabbitmq:3-management                     "docker-entrypoint.s…"   rabbitmq         49 seconds ago   Up 47 seconds (healthy)   0.0.0.0:5672->5672/tcp, [::]:5672->5672/tcp, 0.0.0.0:15672->15672/tcp, [::]:15672->15672/tcp
++ echo Building E2E runner image...
+Building E2E runner image...
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml build e2e-runner
+ Image club-management-pipeline-event-service Building 
+ Image club-management-pipeline-kong Building 
+ Image club-management-pipeline-auth-service Building 
+ Image club-management-pipeline-frontend Building 
+ Image club-management-pipeline-club-service Building 
+ Image club-management-pipeline-e2e-runner Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 4.40kB done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile.e2e
+#2 transferring dockerfile: 1.23kB done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for mcr.microsoft.com/playwright:v1.57.0-jammy
+#3 DONE 0.4s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+
+#5 [deps 1/4] FROM mcr.microsoft.com/playwright:v1.57.0-jammy@sha256:6aca677c27a967caf7673d108ac67ffaf8fed134f27e17b27a05464ca0ace831
+#5 resolve mcr.microsoft.com/playwright:v1.57.0-jammy@sha256:6aca677c27a967caf7673d108ac67ffaf8fed134f27e17b27a05464ca0ace831 0.0s done
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 338.88MB 4.7s
+#6 transferring context: 499.45MB 9.7s
+#6 transferring context: 764.02MB 14.8s
+#6 transferring context: 1.17GB 19.9s
+#6 transferring context: 1.58GB 25.0s
+#6 transferring context: 1.76GB 30.0s
+#6 transferring context: 1.76GB 30.0s done
+#6 DONE 30.6s
+
+#7 [deps 4/4] RUN npm ci
+#7 CACHED
+
+#8 [runner 3/5] COPY --from=deps /app/node_modules ./node_modules
+#8 CACHED
+
+#9 [deps 2/4] WORKDIR /app
+#9 CACHED
+
+#10 [deps 3/4] COPY package*.json ./
+#10 CACHED
+
+#11 [runner 4/5] COPY package*.json ./
+#11 CACHED
+
+#12 [runner 5/5] COPY . .
+#12 DONE 19.1s
+
+#13 exporting to image
+#13 exporting layers
+#13 exporting layers 58.2s done
+#13 exporting manifest sha256:23e604c1d25b3c075a7bf4e50ca591a368f98079606aea773dd80886f5ae27ee
+#13 exporting manifest sha256:23e604c1d25b3c075a7bf4e50ca591a368f98079606aea773dd80886f5ae27ee done
+#13 exporting config sha256:e0cb7bb10e3990336aa69b6aed4a27ba4696d7a4e050a32aa9cc4a203134a5a3 done
+#13 exporting attestation manifest sha256:608b1f33e38b6bfd289769882d284f65694a5abf2a43a69c24af4a9ffdb18d64 done
+#13 exporting manifest list sha256:a87103fa1350cadc0eaf6c443c93b64686c16ea68d65fc3b3850263484fddeb2 done
+#13 naming to docker.io/library/club-management-pipeline-e2e-runner:latest done
+#13 unpacking to docker.io/library/club-management-pipeline-e2e-runner:latest
+#13 unpacking to docker.io/library/club-management-pipeline-e2e-runner:latest 13.8s done
+#13 DONE 72.1s
+
+#14 resolving provenance for metadata file
+#14 DONE 0.1s
+ Image club-management-pipeline-e2e-runner Built 
+[Pipeline] sh
++ set +e
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml run --rm e2e-runner
+time="2026-01-10T06:54:20Z" level=warning msg="No services to build"
+ Container club_management_rabbitmq_e2e Running 
+ Container club_management_postgres_e2e Running 
+ Container club_management_mongo_e2e Running 
+ Container club_management_kong Running 
+ Container club_management_club Running 
+ Container club_management_auth Running 
+ Container club_management_event Running 
+ Container club_management_frontend Running 
+ Container club_management_mongo_e2e Waiting 
+ Container club_management_postgres_e2e Waiting 
+ Container club_management_rabbitmq_e2e Waiting 
+ Container club_management_mongo_e2e Waiting 
+ Container club_management_rabbitmq_e2e Healthy 
+ Container club_management_postgres_e2e Healthy 
+ Container club_management_mongo_e2e Healthy 
+ Container club_management_mongo_e2e Healthy 
+time="2026-01-10T06:54:21Z" level=warning msg="No services to build"
+ Container club_management_kong Waiting 
+ Container club_management_auth Waiting 
+ Container club_management_club Waiting 
+ Container club_management_event Waiting 
+ Container club_management_frontend Waiting 
+ Container club_management_frontend Healthy 
+ Container club_management_club Healthy 
+ Container club_management_auth Healthy 
+ Container club_management_event Healthy 
+ Container club_management_kong Healthy 
+ Container club-management-pipeline-e2e-runner-run-a00cc7b4a51d Creating 
+ Container club-management-pipeline-e2e-runner-run-a00cc7b4a51d Created 
+
++ EXIT_CODE=1
++ echo E2E_EXIT_CODE:1
++ exit 0
+[Pipeline] echo
+E2E tests finished with exit code: 1
+[Pipeline] sh
+[Pipeline] }
+[Pipeline] // script
+Post stage
+[Pipeline] script
+[Pipeline] {
+[Pipeline] sh
++ chmod +x scripts/analyze-e2e-results.sh
+ seems to be removed or offline (java.io.IOException: cannot find current thread in CpsStepContext[114:sh]:club-management-pipeline#45); will wait for 5 min 0 sec for it to come back online
++ cat
++ [ -f e2e-test-summary.json ]
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] publishHTML
+[htmlpublisher] Archiving HTML reports...
+[htmlpublisher] Archiving at BUILD level /var/jenkins_home/workspace/club-management-pipeline to E2E_20Test_20Summary
+[htmlpublisher] Copying recursive using current thread
+ is back online
+ seems to be removed or offline (java.io.IOException: cannot find current thread in CpsStepContext[114:sh]:club-management-pipeline#45); will wait for 5 min 0 sec for it to come back online
+ is back online
+ seems to be removed or offline (java.io.IOException: cannot find current thread in CpsStepContext[114:sh]:club-management-pipeline#45); will wait for 5 min 0 sec for it to come back online
+ is back online
+ seems to be removed or offline (java.io.IOException: cannot find current thread in CpsStepContext[114:sh]:club-management-pipeline#45); will wait for 5 min 0 sec for it to come back online
+ is back online
+ seems to be removed or offline (java.io.IOException: cannot find current thread in CpsStepContext[114:sh]:club-management-pipeline#45); will wait for 5 min 0 sec for it to come back online
+ is back online
+ seems to be removed or offline (java.io.IOException: cannot find current thread in CpsStepContext[114:sh]:club-management-pipeline#45); will wait for 5 min 0 sec for it to come back online
+ is back online
+ seems to be removed or offline (java.io.IOException: cannot find current thread in CpsStepContext[114:sh]:club-management-pipeline#45); will wait for 5 min 0 sec for it to come back online
+ is back online
+ seems to be removed or offline (java.io.IOException: cannot find current thread in CpsStepContext[114:sh]:club-management-pipeline#45); will wait for 5 min 0 sec for it to come back online
+ is back online
+ seems to be removed or offline (java.io.IOException: cannot find current thread in CpsStepContext[114:sh]:club-management-pipeline#45); will wait for 5 min 0 sec for it to come back online
+ is back online
+ seems to be removed or offline (java.io.IOException: cannot find current thread in CpsStepContext[114:sh]:club-management-pipeline#45); will wait for 5 min 0 sec for it to come back online
+ is back online
+ seems to be removed or offline (java.io.IOException: cannot find current thread in CpsStepContext[114:sh]:club-management-pipeline#45); will wait for 5 min 0 sec for it to come back online
+ is back online
+ seems to be removed or offline (java.io.IOException: cannot find current thread in CpsStepContext[114:sh]:club-management-pipeline#45); will wait for 5 min 0 sec for it to come back online
+ is back online
+ seems to be removed or offline (java.io.IOException: cannot find current thread in CpsStepContext[114:sh]:club-management-pipeline#45); will wait for 5 min 0 sec for it to come back online
+ is back online
+ seems to be removed or offline (java.io.IOException: cannot find current thread in CpsStepContext[114:sh]:club-management-pipeline#45); will wait for 5 min 0 sec for it to come back online
+ is back online
+ seems to be removed or offline (java.io.IOException: cannot find current thread in CpsStepContext[114:sh]:club-management-pipeline#45); will wait for 5 min 0 sec for it to come back online
+ is back online
+ seems to be removed or offline (java.io.IOException: cannot find current thread in CpsStepContext[114:sh]:club-management-pipeline#45); will wait for 5 min 0 sec for it to come back online
+[Pipeline] publishHTML
+[htmlpublisher] Archiving HTML reports...
+[htmlpublisher] Archiving at BUILD level /var/jenkins_home/workspace/club-management-pipeline/playwright-report to Playwright_20E2E_20Test_20Report
+[htmlpublisher] Copying recursive using current thread
+[Pipeline] junit
+Recording test results
+No test report files were found. Configuration error?
+[Checks API] No suitable checks publisher found.
+[Pipeline] archiveArtifacts
+Archiving artifacts
+[Pipeline] sh
++ echo Collecting service logs...
+Collecting service logs...
++ mkdir -p logs
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs
+[Pipeline] archiveArtifacts
+Archiving artifacts
+[Pipeline] sh
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v
+ Container club_management_auth Stopping 
+ Container club_management_notify Stopping 
+ Container club_management_club Stopping 
+ Container club_management_image Stopping 
+ Container club_management_event Stopping 
+ Container club_management_frontend Stopping 
+ is back online
+ seems to be removed or offline (java.io.IOException: cannot find current thread in CpsStepContext[114:sh]:club-management-pipeline#45); will wait for 5 min 0 sec for it to come back online
+ Container club_management_auth Stopped 
+ Container club_management_auth Removing 
+ Container club_management_frontend Stopped 
+ Container club_management_frontend Removing 
+ Container club_management_event Stopped 
+ Container club_management_event Removing 
+ Container club_management_club Stopped 
+ Container club_management_club Removing 
+ Container club_management_image Stopped 
+ Container club_management_image Removing 
+ Container club_management_notify Stopped 
+ Container club_management_notify Removing 
+ Container club_management_auth Removed 
+ Container club_management_postgres_e2e Stopping 
+ Container club_management_notify Removed 
+ Container club_management_frontend Removed 
+ Container club_management_kong Stopping 
+ Container club_management_club Removed 
+ Container club_management_event Removed 
+ Container club_management_mongo_e2e Stopping 
+ Container club_management_image Removed 
+ Container club_management_rabbitmq_e2e Stopping 
+ Container club_management_postgres_e2e Stopped 
+ Container club_management_postgres_e2e Removing 
+ Container club_management_postgres_e2e Removed 
+ Container club_management_mongo_e2e Stopped 
+ Container club_management_mongo_e2e Removing 
+ Container club_management_mongo_e2e Removed 
+ Container club_management_rabbitmq_e2e Stopped 
+ Container club_management_rabbitmq_e2e Removing 
+ Container club_management_rabbitmq_e2e Removed 
+ Container club_management_kong Stopped 
+ Container club_management_kong Removing 
+ Container club_management_kong Removed 
+ Volume club-management-pipeline_rabbitmq_e2e_data Removing 
+ Volume club-management-pipeline_notify_logs Removing 
+ Network club-management-pipeline_club_network Removing 
+ Volume club-management-pipeline_notify_logs Removed 
+ Volume club-management-pipeline_rabbitmq_e2e_data Removed 
+ Network club-management-pipeline_club_network Removed 
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Tag & Push Images)
+Stage "Tag & Push Images" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Deploy to Environment)
+Stage "Deploy to Environment" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Security Scan)
+Stage "Security Scan" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Declarative: Post Actions)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] echo
+🧹 Cleaning up workspace
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] sh
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v
++ docker image prune -f
+Total reclaimed space: 0B
+[Pipeline] cleanWs
+[WS-CLEANUP] Deleting project workspace...
+[WS-CLEANUP] Deferred wipeout is disabled by the job configuration...
+[WS-CLEANUP] done
+[Pipeline] script
+[Pipeline] {
+[Pipeline] echo
+❌ Pipeline failed!
+[Pipeline] sh
++ echo Collecting failure diagnostics...
+Collecting failure diagnostics...
++ docker ps -a
++ docker images
+ is back online
+ seems to be removed or offline (java.io.IOException: cannot find current thread in CpsStepContext[114:sh]:club-management-pipeline#45); will wait for 5 min 0 sec for it to come back online
+WARNING: This output is designed for human readability. For machine-readable output, please use --format.
+[Pipeline] archiveArtifacts
+Archiving artifacts
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // timeout
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+an exception which occurred:
+	in field com.cloudbees.groovy.cps.impl.BlockScopeEnv.locals
+	in object com.cloudbees.groovy.cps.impl.BlockScopeEnv@4ec7e401
+	in field com.cloudbees.groovy.cps.impl.CallEnv.caller
+	in object com.cloudbees.groovy.cps.impl.FunctionCallEnv@5bbc9e8a
+	in field com.cloudbees.groovy.cps.Continuable.e
+	in object org.jenkinsci.plugins.workflow.cps.SandboxContinuable@41d1963c
+	in field org.jenkinsci.plugins.workflow.cps.CpsThread.program
+	in object org.jenkinsci.plugins.workflow.cps.CpsThread@615028a9
+	in field org.jenkinsci.plugins.workflow.cps.CpsThreadGroup.threads
+	in object org.jenkinsci.plugins.workflow.cps.CpsThreadGroup@678179cf
+	in object org.jenkinsci.plugins.workflow.cps.CpsThreadGroup@678179cf
+Also:   org.jenkinsci.plugins.workflow.actions.ErrorAction$ErrorId: c1e0cfba-a2d0-478f-a9ea-00c8a4cc90dd
+Caused: java.io.NotSerializableException: java.util.regex.Matcher
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.RiverMarshaller.doWriteObject(RiverMarshaller.java:278)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.BlockMarshaller.doWriteObject(BlockMarshaller.java:65)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.BlockMarshaller.writeObject(BlockMarshaller.java:56)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.MarshallerObjectOutputStream.writeObjectOverride(MarshallerObjectOutputStream.java:50)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.RiverObjectOutputStream.writeObjectOverride(RiverObjectOutputStream.java:179)
+	at java.base/java.io.ObjectOutputStream.writeObject(Unknown Source)
+	at java.base/java.util.HashMap.internalWriteEntries(Unknown Source)
+	at java.base/java.util.HashMap.writeObject(Unknown Source)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.reflect.SerMethods.callWriteObject(SerMethods.java:69)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.reflect.SerializableClass.callWriteObject(SerializableClass.java:231)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.RiverMarshaller.doWriteSerializableObject(RiverMarshaller.java:1128)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.RiverMarshaller.doWriteObject(RiverMarshaller.java:271)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.RiverMarshaller.doWriteFields(RiverMarshaller.java:1182)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.RiverMarshaller.doWriteSerializableObject(RiverMarshaller.java:1140)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.RiverMarshaller.doWriteObject(RiverMarshaller.java:271)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.RiverMarshaller.doWriteFields(RiverMarshaller.java:1182)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.RiverMarshaller.doWriteSerializableObject(RiverMarshaller.java:1140)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.RiverMarshaller.doWriteSerializableObject(RiverMarshaller.java:1119)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.RiverMarshaller.doWriteObject(RiverMarshaller.java:271)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.RiverMarshaller.doWriteFields(RiverMarshaller.java:1182)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.RiverMarshaller.doWriteSerializableObject(RiverMarshaller.java:1140)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.RiverMarshaller.doWriteSerializableObject(RiverMarshaller.java:1119)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.RiverMarshaller.doWriteObject(RiverMarshaller.java:271)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.RiverMarshaller.doWriteFields(RiverMarshaller.java:1182)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.RiverMarshaller.doWriteSerializableObject(RiverMarshaller.java:1140)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.RiverMarshaller.doWriteObject(RiverMarshaller.java:271)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.BlockMarshaller.doWriteObject(BlockMarshaller.java:65)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.BlockMarshaller.writeObject(BlockMarshaller.java:56)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.MarshallerObjectOutputStream.writeObjectOverride(MarshallerObjectOutputStream.java:50)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.RiverObjectOutputStream.writeObjectOverride(RiverObjectOutputStream.java:179)
+	at java.base/java.io.ObjectOutputStream.writeObject(Unknown Source)
+	at java.base/java.util.HashMap.internalWriteEntries(Unknown Source)
+	at java.base/java.util.HashMap.writeObject(Unknown Source)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.reflect.SerMethods.callWriteObject(SerMethods.java:69)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.reflect.SerializableClass.callWriteObject(SerializableClass.java:231)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.RiverMarshaller.doWriteSerializableObject(RiverMarshaller.java:1128)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.RiverMarshaller.doWriteObject(RiverMarshaller.java:271)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.RiverMarshaller.doWriteFields(RiverMarshaller.java:1182)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.RiverMarshaller.doWriteSerializableObject(RiverMarshaller.java:1140)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.river.RiverMarshaller.doWriteObject(RiverMarshaller.java:271)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.AbstractObjectOutput.writeObject(AbstractObjectOutput.java:58)
+	at PluginClassLoader for workflow-support//org.jboss.marshalling.AbstractMarshaller.writeObject(AbstractMarshaller.java:116)
+	at PluginClassLoader for workflow-support//org.jenkinsci.plugins.workflow.support.pickles.serialization.RiverWriter.lambda$writeObject$1(RiverWriter.java:147)
+	at PluginClassLoader for script-security//org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.GroovySandbox.runInSandbox(GroovySandbox.java:329)
+	at PluginClassLoader for workflow-support//org.jenkinsci.plugins.workflow.support.pickles.serialization.RiverWriter.writeObject(RiverWriter.java:146)
+	at PluginClassLoader for workflow-cps//org.jenkinsci.plugins.workflow.cps.CpsThreadGroup.saveProgram(CpsThreadGroup.java:639)
+	at PluginClassLoader for workflow-cps//org.jenkinsci.plugins.workflow.cps.CpsThreadGroup.saveProgram(CpsThreadGroup.java:613)
+	at PluginClassLoader for workflow-cps//org.jenkinsci.plugins.workflow.cps.CpsThreadGroup.saveProgramIfPossible(CpsThreadGroup.java:596)
+	at PluginClassLoader for workflow-cps//org.jenkinsci.plugins.workflow.cps.CpsThreadGroup.run(CpsThreadGroup.java:520)
+	at PluginClassLoader for workflow-cps//org.jenkinsci.plugins.workflow.cps.CpsThreadGroup$2.call(CpsThreadGroup.java:372)
+	at PluginClassLoader for workflow-cps//org.jenkinsci.plugins.workflow.cps.CpsThreadGroup$2.call(CpsThreadGroup.java:302)
+	at PluginClassLoader for workflow-cps//org.jenkinsci.plugins.workflow.cps.CpsVmExecutorService.lambda$wrap$4(CpsVmExecutorService.java:143)
+	at java.base/java.util.concurrent.FutureTask.run(Unknown Source)
+	at hudson.remoting.SingleLaneExecutorService$1.run(SingleLaneExecutorService.java:139)
+	at jenkins.util.ContextResettingExecutorService$1.run(ContextResettingExecutorService.java:28)
+	at jenkins.security.ImpersonatingExecutorService$1.run(ImpersonatingExecutorService.java:68)
+	at jenkins.util.ErrorLoggingExecutorService.lambda$wrap$0(ErrorLoggingExecutorService.java:51)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)
+	at java.base/java.util.concurrent.FutureTask.run(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at PluginClassLoader for workflow-cps//org.jenkinsci.plugins.workflow.cps.CpsVmExecutorService$1.call(CpsVmExecutorService.java:53)
+	at PluginClassLoader for workflow-cps//org.jenkinsci.plugins.workflow.cps.CpsVmExecutorService$1.call(CpsVmExecutorService.java:50)
+	at org.codehaus.groovy.runtime.GroovyCategorySupport$ThreadCategoryInfo.use(GroovyCategorySupport.java:136)
+	at org.codehaus.groovy.runtime.GroovyCategorySupport.use(GroovyCategorySupport.java:275)
+	at PluginClassLoader for workflow-cps//org.jenkinsci.plugins.workflow.cps.CpsVmExecutorService.lambda$categoryThreadFactory$0(CpsVmExecutorService.java:50)
+	at java.base/java.lang.Thread.run(Unknown Source)
+Finished: FAILURE

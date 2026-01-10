@@ -38,6 +38,42 @@ ENV CI=true
 ENV PYTHONUNBUFFERED=1
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-# Default command runs E2E tests with real-time output
-# line reporter shows progress, list shows final summary
-CMD ["npx", "playwright", "test", "--reporter=list,html,junit"]
+# Create entrypoint script for better output handling
+RUN echo '#!/bin/bash\n\
+    set -e\n\
+    echo "========================================"\n\
+    echo "🎭 Starting E2E Test Execution"\n\
+    echo "========================================"\n\
+    echo "Environment:"\n\
+    echo "  - BASE_URL: ${BASE_URL:-not set}"\n\
+    echo "  - API_GATEWAY_URL: ${API_GATEWAY_URL:-not set}"\n\
+    echo "  - CI: ${CI:-false}"\n\
+    echo "========================================"\n\
+    echo ""\n\
+    \n\
+    # Run Playwright tests with multiple reporters\n\
+    npx playwright test --reporter=list,html,junit || EXIT_CODE=$?\n\
+    \n\
+    echo ""\n\
+    echo "========================================"\n\
+    echo "📊 Test Execution Summary"\n\
+    echo "========================================"\n\
+    \n\
+    if [ -f "test-results/results.json" ]; then\n\
+    echo "✅ Test results file generated"\n\
+    else\n\
+    echo "⚠️  Warning: results.json not found"\n\
+    fi\n\
+    \n\
+    if [ -f "playwright-report/index.html" ]; then\n\
+    echo "✅ HTML report generated"\n\
+    else\n\
+    echo "⚠️  Warning: HTML report not found"\n\
+    fi\n\
+    \n\
+    echo "========================================"\n\
+    exit ${EXIT_CODE:-0}\n\
+    ' > /app/run-tests.sh && chmod +x /app/run-tests.sh
+
+# Default command runs the entrypoint script
+CMD ["/app/run-tests.sh"]

@@ -308,33 +308,81 @@ pipeline {
                     def e2eOutput = sh(
                         script: '''
                             set +e  # Don't exit on error
+                            echo "🚀 Starting E2E test runner..."
                             docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
                                 run --rm e2e-runner
                             EXIT_CODE=$?
                             echo "E2E_EXIT_CODE:${EXIT_CODE}"
+                            echo "📊 E2E tests completed with exit code: ${EXIT_CODE}"
                             exit 0
                         ''',
                         returnStdout: true
                     ).trim()
                     
                     // Extract exit code from output (use simple string parsing to avoid serialization issues)
+                    // This avoids creating non-serializable Matcher objects that cause jenkins CPS errors
                     def actualExitCode = 1 // default to failure
-                    e2eOutput.eachLine { line ->
-                        if (line.startsWith('E2E_EXIT_CODE:')) {
-                            actualExitCode = line.split(':')[1].toInteger()
+                    def exitCodeLine = ''
+                    
+                    // Find the line containing E2E_EXIT_CODE using indexOf instead of regex
+                    def lines = e2eOutput.split('\n')
+                    for (int i = 0; i < lines.length; i++) {
+                        def line = lines[i]
+                        if (line.indexOf('E2E_EXIT_CODE:') >= 0) {
+                            exitCodeLine = line
+                            // Extract number after colon using indexOf and substring
+                            def colonIndex = line.indexOf(':')
+                            if (colonIndex >= 0 && colonIndex < line.length() - 1) {
+                                def exitCodeStr = line.substring(colonIndex + 1).trim()
+                                try {
+                                    actualExitCode = exitCodeStr.toInteger()
+                                } catch (NumberFormatException e) {
+                                    echo "⚠️  Warning: Could not parse exit code from: ${exitCodeStr}"
+                                    actualExitCode = 1
+                                }
+                            }
+                            break
                         }
                     }
                     
                     echo "E2E tests finished with exit code: ${actualExitCode}"
+                    echo "Exit code line found: ${exitCodeLine ?: 'NOT FOUND'}"
                     
                     // Analyze test results
                     sh 'chmod +x scripts/analyze-e2e-results.sh'
+                    
+                    // Check if summary file was created
+                    def summaryExists = fileExists('e2e-test-summary.json')
+                    
+                    if (!summaryExists) {
+                        echo "⚠️  Warning: e2e-test-summary.json not found. E2E tests may have failed to run."
+                        echo "Creating default summary for failure case..."
+                        
+                        sh '''
+                            cat > e2e-test-summary.json <<'EOF'
+{
+  "total": 0,
+  "passed": 0,
+  "failed": 1,
+  "skipped": 0,
+  "failureRate": 100,
+  "thresholdPercent": 5,
+  "thresholdAbsolute": 12,
+  "thresholdMode": "both",
+  "withinThreshold": false,
+  "message": "E2E tests failed to execute or summary file not generated",
+  "exitCode": 1
+}
+EOF
+                        '''
+                    }
+                    
                     def analysisExitCode = sh(
                         script: './scripts/analyze-e2e-results.sh',
                         returnStatus: true
                     )
                     
-                    // Read summary
+                    // Read summary (now guaranteed to exist)
                     def summary = readJSON file: 'e2e-test-summary.json'
                     
                     echo """
@@ -347,7 +395,7 @@ pipeline {
 """
                     
                     // Determine build status based on analysis
-                    if (analysisExitCode == 0) {
+                    if (analysisExitCode == 0 && summary.failed == 0) {
                         // All tests passed
                         currentBuild.result = 'SUCCESS'
                         echo "✅ All E2E tests passed!"

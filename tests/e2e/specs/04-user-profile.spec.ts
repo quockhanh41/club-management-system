@@ -91,17 +91,15 @@ test.describe('User Profile Management Journey', () => {
     await profile.goto();
     
     // Check if profile picture section exists
-    const profilePicture = authenticatedPage.locator('.profile-picture, [data-testid="profile-picture"]');
-    const uploadButton = authenticatedPage.locator('input[type="file"], button:has-text("Upload Picture")');
+    const profilePicture = authenticatedPage.locator('.profile-picture, [data-testid="profile-picture"], img[alt*="profile"], img[alt*="avatar"], button:has-text("Đổi avatar")');
+    const uploadButton = authenticatedPage.locator('input[type="file"], button:has-text("Upload Picture"), button:has-text("Đổi avatar")');
     
-    if (await profilePicture.isVisible()) {
-      expect(await profilePicture.isVisible()).toBe(true);
-    }
+    // At least one of these should be visible (either picture or upload button)
+    const hasPicture = await profilePicture.first().isVisible().catch(() => false);
+    const hasUploadButton = await uploadButton.first().isVisible().catch(() => false);
     
-    if (await uploadButton.isVisible()) {
-      // Profile picture upload functionality exists
-      expect(await uploadButton.isVisible()).toBe(true);
-    }
+    // Ensure profile page has profile picture UI (either image or upload button)
+    expect(hasPicture || hasUploadButton).toBe(true);
   });
 
   test('User preferences and settings', async ({ authenticatedPage, profilePage }) => {

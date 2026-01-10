@@ -310,12 +310,18 @@ pipeline {
                             set +e  # Don't exit on error
                             docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
                                 run --rm e2e-runner
-                            echo $?
+                            EXIT_CODE=$?
+                            echo "E2E_EXIT_CODE:${EXIT_CODE}"
+                            exit 0
                         ''',
                         returnStdout: true
-                    ).trim().toInteger()
+                    )
                     
-                    echo "E2E tests finished with exit code: ${e2eExitCode}"
+                    // Extract exit code from output
+                    def exitCodeMatch = (e2eExitCode =~ /E2E_EXIT_CODE:(\d+)/)
+                    def actualExitCode = exitCodeMatch ? exitCodeMatch[0][1].toInteger() : 1
+                    
+                    echo "E2E tests finished with exit code: ${actualExitCode}"
                     
                     // Analyze test results
                     sh 'chmod +x scripts/analyze-e2e-results.sh'

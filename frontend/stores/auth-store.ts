@@ -221,7 +221,7 @@ export const useAuthStore = create<AuthState>()(
 
             set({
               user,
-              token: token ? "existing" : null,
+              token,  // Store actual token instead of "existing"
               isLoading: false,
               isInitialized: true,
               error: null,

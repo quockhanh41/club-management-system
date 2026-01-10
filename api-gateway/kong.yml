@@ -755,29 +755,50 @@ plugins:
         - POST
         - PUT
         - DELETE
+        - PATCH
         - OPTIONS
+        - HEAD
       headers:
         - "Accept"
+        - "Accept-Encoding"
+        - "Accept-Language"
         - "Accept-Version"
+        - "Access-Control-Request-Headers"
+        - "Access-Control-Request-Method"
+        - "Cache-Control"
+        - "Connection"
         - "Content-Length"
         - "Content-MD5"
         - "Content-Type"
+        - "Cookie"
         - "Date"
+        - "Host"
+        - "Origin"
+        - "Referer"
+        - "User-Agent"
         - "X-Auth-Token"
         - "Authorization"
         - "X-User-Id"
         - "X-User-Email"
         - "X-User-Role"
         - "X-User-Full-Name"
+        - "X-Requested-With"
       exposed_headers:
+        - "Content-Length"
+        - "Content-Type"
+        - "Date"
+        - "Server"
         - "X-Auth-Token"
         - "Authorization"
         - "X-User-Id"
         - "X-User-Email"
         - "X-User-Role"
         - "X-User-Full-Name"
+        - "X-Request-Id"
+        - "X-RateLimit-Limit"
+        - "X-RateLimit-Remaining"
       credentials: true
-      max_age: 3600
+      max_age: 86400
       preflight_continue: false
     tags: [global, cors]
 

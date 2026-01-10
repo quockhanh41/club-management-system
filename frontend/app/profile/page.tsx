@@ -101,8 +101,14 @@ export default function ProfilePage() {
     }
 
     if (!user) {
-      router.push("/login")
-      return
+      // Give some time for store rehydration from localStorage
+      const checkAgain = setTimeout(() => {
+        const currentUser = useAuthStore.getState().user;
+        if (!currentUser) {
+          router.push("/login");
+        }
+      }, 100);
+      return () => clearTimeout(checkAgain);
     }
 
     // Set page loading to false once user data is loaded

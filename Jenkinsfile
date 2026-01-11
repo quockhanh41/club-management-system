@@ -344,10 +344,23 @@ pipeline {
                             mkdir -p test-results playwright-report
                             chmod 777 test-results playwright-report
                             
-                            # Run tests and capture output
+                            # Generate unique container name
+                            CONTAINER_NAME="e2e-runner-${BUILD_NUMBER}"
+                            
+                            # Run tests WITHOUT --rm so we can copy results after
                             docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
-                                run --rm --name e2e-runner-temp e2e-runner
+                                run --name "${CONTAINER_NAME}" e2e-runner || true
                             EXIT_CODE=$?
+                            
+                            echo "=========================================="
+                            echo "📦 Copying test results from container..."
+                            
+                            # Copy test results from container to workspace
+                            docker cp "${CONTAINER_NAME}:/app/test-results/." test-results/ 2>/dev/null || echo "⚠️ Could not copy test-results"
+                            docker cp "${CONTAINER_NAME}:/app/playwright-report/." playwright-report/ 2>/dev/null || echo "⚠️ Could not copy playwright-report"
+                            
+                            # Remove container
+                            docker rm -f "${CONTAINER_NAME}" 2>/dev/null || true
                             
                             echo "=========================================="
                             echo "📦 Verifying test results..."

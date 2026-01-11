@@ -102,6 +102,26 @@ esac
 
 echo "=========================================="
 
+# Create JSON summary file for Jenkins
+cat > e2e-test-summary.json <<EOF
+{
+  "total": $TOTAL_TESTS,
+  "passed": $PASSED_TESTS,
+  "failed": $FAILED_TESTS,
+  "skipped": $SKIPPED_TESTS,
+  "failureRate": $FAILURE_RATE,
+  "thresholdPercent": $THRESHOLD_PERCENT,
+  "thresholdAbsolute": $THRESHOLD_ABSOLUTE,
+  "thresholdMode": "$THRESHOLD_MODE",
+  "withinThreshold": $([ $SHOULD_FAIL -eq 0 ] && echo "true" || echo "false"),
+  "message": "E2E test execution completed",
+  "exitCode": $SHOULD_FAIL
+}
+EOF
+
+echo "📝 Test summary saved to e2e-test-summary.json"
+echo "=========================================="
+
 # Exit with appropriate code
 # 0 = success (all passed), 1 = exceeds threshold (fail build), 2 = within threshold (mark unstable)
 if [ $FAILED_TESTS -eq 0 ]; then

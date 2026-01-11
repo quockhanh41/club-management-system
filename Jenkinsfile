@@ -340,24 +340,33 @@ pipeline {
                             echo "🚀 Starting E2E test runner..."
                             echo "=========================================="
                             
-                            # Run tests and capture exit code properly (sh-compatible way)
+                            # Ensure test-results directory exists in workspace with correct permissions
+                            mkdir -p test-results playwright-report
+                            chmod 777 test-results playwright-report
+                            
+                            # Run tests and capture output
                             docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
-                                run --name e2e-test-run e2e-runner
+                                run --rm --name e2e-runner-temp e2e-runner
                             EXIT_CODE=$?
                             
                             echo "=========================================="
-                            echo "📦 Copying test results from container..."
+                            echo "📦 Verifying test results..."
                             
-                            # Copy test results from container to Jenkins workspace
-                            # Use || true to not fail if directories don't exist
-                            docker cp e2e-test-run:/app/test-results ./test-results 2>/dev/null || echo "⚠️  test-results not found in container"
-                            docker cp e2e-test-run:/app/playwright-report ./playwright-report 2>/dev/null || echo "⚠️  playwright-report not found in container"
-                            docker cp e2e-test-run:/app/artifacts ./artifacts 2>/dev/null || echo "✅ artifacts copied"
+                            # List test results files
+                            if [ -d "test-results" ]; then
+                                echo "✅ test-results directory exists"
+                                ls -lh test-results/ | head -10
+                            else
+                                echo "⚠️ test-results directory not found"
+                            fi
                             
-                            # Clean up the container
-                            docker rm e2e-test-run 2>/dev/null || true
+                            if [ -d "playwright-report" ]; then
+                                echo "✅ playwright-report directory exists"
+                            else
+                                echo "⚠️ playwright-report directory not found"
+                            fi
                             
-                            echo "✅ Test results copied to workspace"
+                            echo "=========================================="
                             echo ""
                             echo "E2E_EXIT_CODE:${EXIT_CODE}"
                             echo "📊 E2E tests completed with exit code: ${EXIT_CODE}"

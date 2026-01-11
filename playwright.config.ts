@@ -54,32 +54,17 @@ export default defineConfig({
 
     {
       name: 'webkit',
-      use: { 
-        ...devices['Desktop Safari'],
-        // Webkit needs more time in CI due to slower rendering
-        navigationTimeout: process.env.CI ? 45000 : 30000,
-        actionTimeout: process.env.CI ? 20000 : 10000,
-      },
+      use: { ...devices['Desktop Safari'] },
     },
 
     /* Test against mobile viewports. */
     {
       name: 'Mobile Chrome',
-      use: { 
-        ...devices['Pixel 5'],
-        // Mobile browsers need extra time
-        navigationTimeout: process.env.CI ? 45000 : 30000,
-        actionTimeout: process.env.CI ? 20000 : 10000,
-      },
+      use: { ...devices['Pixel 5'] },
     },
     {
       name: 'Mobile Safari',
-      use: { 
-        ...devices['iPhone 12'],
-        // Mobile Safari is slowest, needs most time
-        navigationTimeout: process.env.CI ? 60000 : 30000,
-        actionTimeout: process.env.CI ? 25000 : 10000,
-      },
+      use: { ...devices['iPhone 12'] },
     },
   ],
 
@@ -101,9 +86,9 @@ export default defineConfig({
     },
   },
 
-  /* Timeout settings - increased for CI stability and webkit/mobile browsers */
-  timeout: process.env.CI ? 90000 : 30000, // 90s for CI (webkit needs more time)
+  /* Timeout settings - increased for CI stability */
+  timeout: process.env.CI ? 60000 : 30000,
   expect: {
-    timeout: process.env.CI ? 25000 : 10000, // Increased for slower browsers
+    timeout: process.env.CI ? 20000 : 10000,
   },
 });

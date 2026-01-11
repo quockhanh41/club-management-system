@@ -319,6 +319,15 @@ pipeline {
                         # Show service status
                         docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
                         
+                        # Extra wait to ensure services are fully ready (not just healthy)
+                        echo "⏳ Waiting additional 30 seconds for services to stabilize..."
+                        sleep 30
+                        
+                        # Verify services are responding
+                        echo "🔍 Verifying service connectivity..."
+                        docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml exec -T frontend curl -s http://localhost:3000/api/health || echo "⚠️ Frontend health check failed"
+                        docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml exec -T kong curl -s http://localhost:8000/health || echo "⚠️ Kong health check failed"
+                        
                         # Build E2E runner image with code baked in (avoids volume mount issues)
                         echo "Building E2E runner image..."
                         docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml build e2e-runner

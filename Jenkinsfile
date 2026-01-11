@@ -338,15 +338,25 @@ pipeline {
                         script: '''
                             set +e  # Don't exit on error
                             echo "🚀 Starting E2E test runner..."
+                            echo "=========================================="
                             
-                            # Run with --no-TTY to ensure output is captured
+                            # Create a temp file to capture full output
+                            OUTPUT_FILE=$(mktemp)
+                            
+                            # Run without -T flag and capture all output
                             docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
-                                run --rm -T e2e-runner 2>&1
-                            EXIT_CODE=$?
+                                run --rm e2e-runner 2>&1 | tee "$OUTPUT_FILE"
+                            EXIT_CODE=${PIPESTATUS[0]}
                             
+                            echo "=========================================="
                             echo ""
                             echo "E2E_EXIT_CODE:${EXIT_CODE}"
                             echo "📊 E2E tests completed with exit code: ${EXIT_CODE}"
+                            
+                            # Show captured output
+                            cat "$OUTPUT_FILE"
+                            rm -f "$OUTPUT_FILE"
+                            
                             exit 0
                         ''',
                         returnStdout: true

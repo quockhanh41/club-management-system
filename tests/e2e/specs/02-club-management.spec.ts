@@ -30,6 +30,12 @@ test.describe('Club Management Journey', () => {
     // Navigate directly to the created club details page
     await adminPage.goto(`/clubs/${created._id || created.id}`);
     
+    // Wait for page to be fully loaded (especially important for webkit/mobile)
+    await adminPage.waitForLoadState('networkidle');
+    
+    // Add extra wait for webkit to ensure data is rendered
+    await adminPage.waitForTimeout(1000);
+    
     // Verify club details page
     const clubTitle = await clubDetails.getClubTitle();
     expect(clubTitle).toContain(newClubData.name);

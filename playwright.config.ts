@@ -54,17 +54,32 @@ export default defineConfig({
 
     {
       name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      use: { 
+        ...devices['Desktop Safari'],
+        // Webkit needs more time in CI due to slower rendering
+        navigationTimeout: process.env.CI ? 45000 : 30000,
+        actionTimeout: process.env.CI ? 20000 : 10000,
+      },
     },
 
     /* Test against mobile viewports. */
     {
       name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
+      use: { 
+        ...devices['Pixel 5'],
+        // Mobile browsers need extra time
+        navigationTimeout: process.env.CI ? 45000 : 30000,
+        actionTimeout: process.env.CI ? 20000 : 10000,
+      },
     },
     {
       name: 'Mobile Safari',
-      use: { ...devices['iPhone 12'] },
+      use: { 
+        ...devices['iPhone 12'],
+        // Mobile Safari is slowest, needs most time
+        navigationTimeout: process.env.CI ? 60000 : 30000,
+        actionTimeout: process.env.CI ? 25000 : 10000,
+      },
     },
   ],
 
@@ -75,10 +90,10 @@ export default defineConfig({
   /* Run your local dev server before starting the tests */
   webServer: process.env.CI ? undefined : {
     command: 'docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --build',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000, // 2 minutes for services to start
-    env: {
+    url: 'http://localhost:3000',and webkit/mobile browsers */
+  timeout: process.env.CI ? 90000 : 30000, // 90s for CI (webkit needs more time)
+  expect: {
+    timeout: process.env.CI ? 25000 : 10000, // Increased for slower browsers
       NODE_ENV: 'test',
       API_GATEWAY_SECRET: 'test-secret-e2e',
       MONGODB_URI: 'mongodb://localhost:27017/club_e2e_test',

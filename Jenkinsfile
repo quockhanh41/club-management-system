@@ -340,22 +340,27 @@ pipeline {
                             echo "🚀 Starting E2E test runner..."
                             echo "=========================================="
                             
-                            # Create a temp file to capture full output
-                            OUTPUT_FILE=$(mktemp)
-                            
-                            # Run without -T flag and capture all output
+                            # Run tests and capture exit code properly (sh-compatible way)
                             docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
-                                run --rm e2e-runner 2>&1 | tee "$OUTPUT_FILE"
-                            EXIT_CODE=${PIPESTATUS[0]}
+                                run --name e2e-test-run e2e-runner
+                            EXIT_CODE=$?
                             
                             echo "=========================================="
+                            echo "📦 Copying test results from container..."
+                            
+                            # Copy test results from container to Jenkins workspace
+                            # Use || true to not fail if directories don't exist
+                            docker cp e2e-test-run:/app/test-results ./test-results 2>/dev/null || echo "⚠️  test-results not found in container"
+                            docker cp e2e-test-run:/app/playwright-report ./playwright-report 2>/dev/null || echo "⚠️  playwright-report not found in container"
+                            docker cp e2e-test-run:/app/artifacts ./artifacts 2>/dev/null || echo "✅ artifacts copied"
+                            
+                            # Clean up the container
+                            docker rm e2e-test-run 2>/dev/null || true
+                            
+                            echo "✅ Test results copied to workspace"
                             echo ""
                             echo "E2E_EXIT_CODE:${EXIT_CODE}"
                             echo "📊 E2E tests completed with exit code: ${EXIT_CODE}"
-                            
-                            # Show captured output
-                            cat "$OUTPUT_FILE"
-                            rm -f "$OUTPUT_FILE"
                             
                             exit 0
                         ''',

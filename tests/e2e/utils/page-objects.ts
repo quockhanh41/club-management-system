@@ -320,7 +320,18 @@ export class ClubDetailsPage extends BasePage {
   }
 
   async getClubTitle(): Promise<string> {
-    return await this.clubTitle.textContent() || '';
+    // Wait for page to load completely before getting title
+    await this.page.waitForLoadState('networkidle');
+    
+    // Wait for either h1 or club-title element to be visible
+    // Increase timeout for webkit/mobile browsers
+    await this.clubTitle.first().waitFor({ 
+      state: 'visible', 
+      timeout: 15000 
+    });
+    
+    const text = await this.clubTitle.first().textContent();
+    return text?.trim() || '';
   }
 
   async joinClub(): Promise<void> {

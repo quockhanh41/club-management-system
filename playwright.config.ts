@@ -90,10 +90,10 @@ export default defineConfig({
   /* Run your local dev server before starting the tests */
   webServer: process.env.CI ? undefined : {
     command: 'docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d --build',
-    url: 'http://localhost:3000',and webkit/mobile browsers */
-  timeout: process.env.CI ? 90000 : 30000, // 90s for CI (webkit needs more time)
-  expect: {
-    timeout: process.env.CI ? 25000 : 10000, // Increased for slower browsers
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000, // 2 minutes for services to start
+    env: {
       NODE_ENV: 'test',
       API_GATEWAY_SECRET: 'test-secret-e2e',
       MONGODB_URI: 'mongodb://localhost:27017/club_e2e_test',
@@ -101,9 +101,9 @@ export default defineConfig({
     },
   },
 
-  /* Timeout settings - increased for CI stability */
-  timeout: process.env.CI ? 60000 : 30000,
+  /* Timeout settings - increased for CI stability and webkit/mobile browsers */
+  timeout: process.env.CI ? 90000 : 30000, // 90s for CI (webkit needs more time)
   expect: {
-    timeout: process.env.CI ? 20000 : 10000,
+    timeout: process.env.CI ? 25000 : 10000, // Increased for slower browsers
   },
 });

@@ -348,9 +348,19 @@ pipeline {
                             CONTAINER_NAME="e2e-runner-${BUILD_NUMBER}"
                             
                             # Run tests WITHOUT --rm so we can copy results after
+                            # Capture exit code but continue execution
+                            set +e
                             docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
-                                run --name "${CONTAINER_NAME}" e2e-runner || true
+                                run --name "${CONTAINER_NAME}" e2e-runner
                             EXIT_CODE=$?
+                            set -e
+                            
+                            echo "=========================================="
+                            echo "📦 Container execution completed with exit code: ${EXIT_CODE}"
+                            
+                            # Show container logs to debug
+                            echo "📋 Container logs:"
+                            docker logs "${CONTAINER_NAME}" 2>&1 || echo "⚠️ Could not retrieve container logs"
                             
                             echo "=========================================="
                             echo "📦 Copying test results from container..."

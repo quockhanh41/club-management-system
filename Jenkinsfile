@@ -329,9 +329,13 @@ pipeline {
                         script: '''
                             set +e  # Don't exit on error
                             echo "🚀 Starting E2E test runner..."
+                            
+                            # Run with --no-TTY to ensure output is captured
                             docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
-                                run --rm e2e-runner
+                                run --rm -T e2e-runner 2>&1
                             EXIT_CODE=$?
+                            
+                            echo ""
                             echo "E2E_EXIT_CODE:${EXIT_CODE}"
                             echo "📊 E2E tests completed with exit code: ${EXIT_CODE}"
                             exit 0

@@ -48,8 +48,28 @@ RUN echo '#!/bin/bash\n\
     echo "  - BASE_URL: ${BASE_URL:-not set}"\n\
     echo "  - API_GATEWAY_URL: ${API_GATEWAY_URL:-not set}"\n\
     echo "  - CI: ${CI:-false}"\n\
+    echo "  - Working Directory: $(pwd)"\n\
     echo "========================================"\n\
     echo ""\n\
+    echo "📁 Checking test files..."\n\
+    echo "Test directory structure:"\n\
+    ls -la tests/e2e/ || echo "⚠️ tests/e2e/ not found"\n\
+    echo ""\n\
+    echo "Test spec files:"\n\
+    find tests/e2e -name "*.spec.ts" -type f || echo "⚠️ No spec files found"\n\
+    echo ""\n\
+    echo "Playwright config:"\n\
+    if [ -f "playwright.config.ts" ]; then\n\
+        echo "✅ playwright.config.ts exists"\n\
+    else\n\
+        echo "❌ playwright.config.ts NOT found"\n\
+    fi\n\
+    echo ""\n\
+    echo "Node modules check:"\n\
+    ls node_modules/@playwright/test > /dev/null && echo "✅ Playwright installed" || echo "❌ Playwright NOT installed"\n\
+    echo "========================================"\n\
+    echo ""\n\
+    echo "🚀 Running Playwright tests..."\n\
     \n\
     # Run Playwright tests with multiple reporters\n\
     npx playwright test --reporter=list,html,junit || EXIT_CODE=$?\n\
@@ -58,17 +78,24 @@ RUN echo '#!/bin/bash\n\
     echo "========================================"\n\
     echo "📊 Test Execution Summary"\n\
     echo "========================================"\n\
+    echo "Exit Code: ${EXIT_CODE:-0}"\n\
     \n\
-    if [ -f "test-results/results.json" ]; then\n\
-    echo "✅ Test results file generated"\n\
+    if [ -f "test-results/e2e-results.json" ]; then\n\
+        echo "✅ e2e-results.json generated"\n\
     else\n\
-    echo "⚠️  Warning: results.json not found"\n\
+        echo "⚠️  Warning: e2e-results.json not found"\n\
+    fi\n\
+    \n\
+    if [ -f "test-results/e2e-results.xml" ]; then\n\
+        echo "✅ e2e-results.xml generated"\n\
+    else\n\
+        echo "⚠️  Warning: e2e-results.xml not found"\n\
     fi\n\
     \n\
     if [ -f "playwright-report/index.html" ]; then\n\
-    echo "✅ HTML report generated"\n\
+        echo "✅ HTML report generated"\n\
     else\n\
-    echo "⚠️  Warning: HTML report not found"\n\
+        echo "⚠️  Warning: HTML report not found"\n\
     fi\n\
     \n\
     echo "========================================"\n\

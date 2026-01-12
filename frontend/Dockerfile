@@ -9,7 +9,8 @@ WORKDIR /app
 
 # Install dependencies using npm (aligns with your local workflow)
 COPY package.json package-lock.json* ./
-RUN npm install --no-audit --no-fund
+# Use npm ci for faster, more reliable installs from package-lock.json
+RUN npm ci --no-audit --no-fund
 
 # Rebuild the source code only when needed
 FROM base AS builder

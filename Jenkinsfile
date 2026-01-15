@@ -89,7 +89,7 @@ pipeline {
                     ).trim()
                     
                     // Set IMAGE_TAG dynamically after checkout
-                    env.IMAGE_TAG = "${env.BUILD_NUMBER}-${env.GIT_COMMIT_SHORT}"
+                    env.IMAGE_TAG = env.BUILD_NUMBER + '-' + env.GIT_COMMIT_SHORT
                     echo "📦 Image tag set to: ${env.IMAGE_TAG}"
                     
                     env.BUILD_TIME = sh(
@@ -129,8 +129,18 @@ pipeline {
                     fi
                 '''
                 
-                // Install Node.js using NodeJS plugin or Docker
+                // Install Node.js if not present
                 sh '''
+                    # Check if Node.js is already installed
+                    if ! command -v node &> /dev/null; then
+                        echo "📦 Installing Node.js ${NODE_VERSION}..."
+                        curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
+                        apt-get install -y nodejs
+                        echo "✓ Node.js installed successfully"
+                    else
+                        echo "✓ Node.js already installed"
+                    fi
+                    
                     node --version
                     npm --version
                 '''
@@ -875,8 +885,8 @@ HTMLEOF
                     // Collect debugging information
                     sh '''
                         echo "Collecting failure diagnostics..."
-                        docker ps -a > failure-diagnostics.txt || true
-                        docker images >> failure-diagnostics.txt || true
+                        sudo docker ps -a > failure-diagnostics.txt || echo "No docker access" > failure-diagnostics.txt
+                        sudo docker images >> failure-diagnostics.txt || echo "No docker access" >> failure-diagnostics.txt
                     '''
                     
                     archiveArtifacts(
@@ -896,10 +906,10 @@ HTMLEOF
                 // Clean up Docker resources
                 sh '''
                     # Stop and remove containers (including E2E infrastructure)
-                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v || true
+                    sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v 2>/dev/null || true
                     
                     # Remove dangling images
-                    docker image prune -f || true
+                    sudo docker image prune -f 2>/dev/null || true
                     
                     # Clean up playwright browsers cache if needed
                     # rm -rf ${PLAYWRIGHT_BROWSERS_PATH} || true

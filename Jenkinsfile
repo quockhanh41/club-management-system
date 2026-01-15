@@ -32,7 +32,7 @@ pipeline {
         
         // Image naming
         IMAGE_PREFIX = 'club-management'
-        IMAGE_TAG = "${env.BUILD_NUMBER ?: 'dev'}-${env.GIT_COMMIT?.take(7) ?: 'latest'}"
+        IMAGE_TAG = 'latest' // Will be set dynamically in Checkout stage
         
         // Service names
         SERVICES = 'auth club event notify image'
@@ -87,6 +87,10 @@ pipeline {
                         script: 'git rev-parse --short HEAD',
                         returnStdout: true
                     ).trim()
+                    
+                    // Set IMAGE_TAG dynamically after checkout
+                    env.IMAGE_TAG = "${env.BUILD_NUMBER}-${env.GIT_COMMIT_SHORT}"
+                    echo "📦 Image tag set to: ${env.IMAGE_TAG}"
                     
                     env.BUILD_TIME = sh(
                         script: 'date -u +%Y-%m-%dT%H:%M:%SZ',

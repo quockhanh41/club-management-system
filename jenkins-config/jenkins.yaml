@@ -7,6 +7,72 @@ jenkins:
   # Controller should not be used for builds
   mode: EXCLUSIVE
   
+  # Define permanent agents
+  nodes:
+    - permanent:
+        name: "build-agent"
+        remoteFS: "/home/jenkins/agent"
+        launcher:
+          inbound:
+            workDirSettings:
+              disabled: false
+              failIfWorkDirIsMissing: false
+              internalDir: "remoting"
+        labelString: "build docker"
+        numExecutors: 2
+        nodeDescription: "Build agent with Docker support"
+        mode: NORMAL
+        retentionStrategy:
+          always: {}
+    
+    - permanent:
+        name: "test-agent"
+        remoteFS: "/home/jenkins/agent"
+        launcher:
+          inbound:
+            workDirSettings:
+              disabled: false
+              failIfWorkDirIsMissing: false
+              internalDir: "remoting"
+        labelString: "test"
+        numExecutors: 2
+        nodeDescription: "Test agent for unit tests"
+        mode: NORMAL
+        retentionStrategy:
+          always: {}
+    
+    - permanent:
+        name: "e2e-agent"
+        remoteFS: "/home/jenkins/agent"
+        launcher:
+          inbound:
+            workDirSettings:
+              disabled: false
+              failIfWorkDirIsMissing: false
+              internalDir: "remoting"
+        labelString: "e2e docker"
+        numExecutors: 1
+        nodeDescription: "E2E test agent with Docker support"
+        mode: NORMAL
+        retentionStrategy:
+          always: {}
+    
+    - permanent:
+        name: "deploy-agent"
+        remoteFS: "/home/jenkins/agent"
+        launcher:
+          inbound:
+            workDirSettings:
+              disabled: false
+              failIfWorkDirIsMissing: false
+              internalDir: "remoting"
+        labelString: "deploy docker"
+        numExecutors: 1
+        nodeDescription: "Deploy agent with Docker support"
+        mode: NORMAL
+        retentionStrategy:
+          always: {}
+  
   # Security realm configuration
   securityRealm:
     local:

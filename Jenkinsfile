@@ -306,36 +306,36 @@ pipeline {
                     echo "🐳 Building Docker images for all services"
                 }
                 
-                sh """
+                sh '''
                     # Setup docker command with or without sudo based on permissions
-                    if [ \"\\$(id -u)\" = \"0\" ]; then
+                    if [ "$(id -u)" = "0" ]; then
                         # Running as root, use docker directly
-                        DOCKER_CMD=\"docker\"
-                        echo \"\u2713 Using docker as root user\"
+                        DOCKER_CMD="docker"
+                        echo "✓ Using docker as root user"
                     elif groups | grep -q docker; then
-                        DOCKER_CMD=\"docker\"
-                        echo \"\u2713 Using docker without sudo (user in docker group)\"
+                        DOCKER_CMD="docker"
+                        echo "✓ Using docker without sudo (user in docker group)"
                     elif command -v sudo >/dev/null 2>&1 && sudo -n docker ps >/dev/null 2>&1; then
-                        DOCKER_CMD=\"sudo docker\"
-                        echo \"\u2713 Using docker with sudo\"
+                        DOCKER_CMD="sudo docker"
+                        echo "✓ Using docker with sudo"
                     elif docker ps >/dev/null 2>&1; then
-                        DOCKER_CMD=\"docker\"
-                        echo \"\u2713 Using docker without sudo\"
+                        DOCKER_CMD="docker"
+                        echo "✓ Using docker without sudo"
                     else
-                        echo \"\u274c Error: Cannot access docker (permission denied)\"
-                        echo \"User: \\$(whoami), Groups: \\$(groups)\"
+                        echo "❌ Error: Cannot access docker (permission denied)"
+                        echo "User: $(whoami), Groups: $(groups)"
                         exit 1
                     fi
                     
                     # Build services with CI configuration (production targets, no volume mounts)
                     # Using --no-cache to ensure fresh builds without stale layers
                     # Include docker-compose.e2e.yml for E2E-specific build args (e.g. NEXT_PUBLIC_API_BASE_URL)
-                    \${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml build --no-cache \\
-                        --build-arg GIT_COMMIT=${env.GIT_COMMIT} \\
-                        --build-arg BUILD_NUMBER=${env.BUILD_NUMBER} \\
-                        --build-arg BUILD_TIME=${env.BUILD_TIME} \\
+                    ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml build --no-cache \
+                        --build-arg GIT_COMMIT=''' + "${env.GIT_COMMIT}" + ''' \
+                        --build-arg BUILD_NUMBER=''' + "${env.BUILD_NUMBER}" + ''' \
+                        --build-arg BUILD_TIME=''' + "${env.BUILD_TIME}" + ''' \
                         auth-service club-service event-service notify-service image-service frontend
-                """
+                '''
             }
         }
 

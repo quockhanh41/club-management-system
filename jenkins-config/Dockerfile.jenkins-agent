@@ -3,14 +3,15 @@ FROM jenkins/inbound-agent:latest-jdk17
 # Switch to root to install packages
 USER root
 
-# Install Docker CLI
+# Install Docker CLI and utilities
 RUN apt-get update && \
     apt-get install -y \
     ca-certificates \
     curl \
     gnupg \
     lsb-release \
-    jq && \
+    jq \
+    bc && \
     mkdir -p /etc/apt/keyrings && \
     curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
     echo \

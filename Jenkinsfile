@@ -316,10 +316,12 @@ pipeline {
                     
                     if command -v docker >/dev/null 2>&1; then
                         DOCKER_FOUND=$(command -v docker)
+                        echo "Found docker in PATH: $DOCKER_FOUND"
                     else
                         echo "Docker not in PATH, checking common locations..."
                         for docker_path in $DOCKER_PATHS; do
-                            if [ -x "$docker_path" ]; then
+                            # Check if it's an executable FILE (not directory)
+                            if [ -f "$docker_path" ] && [ -x "$docker_path" ]; then
                                 DOCKER_FOUND="$docker_path"
                                 echo "Found docker at: $docker_path"
                                 break
@@ -332,13 +334,15 @@ pipeline {
                         echo "PATH: $PATH"
                         echo "Checked locations: $DOCKER_PATHS"
                         echo ""
+                        echo "Searching for docker binary..."
+                        find /usr -name docker -type f -executable 2>/dev/null | head -5 || true
+                        echo ""
                         echo "Docker needs to be installed on this Jenkins agent."
-                        echo "Please ensure docker is installed and accessible."
                         exit 1
                     fi
                     
                     echo "Docker binary: $DOCKER_FOUND"
-                    ls -la "$DOCKER_FOUND"
+                    ls -lh "$DOCKER_FOUND" 2>/dev/null || echo "Cannot list docker binary"
                     
                     # Setup docker command with or without sudo based on permissions
                     if [ "$(id -u)" = "0" ]; then
@@ -363,12 +367,25 @@ pipeline {
                     # Verify docker is actually accessible
                     echo "Testing docker access..."
                     if ! ${DOCKER_CMD} ps >/dev/null 2>&1; then
-                        echo "❌ Error: Docker command found but cannot connect to daemon"
-                        echo "Checking docker socket..."
-                        ls -la /var/run/docker.sock 2>/dev/null || echo "Docker socket not found"
-                        echo "Docker socket permissions - needs to be accessible by user/group"
-                        echo "Is docker daemon running?"
-                        ps aux | grep -i docker | grep -v grep || echo "No docker processes found"
+                        echo "❌ Error: Cannot connect to docker daemon"
+                        echo ""
+                        if [ -S /var/run/docker.sock ]; then
+                            echo "Docker socket found:"
+                            ls -lh /var/run/docker.sock
+                        else
+                            echo "Docker socket NOT found at /var/run/docker.sock"
+                        fi
+                        echo ""
+                        echo "Checking docker service status..."
+                        if command -v systemctl >/dev/null 2>&1; then
+                            systemctl is-active docker 2>/dev/null || echo "Docker service not running"
+                        elif command -v service >/dev/null 2>&1; then
+                            service docker status 2>/dev/null || echo "Cannot check docker service"
+                        else
+                            echo "Cannot check service status (no systemctl/service)"
+                        fi
+                        echo ""
+                        echo "Solution: Ensure docker daemon is running on this Jenkins agent"
                         exit 1
                     fi
                     echo "✓ Docker is accessible and working"

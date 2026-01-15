@@ -7,7 +7,7 @@ jenkins:
   # Controller should not be used for builds
   mode: EXCLUSIVE
   
-  # Define permanent agents
+  # Define permanent agents with labels
   nodes:
     - permanent:
         name: "build-agent"

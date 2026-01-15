@@ -100,10 +100,10 @@ services:
     networks:
       - jenkins-network
     depends_on:
-      jenkins-agent-build:
-        condition: service_started
       jenkins:
         condition: service_healthy
+      jenkins-agent-build:
+        condition: service_started
 
   # Docker Registry (private registry for images)
   registry:

@@ -310,7 +310,7 @@ pipeline {
                     # Build services with CI configuration (production targets, no volume mounts)
                     # Using --no-cache to ensure fresh builds without stale layers
                     # Include docker-compose.e2e.yml for E2E-specific build args (e.g. NEXT_PUBLIC_API_BASE_URL)
-                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml build --no-cache \\
+                    sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml build --no-cache \\
                         --build-arg GIT_COMMIT=${env.GIT_COMMIT} \\
                         --build-arg BUILD_NUMBER=${env.BUILD_NUMBER} \\
                         --build-arg BUILD_TIME=${env.BUILD_TIME} \\
@@ -337,12 +337,12 @@ pipeline {
                         
                         # Start infrastructure services first (databases and message queue)
                         echo "Starting infrastructure services (postgres, mongodb, rabbitmq)..."
-                        docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --force-recreate postgres mongo rabbitmq
+                        sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --force-recreate postgres mongo rabbitmq
                         
                         # Wait for databases to be ready
                         echo "Waiting for databases to be ready..."
                         for i in $(seq 1 60); do
-                            if docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps postgres mongo rabbitmq | grep -E "(unhealthy|starting)" > /dev/null; then
+                            if sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps postgres mongo rabbitmq | grep -E "(unhealthy|starting)" > /dev/null; then
                                 echo "Databases still starting... (attempt $i/60)"
                                 sleep 5
                             else
@@ -352,22 +352,22 @@ pipeline {
                             
                             if [ $i -eq 60 ]; then
                                 echo "Databases failed to become healthy"
-                                docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
-                                docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs postgres mongo rabbitmq
+                                sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
+                                sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs postgres mongo rabbitmq
                                 exit 1
                             fi
                         done
                         
                         # Start application services (use pre-built images from previous stage)
                         echo "Starting application services..."
-                        docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --no-build --force-recreate auth-service club-service event-service notify-service image-service frontend
+                        sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --no-build --force-recreate auth-service club-service event-service notify-service image-service frontend
                         
                         # Wait for services to be healthy (increased timeout for notify-service)
                         echo "Waiting for application services to be healthy..."
                         sleep 30
                         
                         for i in $(seq 1 90); do
-                            if docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps | grep -E "(unhealthy|starting)" > /dev/null; then
+                            if sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps | grep -E "(unhealthy|starting)" > /dev/null; then
                                 echo "Services still starting... (attempt $i/90)"
                                 sleep 10
                             else
@@ -377,14 +377,14 @@ pipeline {
                             
                             if [ $i -eq 90 ]; then
                                 echo "Services failed to become healthy within 15 minutes"
-                                docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
-                                docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs
+                                sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
+                                sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs
                                 exit 1
                             fi
                         done
                         
                         # Show service status
-                        docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
+                        sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
                         
                         # Extra wait to ensure services are fully ready (not just healthy)
                         echo "⏳ Waiting additional 30 seconds for services to stabilize..."
@@ -392,12 +392,12 @@ pipeline {
                         
                         # Verify services are responding
                         echo "🔍 Verifying service connectivity..."
-                        docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml exec -T frontend curl -s http://localhost:3000/api/health || echo "⚠️ Frontend health check failed"
-                        docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml exec -T kong curl -s http://localhost:8000/health || echo "⚠️ Kong health check failed"
+                        sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml exec -T frontend curl -s http://localhost:3000/api/health || echo "⚠️ Frontend health check failed"
+                        sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml exec -T kong curl -s http://localhost:8000/health || echo "⚠️ Kong health check failed"
                         
                         # Build E2E runner image with code baked in (avoids volume mount issues)
                         echo "Building E2E runner image..."
-                        docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml build e2e-runner
+                        sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml build e2e-runner
                     '''
                     
                     // Run E2E tests and capture exit code (don't fail immediately)
@@ -417,7 +417,7 @@ pipeline {
                             # Run tests WITHOUT --rm so we can copy results after
                             # Capture exit code but continue execution
                             set +e
-                            docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
+                            sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
                                 run --name "${CONTAINER_NAME}" e2e-runner
                             EXIT_CODE=$?
                             set -e
@@ -427,17 +427,17 @@ pipeline {
                             
                             # Show container logs to debug
                             echo "📋 Container logs:"
-                            docker logs "${CONTAINER_NAME}" 2>&1 || echo "⚠️ Could not retrieve container logs"
+                            sudo docker logs "${CONTAINER_NAME}" 2>&1 || echo "⚠️ Could not retrieve container logs"
                             
                             echo "=========================================="
                             echo "📦 Copying test results from container..."
                             
                             # Copy test results from container to workspace
-                            docker cp "${CONTAINER_NAME}:/app/test-results/." test-results/ 2>/dev/null || echo "⚠️ Could not copy test-results"
-                            docker cp "${CONTAINER_NAME}:/app/playwright-report/." playwright-report/ 2>/dev/null || echo "⚠️ Could not copy playwright-report"
+                            sudo docker cp "${CONTAINER_NAME}:/app/test-results/." test-results/ 2>/dev/null || echo "⚠️ Could not copy test-results"
+                            sudo docker cp "${CONTAINER_NAME}:/app/playwright-report/." playwright-report/ 2>/dev/null || echo "⚠️ Could not copy playwright-report"
                             
                             # Remove container
-                            docker rm -f "${CONTAINER_NAME}" 2>/dev/null || true
+                            sudo docker rm -f "${CONTAINER_NAME}" 2>/dev/null || true
                             
                             echo "=========================================="
                             echo "📦 Verifying test results..."
@@ -740,17 +740,17 @@ HTMLEOF
                     sh '''
                         echo "Collecting service logs..."
                         mkdir -p logs
-                        docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs > logs/services.log 2>&1 || true
+                        sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs > logs/services.log 2>&1 || true
                     '''
                     
                     archiveArtifacts(
-                        artifacts: 'logs/**/*.log,test-results/**/*,playwright-report/**/*',
+                        artifacts: 'logs/**/*',
                         allowEmptyArchive: true
                     )
                     
-                    // Stop and remove containers
+                    // Stop and remove all containers
                     sh '''
-                        docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v || true
+                        sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v || true
                     '''
                 }
             }
@@ -784,15 +784,15 @@ HTMLEOF
                             
                             // Tag and push with build number
                             sh """
-                                docker tag club-management-system-${service}:latest ${fullImageName}
-                                docker push ${fullImageName}
+                                sudo docker tag club-management-system-${service}:latest ${fullImageName}
+                                sudo docker push ${fullImageName}
                             """
                             
                             // Tag and push as latest
                             if (env.BRANCH_NAME == 'main') {
                                 sh """
-                                    docker tag club-management-system-${service}:latest ${latestImageName}
-                                    docker push ${latestImageName}
+                                    sudo docker tag club-management-system-${service}:latest ${latestImageName}
+                                    sudo docker push ${latestImageName}
                                 """
                             }
                         }

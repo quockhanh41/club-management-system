@@ -1,49 +1,105 @@
 version: '3.8'
 
 services:
-  # Jenkins Master
+  # Jenkins Controller (Master) - NO EXECUTORS (builds disabled)
   jenkins:
     image: jenkins/jenkins:lts-jdk17
-    container_name: jenkins-master
+    container_name: jenkins-controller
     restart: unless-stopped
     privileged: true
     user: root
     ports:
       - "8080:8080"      # Jenkins Web UI
-      - "50000:50000"    # Jenkins Agent
+      - "50000:50000"    # Jenkins Agent Connection
     volumes:
       - jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
       - ./scripts:/scripts:ro
       - ./artifacts:/artifacts
       - .:/workspace:ro  # Mount local repository for testing
+      - ./jenkins-config:/var/jenkins_home/casc_configs:ro  # JCasC configuration
     environment:
-      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false -Dhudson.slaves.NodeProvisioner.initialDelay=0
       - DOCKER_HOST=unix:///var/run/docker.sock
+      - CASC_JENKINS_CONFIG=/var/jenkins_home/casc_configs
     networks:
       - jenkins-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/login || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
-  # Jenkins Agent (optional - for distributed builds)
-  # DISABLED: Not needed for single-node setup
-  # To enable: set JENKINS_AGENT_SECRET from Jenkins UI and uncomment
-  # jenkins-agent:
-  #   image: jenkins/inbound-agent:latest
-  #   container_name: jenkins-agent
-  #   restart: unless-stopped
-  #   privileged: true
-  #   user: root
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #     - jenkins_agent_workspace:/home/jenkins/agent
-  #   environment:
-  #     - JENKINS_URL=http://jenkins:8080
-  #     - JENKINS_AGENT_NAME=agent-1
-  #     - JENKINS_SECRET=${JENKINS_AGENT_SECRET:-changeme}
-  #     - JENKINS_AGENT_WORKDIR=/home/jenkins/agent
-  #   networks:
-  #     - jenkins-network
-  #   depends_on:
-  #     - jenkins
+  # Build Agent - For build and lint tasks
+  jenkins-agent-build:
+    image: jenkins/inbound-agent:latest-jdk17
+    container_name: jenkins-agent-build
+    restart: unless-stopped
+    privileged: true
+    user: root
+    command: -url http://jenkins:8080 -secret ${JENKINS_BUILD_AGENT_SECRET} -name build-agent -workDir /home/jenkins/agent -webSocket
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - jenkins_agent_build_workspace:/home/jenkins/agent
+      - /usr/bin/docker:/usr/bin/docker
+    networks:
+      - jenkins-network
+    depends_on:
+      jenkins:
+        condition: service_healthy
+
+  # Test Agent - For unit and integration tests
+  jenkins-agent-test:
+    image: jenkins/inbound-agent:latest-jdk17
+    container_name: jenkins-agent-test
+    restart: unless-stopped
+    user: root
+    command: -url http://jenkins:8080 -secret ${JENKINS_TEST_AGENT_SECRET} -name test-agent -workDir /home/jenkins/agent -webSocket
+    volumes:
+      - jenkins_agent_test_workspace:/home/jenkins/agent
+    networks:
+      - jenkins-network
+    depends_on:
+      jenkins:
+        condition: service_healthy
+
+  # E2E Agent - For E2E tests with Docker capabilities
+  jenkins-agent-e2e:
+    image: jenkins/inbound-agent:latest-jdk17
+    container_name: jenkins-agent-e2e
+    restart: unless-stopped
+    privileged: true
+    user: root
+    command: -url http://jenkins:8080 -secret ${JENKINS_E2E_AGENT_SECRET} -name e2e-agent -workDir /home/jenkins/agent -webSocket
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - jenkins_agent_e2e_workspace:/home/jenkins/agent
+      - /usr/bin/docker:/usr/bin/docker
+    networks:
+      - jenkins-network
+    depends_on:
+      jenkins:
+        condition: service_healthy
+
+  # Deploy Agent - For deployment tasks
+  jenkins-agent-deploy:
+    image: jenkins/inbound-agent:latest-jdk17
+    container_name: jenkins-agent-deploy
+    restart: unless-stopped
+    privileged: true
+    user: root
+    command: -url http://jenkins:8080 -secret ${JENKINS_DEPLOY_AGENT_SECRET} -name deploy-agent -workDir /home/jenkins/agent -webSocket
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - jenkins_agent_deploy_workspace:/home/jenkins/agent
+      - /usr/bin/docker:/usr/bin/docker
+      - ~/.aws:/root/.aws:ro  # AWS credentials for deployment
+    networks:
+      - jenkins-network
+    depends_on:
+      jenkins:
+        condition: service_healthy
 
   # Docker Registry (private registry for images)
   registry:
@@ -83,7 +139,13 @@ networks:
 volumes:
   jenkins_home:
     driver: local
-  jenkins_agent_workspace:
+  jenkins_agent_build_workspace:
+    driver: local
+  jenkins_agent_test_workspace:
+    driver: local
+  jenkins_agent_e2e_workspace:
+    driver: local
+  jenkins_agent_deploy_workspace:
     driver: local
   registry_data:
     driver: local

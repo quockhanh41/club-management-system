@@ -65,7 +65,7 @@ get_admin_password() {
     echo "🔑 Getting initial admin password..."
     
     # Try to get password from Jenkins container
-    local password=$(docker exec jenkins-master cat /var/jenkins_home/secrets/initialAdminPassword 2>/dev/null || echo "")
+    local password=$(docker exec jenkins-controller cat /var/jenkins_home/secrets/initialAdminPassword 2>/dev/null || echo "")
     
     if [ -n "$password" ]; then
         echo -e "${GREEN}Initial Admin Password: ${password}${NC}"
@@ -80,7 +80,7 @@ get_admin_password() {
 install_docker_in_jenkins() {
     echo "🐳 Installing Docker CLI in Jenkins container..."
     
-    docker exec -u root jenkins-master bash -c '
+    docker exec -u root jenkins-controller bash -c '
         apt-get update && \
         apt-get install -y \
             apt-transport-https \
@@ -104,7 +104,7 @@ install_docker_in_jenkins() {
 install_essential_tools() {
     echo "🔧 Installing essential tools (jq, bc) in Jenkins container..."
     
-    docker exec -u root jenkins-master bash -c '
+    docker exec -u root jenkins-controller bash -c '
         apt-get update && \
         apt-get install -y jq bc
     '
@@ -116,7 +116,7 @@ install_essential_tools() {
 install_nodejs_in_jenkins() {
     echo "📦 Installing Node.js in Jenkins container..."
     
-    docker exec -u root jenkins-master bash -c '
+    docker exec -u root jenkins-controller bash -c '
         curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
         apt-get install -y nodejs && \
         npm install -g npm@latest
@@ -147,7 +147,7 @@ install_jenkins_plugins() {
     
     for plugin in "${plugins[@]}"; do
         echo "Installing plugin: $plugin"
-        docker exec jenkins-master jenkins-plugin-cli --plugins "$plugin" || true
+        docker exec jenkins-controller jenkins-plugin-cli --plugins "$plugin" || true
     done
     
     echo -e "${GREEN}✅ Plugins installation queued${NC}"

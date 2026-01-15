@@ -1,0 +1,64 @@
+jenkins:
+  systemMessage: "Jenkins Controller - Distributed Build Architecture (No Executors on Controller)"
+  
+  # Disable executors on controller (built-in node)
+  numExecutors: 0
+  
+  # Controller should not be used for builds
+  mode: EXCLUSIVE
+  
+  # Security realm configuration
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "${JENKINS_ADMIN_PASSWORD:-admin}"
+  
+  # Authorization strategy
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+  
+  # Agent protocols
+  agentProtocols:
+    - "JNLP4-connect"
+    - "Ping"
+  
+  # Quiet period
+  quietPeriod: 5
+  
+  # SCM checkout retry count
+  scmCheckoutRetryCount: 3
+  
+  # Remote access
+  remotingSecurity:
+    enabled: true
+
+# Unclassified settings
+unclassified:
+  location:
+    url: "http://jenkins:8080/"
+    adminAddress: "admin@localhost"
+  
+  # Instance Identity
+  instanceIdentity:
+    enabled: true
+  
+  # Global pipeline libraries (optional)
+  globalLibraries:
+    libraries: []
+
+# Tool installations
+tool:
+  git:
+    installations:
+      - name: "Default"
+        home: "git"
+  
+  # Add more tools as needed (Maven, Gradle, etc.)
+
+# Credentials (use Jenkins Credentials Plugin for actual secrets)
+credentials:
+  system:
+    domainCredentials: []

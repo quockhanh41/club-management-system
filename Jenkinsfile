@@ -26,8 +26,9 @@ pipeline {
     }
 
     environment {
-        // Docker Registry Configuration (local registry from docker-compose)
-        DOCKER_REGISTRY = 'localhost:5001'
+        // Docker Registry Configuration
+        DOCKER_REGISTRY = credentials('docker-registry-url') // Configure in Jenkins credentials
+        DOCKER_CREDENTIALS_ID = 'docker-registry-credentials'
         
         // Image naming
         IMAGE_PREFIX = 'club-management'
@@ -863,55 +864,51 @@ HTMLEOF
         }
         
         failure {
-            node('build') {
-                script {
-                    echo "❌ Pipeline failed!"
-                    
-                    // Collect debugging information
-                    sh '''
-                        echo "Collecting failure diagnostics..."
-                        docker ps -a > failure-diagnostics.txt || true
-                        docker images >> failure-diagnostics.txt || true
-                    '''
-                    
-                    archiveArtifacts(
-                        artifacts: 'failure-diagnostics.txt',
-                        allowEmptyArchive: true
-                    )
-                }
+            script {
+                echo "❌ Pipeline failed!"
+                
+                // Collect debugging information
+                sh '''
+                    echo "Collecting failure diagnostics..."
+                    docker ps -a > failure-diagnostics.txt || true
+                    docker images >> failure-diagnostics.txt || true
+                '''
+                
+                archiveArtifacts(
+                    artifacts: 'failure-diagnostics.txt',
+                    allowEmptyArchive: true
+                )
             }
         }
         
         always {
-            node('build') {
-                script {
-                    echo "🧹 Cleaning up workspace"
-                }
-                
-                // Clean up Docker resources
-                sh '''
-                    # Stop and remove containers (including E2E infrastructure)
-                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v || true
-                    
-                    # Remove dangling images
-                    docker image prune -f || true
-                    
-                    # Clean up playwright browsers cache if needed
-                    # rm -rf ${PLAYWRIGHT_BROWSERS_PATH} || true
-                '''
-                
-                // Clean workspace
-                cleanWs(
-                    deleteDirs: true,
-                    disableDeferredWipeout: true,
-                    notFailBuild: true,
-                    patterns: [
-                        [pattern: 'node_modules', type: 'INCLUDE'],
-                        [pattern: 'playwright-browsers', type: 'INCLUDE'],
-                        [pattern: '.npm', type: 'INCLUDE']
-                    ]
-                )
+            script {
+                echo "🧹 Cleaning up workspace"
             }
+            
+            // Clean up Docker resources
+            sh '''
+                # Stop and remove containers (including E2E infrastructure)
+                docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v || true
+                
+                # Remove dangling images
+                docker image prune -f || true
+                
+                # Clean up playwright browsers cache if needed
+                # rm -rf ${PLAYWRIGHT_BROWSERS_PATH} || true
+            '''
+            
+            // Clean workspace
+            cleanWs(
+                deleteDirs: true,
+                disableDeferredWipeout: true,
+                notFailBuild: true,
+                patterns: [
+                    [pattern: 'node_modules', type: 'INCLUDE'],
+                    [pattern: 'playwright-browsers', type: 'INCLUDE'],
+                    [pattern: '.npm', type: 'INCLUDE']
+                ]
+            )
         }
     }
 }

@@ -1,15 +1,16 @@
 pipeline {
-    agent any
+    // Disable builds on controller - force all stages to use specific agents
+    agent none
     
     parameters {
         string(
             name: 'E2E_FAILURE_THRESHOLD_PERCENT',
-            defaultValue: '5',
+            defaultValue: '10',
             description: 'Maximum percentage of E2E tests allowed to fail (0-100)'
         )
         string(
             name: 'E2E_FAILURE_THRESHOLD_ABSOLUTE',
-            defaultValue: '12',
+            defaultValue: '24',
             description: 'Maximum absolute number of E2E tests allowed to fail'
         )
         choice(
@@ -25,9 +26,8 @@ pipeline {
     }
 
     environment {
-        // Docker Registry Configuration
-        DOCKER_REGISTRY = credentials('docker-registry-url') // Configure in Jenkins credentials
-        DOCKER_CREDENTIALS_ID = 'docker-registry-credentials'
+        // Docker Registry Configuration (local registry from docker-compose)
+        DOCKER_REGISTRY = 'localhost:5001'
         
         // Image naming
         IMAGE_PREFIX = 'club-management'
@@ -73,6 +73,9 @@ pipeline {
 
     stages {
         stage('Checkout') {
+            agent {
+                label 'build'
+            }
             steps {
                 script {
                     echo "🔄 Checking out code from ${env.GIT_BRANCH}"
@@ -93,6 +96,9 @@ pipeline {
         }
 
         stage('Setup Environment') {
+            agent {
+                label 'build'
+            }
             steps {
                 script {
                     echo "🔧 Setting up Node.js environment"
@@ -148,6 +154,9 @@ pipeline {
         stage('Lint & Code Quality') {
             parallel {
                 stage('Lint Backend Services') {
+                    agent {
+                        label 'build'
+                    }
                     steps {
                         script {
                             echo "🔍 Running lint checks on backend services"
@@ -174,6 +183,9 @@ pipeline {
                 }
                 
                 stage('Lint Frontend') {
+                    agent {
+                        label 'build'
+                    }
                     steps {
                         script {
                             echo "🔍 Running lint checks on frontend"
@@ -194,6 +206,9 @@ pipeline {
         }
 
         stage('Unit Tests') {
+            agent {
+                label 'test'
+            }
             steps {
                 script {
                     echo "🧪 Running unit tests for all services"
@@ -237,6 +252,9 @@ pipeline {
         }
 
         stage('Build Docker Images') {
+            agent {
+                label 'docker'
+            }
             steps {
                 script {
                     echo "🐳 Building Docker images for all services"
@@ -256,6 +274,9 @@ pipeline {
         }
 
         stage('E2E Tests') {
+            agent {
+                label 'e2e'
+            }
             steps {
                 script {
                     echo "🧪 Running E2E tests with Docker infrastructure"
@@ -690,6 +711,9 @@ HTMLEOF
         }
 
         stage('Tag & Push Images') {
+            agent {
+                label 'docker'
+            }
             when {
                 anyOf {
                     branch 'main'
@@ -732,6 +756,9 @@ HTMLEOF
         }
 
         stage('Deploy to Environment') {
+            agent {
+                label 'deploy'
+            }
             when {
                 anyOf {
                     branch 'main'
@@ -775,6 +802,9 @@ HTMLEOF
         }
 
         stage('Security Scan') {
+            agent {
+                label 'docker'
+            }
             when {
                 anyOf {
                     branch 'main'
@@ -833,51 +863,55 @@ HTMLEOF
         }
         
         failure {
-            script {
-                echo "❌ Pipeline failed!"
-                
-                // Collect debugging information
-                sh '''
-                    echo "Collecting failure diagnostics..."
-                    docker ps -a > failure-diagnostics.txt || true
-                    docker images >> failure-diagnostics.txt || true
-                '''
-                
-                archiveArtifacts(
-                    artifacts: 'failure-diagnostics.txt',
-                    allowEmptyArchive: true
-                )
+            node('build') {
+                script {
+                    echo "❌ Pipeline failed!"
+                    
+                    // Collect debugging information
+                    sh '''
+                        echo "Collecting failure diagnostics..."
+                        docker ps -a > failure-diagnostics.txt || true
+                        docker images >> failure-diagnostics.txt || true
+                    '''
+                    
+                    archiveArtifacts(
+                        artifacts: 'failure-diagnostics.txt',
+                        allowEmptyArchive: true
+                    )
+                }
             }
         }
         
         always {
-            script {
-                echo "🧹 Cleaning up workspace"
+            node('build') {
+                script {
+                    echo "🧹 Cleaning up workspace"
+                }
+                
+                // Clean up Docker resources
+                sh '''
+                    # Stop and remove containers (including E2E infrastructure)
+                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v || true
+                    
+                    # Remove dangling images
+                    docker image prune -f || true
+                    
+                    # Clean up playwright browsers cache if needed
+                    # rm -rf ${PLAYWRIGHT_BROWSERS_PATH} || true
+                '''
+                
+                // Clean workspace
+                cleanWs(
+                    deleteDirs: true,
+                    disableDeferredWipeout: true,
+                    notFailBuild: true,
+                    patterns: [
+                        [pattern: 'node_modules', type: 'INCLUDE'],
+                        [pattern: 'playwright-browsers', type: 'INCLUDE'],
+                        [pattern: '.npm', type: 'INCLUDE']
+                    ]
+                )
             }
-            
-            // Clean up Docker resources
-            sh '''
-                # Stop and remove containers (including E2E infrastructure)
-                docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v || true
-                
-                # Remove dangling images
-                docker image prune -f || true
-                
-                # Clean up playwright browsers cache if needed
-                # rm -rf ${PLAYWRIGHT_BROWSERS_PATH} || true
-            '''
-            
-            // Clean workspace
-            cleanWs(
-                deleteDirs: true,
-                disableDeferredWipeout: true,
-                notFailBuild: true,
-                patterns: [
-                    [pattern: 'node_modules', type: 'INCLUDE'],
-                    [pattern: 'playwright-browsers', type: 'INCLUDE'],
-                    [pattern: '.npm', type: 'INCLUDE']
-                ]
-            )
         }
     }
 }

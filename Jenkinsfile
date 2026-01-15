@@ -5,7 +5,7 @@ pipeline {
     parameters {
         booleanParam(
             name: 'LOCAL_DEBUG',
-            defaultValue: false,
+            defaultValue: true,
             description: 'Use local mounted workspace instead of git checkout for debugging'
         )
         string(

@@ -308,12 +308,19 @@ pipeline {
                 
                 sh """
                     # Setup docker command with or without sudo based on permissions
-                    if docker ps &> /dev/null; then
+                    # Test if we need sudo by checking docker group membership
+                    if groups | grep -q docker; then
                         DOCKER_CMD="docker"
-                    elif command -v sudo &> /dev/null; then
+                        echo "✓ Using docker without sudo (user in docker group)"
+                    elif command -v sudo >/dev/null 2>&1 && sudo -n docker ps >/dev/null 2>&1; then
                         DOCKER_CMD="sudo docker"
+                        echo "✓ Using docker with sudo"
+                    elif docker ps >/dev/null 2>&1; then
+                        DOCKER_CMD="docker"
+                        echo "✓ Using docker without sudo"
                     else
-                        echo "Error: Cannot access docker and sudo not available"
+                        echo "❌ Error: Cannot access docker (permission denied)"
+                        echo "User: \$(whoami), Groups: \$(groups)"
                         exit 1
                     fi
                     
@@ -341,12 +348,18 @@ pipeline {
                     // Start services
                     sh '''
                         # Setup docker command with or without sudo based on permissions
-                        if docker ps &> /dev/null; then
+                        if groups | grep -q docker; then
                             DOCKER_CMD="docker"
-                        elif command -v sudo &> /dev/null; then
+                            echo "✓ Using docker without sudo (user in docker group)"
+                        elif command -v sudo >/dev/null 2>&1 && sudo -n docker ps >/dev/null 2>&1; then
                             DOCKER_CMD="sudo docker"
+                            echo "✓ Using docker with sudo"
+                        elif docker ps >/dev/null 2>&1; then
+                            DOCKER_CMD="docker"
+                            echo "✓ Using docker without sudo"
                         else
-                            echo "Error: Cannot access docker and sudo not available"
+                            echo "❌ Error: Cannot access docker (permission denied)"
+                            echo "User: $(whoami), Groups: $(groups)"
                             exit 1
                         fi
                         
@@ -424,12 +437,18 @@ pipeline {
                     def e2eOutput = sh(
                         script: '''
                             # Setup docker command
-                            if docker ps &> /dev/null; then
+                            if groups | grep -q docker; then
                                 DOCKER_CMD="docker"
-                            elif command -v sudo &> /dev/null; then
+                                echo "✓ Using docker without sudo (user in docker group)"
+                            elif command -v sudo >/dev/null 2>&1 && sudo -n docker ps >/dev/null 2>&1; then
                                 DOCKER_CMD="sudo docker"
+                                echo "✓ Using docker with sudo"
+                            elif docker ps >/dev/null 2>&1; then
+                                DOCKER_CMD="docker"
+                                echo "✓ Using docker without sudo"
                             else
-                                echo "Error: Cannot access docker and sudo not available"
+                                echo "❌ Error: Cannot access docker (permission denied)"
+                                echo "User: $(whoami), Groups: $(groups)"
                                 exit 1
                             fi
                             
@@ -769,12 +788,14 @@ HTMLEOF
                     // Collect service logs
                     sh '''
                         # Setup docker command
-                        if docker ps &> /dev/null; then
+                        if groups | grep -q docker; then
                             DOCKER_CMD="docker"
-                        elif command -v sudo &> /dev/null; then
+                        elif command -v sudo >/dev/null 2>&1 && sudo -n docker ps >/dev/null 2>&1; then
                             DOCKER_CMD="sudo docker"
-                        else
+                        elif docker ps >/dev/null 2>&1; then
                             DOCKER_CMD="docker"
+                        else
+                            DOCKER_CMD="docker"  # Fallback
                         fi
                         
                         echo "Collecting service logs..."
@@ -790,12 +811,14 @@ HTMLEOF
                     // Stop and remove all containers
                     sh '''
                         # Setup docker command
-                        if docker ps &> /dev/null; then
+                        if groups | grep -q docker; then
                             DOCKER_CMD="docker"
-                        elif command -v sudo &> /dev/null; then
+                        elif command -v sudo >/dev/null 2>&1 && sudo -n docker ps >/dev/null 2>&1; then
                             DOCKER_CMD="sudo docker"
-                        else
+                        elif docker ps >/dev/null 2>&1; then
                             DOCKER_CMD="docker"
+                        else
+                            DOCKER_CMD="docker"  # Fallback
                         fi
                         
                         ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v || true
@@ -822,10 +845,12 @@ HTMLEOF
                     
                     // Setup docker command
                     def dockerCmd = sh(script: '''
-                        if docker ps &> /dev/null; then
+                        if groups | grep -q docker; then
                             echo "docker"
-                        elif command -v sudo &> /dev/null; then
+                        elif command -v sudo >/dev/null 2>&1 && sudo -n docker ps >/dev/null 2>&1; then
                             echo "sudo docker"
+                        elif docker ps >/dev/null 2>&1; then
+                            echo "docker"
                         else
                             echo "docker"
                         fi
@@ -975,12 +1000,14 @@ HTMLEOF
                     // Collect debugging information
                     sh '''
                         # Setup docker command
-                        if docker ps &> /dev/null; then
+                        if groups | grep -q docker; then
                             DOCKER_CMD="docker"
-                        elif command -v sudo &> /dev/null; then
+                        elif command -v sudo >/dev/null 2>&1 && sudo -n docker ps >/dev/null 2>&1; then
                             DOCKER_CMD="sudo docker"
-                        else
+                        elif docker ps >/dev/null 2>&1; then
                             DOCKER_CMD="docker"
+                        else
+                            DOCKER_CMD="docker"  # Fallback
                         fi
                         
                         echo "Collecting failure diagnostics..."
@@ -1005,12 +1032,14 @@ HTMLEOF
                 // Clean up Docker resources
                 sh '''
                     # Setup docker command
-                    if docker ps &> /dev/null; then
+                    if groups | grep -q docker; then
                         DOCKER_CMD="docker"
-                    elif command -v sudo &> /dev/null; then
+                    elif command -v sudo >/dev/null 2>&1 && sudo -n docker ps >/dev/null 2>&1; then
                         DOCKER_CMD="sudo docker"
-                    else
+                    elif docker ps >/dev/null 2>&1; then
                         DOCKER_CMD="docker"
+                    else
+                        DOCKER_CMD="docker"  # Fallback
                     fi
                     
                     # Stop and remove containers (including E2E infrastructure)

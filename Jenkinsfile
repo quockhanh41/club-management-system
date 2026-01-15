@@ -327,6 +327,18 @@ pipeline {
                         exit 1
                     fi
                     
+                    # Verify docker is actually accessible
+                    echo "Testing docker access..."
+                    if ! ${DOCKER_CMD} ps >/dev/null 2>&1; then
+                        echo "❌ Error: Docker command found but cannot connect to daemon"
+                        echo "Checking docker socket..."
+                        ls -la /var/run/docker.sock 2>/dev/null || echo "Docker socket not found"
+                        echo "Is docker daemon running?"
+                        ${DOCKER_CMD} info 2>&1 | head -20 || true
+                        exit 1
+                    fi
+                    echo "✓ Docker is accessible and working"
+                    
                     # Build services with CI configuration (production targets, no volume mounts)
                     # Using --no-cache to ensure fresh builds without stale layers
                     # Include docker-compose.e2e.yml for E2E-specific build args (e.g. NEXT_PUBLIC_API_BASE_URL)

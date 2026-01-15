@@ -307,10 +307,20 @@ pipeline {
                 }
                 
                 sh """
+                    # Setup docker command with or without sudo based on permissions
+                    if docker ps &> /dev/null; then
+                        DOCKER_CMD="docker"
+                    elif command -v sudo &> /dev/null; then
+                        DOCKER_CMD="sudo docker"
+                    else
+                        echo "Error: Cannot access docker and sudo not available"
+                        exit 1
+                    fi
+                    
                     # Build services with CI configuration (production targets, no volume mounts)
                     # Using --no-cache to ensure fresh builds without stale layers
                     # Include docker-compose.e2e.yml for E2E-specific build args (e.g. NEXT_PUBLIC_API_BASE_URL)
-                    sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml build --no-cache \\
+                    \${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml build --no-cache \\
                         --build-arg GIT_COMMIT=${env.GIT_COMMIT} \\
                         --build-arg BUILD_NUMBER=${env.BUILD_NUMBER} \\
                         --build-arg BUILD_TIME=${env.BUILD_TIME} \\
@@ -330,6 +340,16 @@ pipeline {
                     
                     // Start services
                     sh '''
+                        # Setup docker command with or without sudo based on permissions
+                        if docker ps &> /dev/null; then
+                            DOCKER_CMD="docker"
+                        elif command -v sudo &> /dev/null; then
+                            DOCKER_CMD="sudo docker"
+                        else
+                            echo "Error: Cannot access docker and sudo not available"
+                            exit 1
+                        fi
+                        
                         echo "Starting services for E2E tests..."
                         
                         # Create required directories
@@ -337,12 +357,12 @@ pipeline {
                         
                         # Start infrastructure services first (databases and message queue)
                         echo "Starting infrastructure services (postgres, mongodb, rabbitmq)..."
-                        sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --force-recreate postgres mongo rabbitmq
+                        ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --force-recreate postgres mongo rabbitmq
                         
                         # Wait for databases to be ready
                         echo "Waiting for databases to be ready..."
                         for i in $(seq 1 60); do
-                            if sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps postgres mongo rabbitmq | grep -E "(unhealthy|starting)" > /dev/null; then
+                            if ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps postgres mongo rabbitmq | grep -E "(unhealthy|starting)" > /dev/null; then
                                 echo "Databases still starting... (attempt $i/60)"
                                 sleep 5
                             else
@@ -352,22 +372,22 @@ pipeline {
                             
                             if [ $i -eq 60 ]; then
                                 echo "Databases failed to become healthy"
-                                sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
-                                sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs postgres mongo rabbitmq
+                                ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
+                                ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs postgres mongo rabbitmq
                                 exit 1
                             fi
                         done
                         
                         # Start application services (use pre-built images from previous stage)
                         echo "Starting application services..."
-                        sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --no-build --force-recreate auth-service club-service event-service notify-service image-service frontend
+                        ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --no-build --force-recreate auth-service club-service event-service notify-service image-service frontend
                         
                         # Wait for services to be healthy (increased timeout for notify-service)
                         echo "Waiting for application services to be healthy..."
                         sleep 30
                         
                         for i in $(seq 1 90); do
-                            if sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps | grep -E "(unhealthy|starting)" > /dev/null; then
+                            if ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps | grep -E "(unhealthy|starting)" > /dev/null; then
                                 echo "Services still starting... (attempt $i/90)"
                                 sleep 10
                             else
@@ -377,14 +397,14 @@ pipeline {
                             
                             if [ $i -eq 90 ]; then
                                 echo "Services failed to become healthy within 15 minutes"
-                                sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
-                                sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs
+                                ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
+                                ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs
                                 exit 1
                             fi
                         done
                         
                         # Show service status
-                        sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
+                        ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
                         
                         # Extra wait to ensure services are fully ready (not just healthy)
                         echo "⏳ Waiting additional 30 seconds for services to stabilize..."
@@ -392,17 +412,27 @@ pipeline {
                         
                         # Verify services are responding
                         echo "🔍 Verifying service connectivity..."
-                        sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml exec -T frontend curl -s http://localhost:3000/api/health || echo "⚠️ Frontend health check failed"
-                        sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml exec -T kong curl -s http://localhost:8000/health || echo "⚠️ Kong health check failed"
+                        ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml exec -T frontend curl -s http://localhost:3000/api/health || echo "⚠️ Frontend health check failed"
+                        ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml exec -T kong curl -s http://localhost:8000/health || echo "⚠️ Kong health check failed"
                         
                         # Build E2E runner image with code baked in (avoids volume mount issues)
                         echo "Building E2E runner image..."
-                        sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml build e2e-runner
+                        ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml build e2e-runner
                     '''
                     
                     // Run E2E tests and capture exit code (don't fail immediately)
                     def e2eOutput = sh(
                         script: '''
+                            # Setup docker command
+                            if docker ps &> /dev/null; then
+                                DOCKER_CMD="docker"
+                            elif command -v sudo &> /dev/null; then
+                                DOCKER_CMD="sudo docker"
+                            else
+                                echo "Error: Cannot access docker and sudo not available"
+                                exit 1
+                            fi
+                            
                             set +e  # Don't exit on error
                             echo "🚀 Starting E2E test runner..."
                             echo "=========================================="
@@ -417,7 +447,7 @@ pipeline {
                             # Run tests WITHOUT --rm so we can copy results after
                             # Capture exit code but continue execution
                             set +e
-                            sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
+                            ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
                                 run --name "${CONTAINER_NAME}" e2e-runner
                             EXIT_CODE=$?
                             set -e
@@ -427,17 +457,17 @@ pipeline {
                             
                             # Show container logs to debug
                             echo "📋 Container logs:"
-                            sudo docker logs "${CONTAINER_NAME}" 2>&1 || echo "⚠️ Could not retrieve container logs"
+                            ${DOCKER_CMD} logs "${CONTAINER_NAME}" 2>&1 || echo "⚠️ Could not retrieve container logs"
                             
                             echo "=========================================="
                             echo "📦 Copying test results from container..."
                             
                             # Copy test results from container to workspace
-                            sudo docker cp "${CONTAINER_NAME}:/app/test-results/." test-results/ 2>/dev/null || echo "⚠️ Could not copy test-results"
-                            sudo docker cp "${CONTAINER_NAME}:/app/playwright-report/." playwright-report/ 2>/dev/null || echo "⚠️ Could not copy playwright-report"
+                            ${DOCKER_CMD} cp "${CONTAINER_NAME}:/app/test-results/." test-results/ 2>/dev/null || echo "⚠️ Could not copy test-results"
+                            ${DOCKER_CMD} cp "${CONTAINER_NAME}:/app/playwright-report/." playwright-report/ 2>/dev/null || echo "⚠️ Could not copy playwright-report"
                             
                             # Remove container
-                            sudo docker rm -f "${CONTAINER_NAME}" 2>/dev/null || true
+                            ${DOCKER_CMD} rm -f "${CONTAINER_NAME}" 2>/dev/null || true
                             
                             echo "=========================================="
                             echo "📦 Verifying test results..."
@@ -738,9 +768,18 @@ HTMLEOF
                     
                     // Collect service logs
                     sh '''
+                        # Setup docker command
+                        if docker ps &> /dev/null; then
+                            DOCKER_CMD="docker"
+                        elif command -v sudo &> /dev/null; then
+                            DOCKER_CMD="sudo docker"
+                        else
+                            DOCKER_CMD="docker"
+                        fi
+                        
                         echo "Collecting service logs..."
                         mkdir -p logs
-                        sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs > logs/services.log 2>&1 || true
+                        ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs > logs/services.log 2>&1 || true
                     '''
                     
                     archiveArtifacts(
@@ -750,7 +789,16 @@ HTMLEOF
                     
                     // Stop and remove all containers
                     sh '''
-                        sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v || true
+                        # Setup docker command
+                        if docker ps &> /dev/null; then
+                            DOCKER_CMD="docker"
+                        elif command -v sudo &> /dev/null; then
+                            DOCKER_CMD="sudo docker"
+                        else
+                            DOCKER_CMD="docker"
+                        fi
+                        
+                        ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v || true
                     '''
                 }
             }
@@ -772,6 +820,17 @@ HTMLEOF
                 script {
                     echo "🏷️  Tagging and pushing Docker images to registry"
                     
+                    // Setup docker command
+                    def dockerCmd = sh(script: '''
+                        if docker ps &> /dev/null; then
+                            echo "docker"
+                        elif command -v sudo &> /dev/null; then
+                            echo "sudo docker"
+                        else
+                            echo "docker"
+                        fi
+                    ''', returnStdout: true).trim()
+                    
                     docker.withRegistry("https://${env.DOCKER_REGISTRY}", env.DOCKER_CREDENTIALS_ID) {
                         def services = ['auth', 'club', 'event', 'notify', 'image', 'frontend']
                         
@@ -784,15 +843,15 @@ HTMLEOF
                             
                             // Tag and push with build number
                             sh """
-                                sudo docker tag club-management-system-${service}:latest ${fullImageName}
-                                sudo docker push ${fullImageName}
+                                ${dockerCmd} tag club-management-system-${service}:latest ${fullImageName}
+                                ${dockerCmd} push ${fullImageName}
                             """
                             
                             // Tag and push as latest
                             if (env.BRANCH_NAME == 'main') {
                                 sh """
-                                    sudo docker tag club-management-system-${service}:latest ${latestImageName}
-                                    sudo docker push ${latestImageName}
+                                    ${dockerCmd} tag club-management-system-${service}:latest ${latestImageName}
+                                    ${dockerCmd} push ${latestImageName}
                                 """
                             }
                         }
@@ -915,9 +974,18 @@ HTMLEOF
                     
                     // Collect debugging information
                     sh '''
+                        # Setup docker command
+                        if docker ps &> /dev/null; then
+                            DOCKER_CMD="docker"
+                        elif command -v sudo &> /dev/null; then
+                            DOCKER_CMD="sudo docker"
+                        else
+                            DOCKER_CMD="docker"
+                        fi
+                        
                         echo "Collecting failure diagnostics..."
-                        sudo docker ps -a > failure-diagnostics.txt || echo "No docker access" > failure-diagnostics.txt
-                        sudo docker images >> failure-diagnostics.txt || echo "No docker access" >> failure-diagnostics.txt
+                        ${DOCKER_CMD} ps -a > failure-diagnostics.txt || echo "No docker access" > failure-diagnostics.txt
+                        ${DOCKER_CMD} images >> failure-diagnostics.txt || echo "No docker access" >> failure-diagnostics.txt
                     '''
                     
                     archiveArtifacts(
@@ -936,11 +1004,20 @@ HTMLEOF
                 
                 // Clean up Docker resources
                 sh '''
+                    # Setup docker command
+                    if docker ps &> /dev/null; then
+                        DOCKER_CMD="docker"
+                    elif command -v sudo &> /dev/null; then
+                        DOCKER_CMD="sudo docker"
+                    else
+                        DOCKER_CMD="docker"
+                    fi
+                    
                     # Stop and remove containers (including E2E infrastructure)
-                    sudo docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v 2>/dev/null || true
+                    ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v 2>/dev/null || true
                     
                     # Remove dangling images
-                    sudo docker image prune -f 2>/dev/null || true
+                    ${DOCKER_CMD} image prune -f 2>/dev/null || true
                     
                     # Clean up playwright browsers cache if needed
                     # rm -rf ${PLAYWRIGHT_BROWSERS_PATH} || true

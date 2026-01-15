@@ -45,6 +45,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - jenkins_agent_build_workspace:/home/jenkins/agent
+      - .:/workspace:ro  # Local source code for debugging
     networks:
       - jenkins-network
     depends_on:
@@ -77,6 +78,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - jenkins_agent_e2e_workspace:/home/jenkins/agent
+      - .:/workspace:ro  # Local source code for debugging
     networks:
       - jenkins-network
     depends_on:
@@ -97,6 +99,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - jenkins_agent_deploy_workspace:/home/jenkins/agent
       - ~/.aws:/root/.aws:ro  # AWS credentials for deployment
+      - .:/workspace:ro  # Local source code for debugging
     networks:
       - jenkins-network
     depends_on:

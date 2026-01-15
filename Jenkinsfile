@@ -3,6 +3,11 @@ pipeline {
     agent none
     
     parameters {
+        booleanParam(
+            name: 'LOCAL_DEBUG',
+            defaultValue: false,
+            description: 'Use local mounted workspace instead of git checkout for debugging'
+        )
         string(
             name: 'E2E_FAILURE_THRESHOLD_PERCENT',
             defaultValue: '10',
@@ -79,8 +84,25 @@ pipeline {
             }
             steps {
                 script {
-                    echo "🔄 Checking out code from ${env.GIT_BRANCH}"
-                    checkout scm
+                    echo "🔄 Checking out code"
+                    
+                    // Check if LOCAL_DEBUG is enabled to use mounted workspace instead of git checkout
+                    if (env.LOCAL_DEBUG == 'true') {
+                        echo "🐛 LOCAL_DEBUG enabled - using mounted workspace at /workspace"
+                        sh '''
+                            # Copy from mounted local workspace to Jenkins workspace
+                            if [ -d /workspace/.git ]; then
+                                echo "Syncing from /workspace to $PWD"
+                                rsync -av --exclude='.git' --exclude='node_modules' --exclude='dist' /workspace/ ./ || cp -r /workspace/* ./
+                            else
+                                echo "ERROR: /workspace not found or not mounted"
+                                exit 1
+                            fi
+                        '''
+                    } else {
+                        echo "Using git checkout from SCM"
+                        checkout scm
+                    }
                     
                     // Get Git commit info
                     env.GIT_COMMIT_SHORT = sh(

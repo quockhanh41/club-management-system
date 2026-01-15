@@ -307,6 +307,18 @@ pipeline {
                 }
                 
                 sh '''
+                    # Check if docker binary exists and is executable
+                    echo "Checking docker installation..."
+                    if ! command -v docker >/dev/null 2>&1; then
+                        echo "❌ Error: docker command not found in PATH"
+                        echo "PATH: $PATH"
+                        exit 1
+                    fi
+                    
+                    DOCKER_BIN=$(command -v docker)
+                    echo "Docker binary: $DOCKER_BIN"
+                    ls -la "$DOCKER_BIN" || echo "Cannot stat docker binary"
+                    
                     # Setup docker command with or without sudo based on permissions
                     if [ "$(id -u)" = "0" ]; then
                         # Running as root, use docker directly
@@ -333,8 +345,9 @@ pipeline {
                         echo "❌ Error: Docker command found but cannot connect to daemon"
                         echo "Checking docker socket..."
                         ls -la /var/run/docker.sock 2>/dev/null || echo "Docker socket not found"
+                        echo "Docker socket permissions - needs to be accessible by user/group"
                         echo "Is docker daemon running?"
-                        ${DOCKER_CMD} info 2>&1 | head -20 || true
+                        ps aux | grep -i docker | grep -v grep || echo "No docker processes found"
                         exit 1
                     fi
                     echo "✓ Docker is accessible and working"

@@ -309,29 +309,50 @@ pipeline {
                 sh '''
                     # Check if docker binary exists and is executable
                     echo "Checking docker installation..."
-                    if ! command -v docker >/dev/null 2>&1; then
-                        echo "❌ Error: docker command not found in PATH"
+                    
+                    # Try to find docker in common locations
+                    DOCKER_PATHS="/usr/bin/docker /usr/local/bin/docker /snap/bin/docker /opt/docker/bin/docker"
+                    DOCKER_FOUND=""
+                    
+                    if command -v docker >/dev/null 2>&1; then
+                        DOCKER_FOUND=$(command -v docker)
+                    else
+                        echo "Docker not in PATH, checking common locations..."
+                        for docker_path in $DOCKER_PATHS; do
+                            if [ -x "$docker_path" ]; then
+                                DOCKER_FOUND="$docker_path"
+                                echo "Found docker at: $docker_path"
+                                break
+                            fi
+                        done
+                    fi
+                    
+                    if [ -z "$DOCKER_FOUND" ]; then
+                        echo "❌ Error: docker command not found"
                         echo "PATH: $PATH"
+                        echo "Checked locations: $DOCKER_PATHS"
+                        echo ""
+                        echo "Docker needs to be installed on this Jenkins agent."
+                        echo "Please ensure docker is installed and accessible."
                         exit 1
                     fi
                     
-                    DOCKER_BIN=$(command -v docker)
-                    echo "Docker binary: $DOCKER_BIN"
-                    ls -la "$DOCKER_BIN" || echo "Cannot stat docker binary"
+                    echo "Docker binary: $DOCKER_FOUND"
+                    ls -la "$DOCKER_FOUND"
                     
                     # Setup docker command with or without sudo based on permissions
                     if [ "$(id -u)" = "0" ]; then
                         # Running as root, use docker directly
-                        DOCKER_CMD="docker"
+                        DOCKER_CMD="$DOCKER_FOUND"
                         echo "✓ Using docker as root user"
                     elif groups | grep -q docker; then
-                        DOCKER_CMD="docker"
+                        DOCKER_CMD="$DOCKER_FOUND"
                         echo "✓ Using docker without sudo (user in docker group)"
-                    elif command -v sudo >/dev/null 2>&1 && sudo -n docker ps >/dev/null 2>&1; then
-                        DOCKER_CMD="sudo docker"
+                    elif command -v sudo >/dev/null 2>&1 && sudo -n $DOCKER_FOUND ps >/dev/null 2>&1; then
+                        DOCKER_CMD="sudo $DOCKER_FOUND"
                         echo "✓ Using docker with sudo"
-                    elif docker ps >/dev/null 2>&1; then
-                        DOCKER_CMD="docker"
+                    elif $DOCKER_FOUND ps >/dev/null 2>&1; then
+                        DOCKER_CMD="$DOCKER_FOUND"
                         echo "✓ Using docker without sudo"
                     else
                         echo "❌ Error: Cannot access docker (permission denied)"

@@ -173,6 +173,15 @@ pipeline {
                         label 'build'
                     }
                     steps {
+                        // Ensure Node.js is available
+                        sh '''
+                            if ! command -v node &> /dev/null; then
+                                echo "📦 Installing Node.js..."
+                                curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
+                                apt-get install -y nodejs
+                            fi
+                        '''
+                        
                         script {
                             echo "🔍 Running lint checks on backend services"
                             def services = ['auth', 'club', 'event', 'notify']
@@ -202,6 +211,15 @@ pipeline {
                         label 'build'
                     }
                     steps {
+                        // Ensure Node.js is available
+                        sh '''
+                            if ! command -v node &> /dev/null; then
+                                echo "📦 Installing Node.js..."
+                                curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
+                                apt-get install -y nodejs
+                            fi
+                        '''
+                        
                         script {
                             echo "🔍 Running lint checks on frontend"
                             sh '''
@@ -228,6 +246,19 @@ pipeline {
                 script {
                     echo "🧪 Running unit tests for all services"
                 }
+                
+                // Ensure Node.js is installed on test agent
+                sh '''
+                    # Check if Node.js is already installed
+                    if ! command -v node &> /dev/null; then
+                        echo "📦 Installing Node.js ${NODE_VERSION}..."
+                        curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
+                        apt-get install -y nodejs
+                        echo "✓ Node.js installed successfully"
+                    else
+                        echo "✓ Node.js already installed: $(node --version)"
+                    fi
+                '''
                 
                 sh '''
                     mkdir -p test-results/unit

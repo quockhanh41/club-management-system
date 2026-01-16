@@ -549,62 +549,15 @@ pipeline {
                             fi
                             
                             set +e  # Don't exit on error
-                            echo "🚀 Starting E2E test runner..."
-                            echo "=========================================="
+                            echo "🚀 Running E2E tests in Docker container..."
                             
-                            # Ensure test-results directory exists in workspace with correct permissions
-                            mkdir -p test-results playwright-report
-                            chmod 777 test-results playwright-report
-                            
-                            # Generate unique container name
-                            CONTAINER_NAME="e2e-runner-${BUILD_NUMBER}"
-                            
-                            # Run tests WITHOUT --rm so we can copy results after
-                            # Use -T to disable pseudo-TTY allocation but keep output streaming
-                            # Capture all output including container logs
-                            set +e
-                            echo "🚀 Starting E2E test container: ${CONTAINER_NAME}"
+                            # Run tests with --rm for automatic cleanup
+                            # Output streams directly to Jenkins console (no TTY flags needed)
                             ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
-                                run --name "${CONTAINER_NAME}" -T e2e-runner
+                                run --rm e2e-runner
                             EXIT_CODE=$?
                             set -e
                             
-                            echo "=========================================="
-                            echo "📦 Container execution completed with exit code: ${EXIT_CODE}"
-                            
-                            # Also try to get logs in case run command didn't show them
-                            echo "📋 Retrieving container logs..."
-                            ${DOCKER_CMD} logs "${CONTAINER_NAME}" 2>&1 || echo "⚠️ Could not retrieve additional logs"
-                            
-                            echo "=========================================="
-                            echo "📦 Copying test results from container..."
-                            
-                            # Copy test results from container to workspace
-                            ${DOCKER_CMD} cp "${CONTAINER_NAME}:/app/test-results/." test-results/ 2>/dev/null || echo "⚠️ Could not copy test-results"
-                            ${DOCKER_CMD} cp "${CONTAINER_NAME}:/app/playwright-report/." playwright-report/ 2>/dev/null || echo "⚠️ Could not copy playwright-report"
-                            
-                            # Remove container
-                            ${DOCKER_CMD} rm -f "${CONTAINER_NAME}" 2>/dev/null || true
-                            
-                            echo "=========================================="
-                            echo "📦 Verifying test results..."
-                            
-                            # List test results files
-                            if [ -d "test-results" ]; then
-                                echo "✅ test-results directory exists"
-                                ls -lh test-results/ | head -10
-                            else
-                                echo "⚠️ test-results directory not found"
-                            fi
-                            
-                            if [ -d "playwright-report" ]; then
-                                echo "✅ playwright-report directory exists"
-                            else
-                                echo "⚠️ playwright-report directory not found"
-                            fi
-                            
-                            echo "=========================================="
-                            echo ""
                             echo "E2E_EXIT_CODE:${EXIT_CODE}"
                             echo "📊 E2E tests completed with exit code: ${EXIT_CODE}"
                             

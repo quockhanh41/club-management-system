@@ -418,33 +418,21 @@ pipeline {
                                 // Read and parse JSON results
                                 def resultsJson = readJSON file: resultsFile
                                 
-                                // Extract test statistics
+                                // Extract test statistics from Playwright JSON stats object
                                 def totalTests = 0
                                 def passedTests = 0
                                 def failedTests = 0
                                 def flakyTests = 0
                                 def skippedTests = 0
                                 
-                                // Parse Playwright JSON structure
-                                if (resultsJson.suites) {
-                                    resultsJson.suites.each { suite ->
-                                        suite.specs?.each { spec ->
-                                            totalTests++
-                                            if (spec.ok == true) {
-                                                passedTests++
-                                            } else if (spec.ok == false) {
-                                                // Check if flaky (passed after retry)
-                                                def hasPassedResult = spec.tests?.any { test ->
-                                                    test.results?.any { result -> result.status == 'passed' }
-                                                }
-                                                if (hasPassedResult) {
-                                                    flakyTests++
-                                                } else {
-                                                    failedTests++
-                                                }
-                                            }
-                                        }
-                                    }
+                                // Parse Playwright JSON structure (uses stats object in newer versions)
+                                if (resultsJson.stats) {
+                                    def stats = resultsJson.stats
+                                    passedTests = (stats.expected ?: 0) as Integer
+                                    failedTests = (stats.unexpected ?: 0) as Integer
+                                    flakyTests = (stats.flaky ?: 0) as Integer
+                                    skippedTests = (stats.skipped ?: 0) as Integer
+                                    totalTests = passedTests + failedTests + flakyTests + skippedTests
                                 }
                                 
                                 // Calculate failure percentage

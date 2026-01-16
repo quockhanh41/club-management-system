@@ -30,7 +30,11 @@ COPY --from=deps /app/node_modules ./node_modules
 # Copy package files
 COPY package*.json ./
 
-# Copy all source code and tests
+# Copy playwright config and test files explicitly
+COPY playwright.config.ts ./
+COPY tests/ ./tests/
+
+# Copy all other source code
 COPY . .
 
 # Set environment

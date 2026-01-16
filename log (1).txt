@@ -1,0 +1,714 @@
+Started by user unknown or anonymous
+Restarted from build #23, stage E2E Tests
+Copying 3 artifact(s) from #23
+[Pipeline] Start of Pipeline
+[Pipeline] withCredentials
+Masking supported pattern matches of $DOCKER_REGISTRY
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] timeout
+Timeout set to expire in 1 hr 0 min
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Checkout)
+Stage "Checkout" skipped due to this build restarting at stage "E2E Tests"
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Setup Environment)
+Stage "Setup Environment" skipped due to this build restarting at stage "E2E Tests"
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Lint & Code Quality)
+Stage "Lint & Code Quality" skipped due to this build restarting at stage "E2E Tests"
+[Pipeline] getContext
+[Pipeline] parallel
+[Pipeline] { (Branch: Lint Backend Services)
+[Pipeline] { (Branch: Lint Frontend)
+[Pipeline] stage
+[Pipeline] { (Lint Backend Services)
+[Pipeline] stage
+[Pipeline] { (Lint Frontend)
+Stage "Lint Backend Services" skipped due to this build restarting at stage "E2E Tests"
+[Pipeline] getContext
+[Pipeline] }
+Stage "Lint Frontend" skipped due to this build restarting at stage "E2E Tests"
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] }
+[Pipeline] // parallel
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Unit Tests)
+Stage "Unit Tests" skipped due to this build restarting at stage "E2E Tests"
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Build Docker Images)
+Stage "Build Docker Images" skipped due to this build restarting at stage "E2E Tests"
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (E2E Tests)
+[Pipeline] node
+Running on e2e-agent in /home/jenkins/agent/workspace/club-management-pipeline
+[Pipeline] {
+[Pipeline] checkout
+The recommended git tool is: git
+No credentials specified
+Fetching changes from the remote Git repository
+ > git rev-parse --resolve-git-dir /home/jenkins/agent/workspace/club-management-pipeline/.git # timeout=10
+ > git config remote.origin.url https://github.com/quockhanh41/club-management-system # timeout=10
+Fetching upstream changes from https://github.com/quockhanh41/club-management-system
+ > git --version # timeout=10
+ > git --version # 'git version 2.39.5'
+ > git fetch --tags --force --progress -- https://github.com/quockhanh41/club-management-system +refs/heads/*:refs/remotes/origin/* # timeout=10
+Checking out Revision 3920068e3138992af3a00cbf218436af0517d787 (refs/remotes/origin/main)
+Commit message: "fix: explicitly copy tests directory in E2E Dockerfile"
+ > git rev-parse refs/remotes/origin/main^{commit} # timeout=10
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 3920068e3138992af3a00cbf218436af0517d787 # timeout=10
+ > git rev-list --no-walk 8bb11543f0321155d96fb1b618ec012daff5b742 # timeout=10
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] script
+[Pipeline] {
+[Pipeline] echo
+🧪 Running E2E tests with Docker infrastructure
+[Pipeline] echo
+📋 Failure Thresholds: 10% or 24 tests (Mode: both)
+[Pipeline] sh
++ id -u
++ [ 0 = 0 ]
++ DOCKER_CMD=docker
++ echo ✓ Using docker as root user
+✓ Using docker as root user
++ echo Starting services for E2E tests...
+Starting services for E2E tests...
++ mkdir -p artifacts test-results logs
++ echo Starting infrastructure services (postgres, mongodb, rabbitmq)...
+Starting infrastructure services (postgres, mongodb, rabbitmq)...
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --force-recreate postgres mongo rabbitmq
+time="2026-01-16T04:55:00Z" level=warning msg="No services to build"
+ Network club-management-pipeline_club_network Creating 
+ Network club-management-pipeline_club_network Created 
+ Volume club-management-pipeline_rabbitmq_e2e_data Creating 
+ Volume club-management-pipeline_rabbitmq_e2e_data Created 
+ Container club_management_postgres_e2e Creating 
+ Container club_management_mongo_e2e Creating 
+ Container club_management_rabbitmq_e2e Creating 
+ Container club_management_mongo_e2e Created 
+ Container club_management_rabbitmq_e2e Created 
+ Container club_management_postgres_e2e Created 
+ Container club_management_postgres_e2e Starting 
+ Container club_management_mongo_e2e Starting 
+ Container club_management_rabbitmq_e2e Starting 
+ Container club_management_postgres_e2e Started 
+ Container club_management_rabbitmq_e2e Started 
+ Container club_management_mongo_e2e Started 
++ echo Waiting for databases to be ready...
+Waiting for databases to be ready...
++ seq 1 60
++ grep -E (unhealthy|starting)
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps postgres mongo rabbitmq
++ echo Databases still starting... (attempt 1/60)
+Databases still starting... (attempt 1/60)
++ sleep 5
++ [ 1 -eq 60 ]
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps postgres mongo rabbitmq
++ grep -E (unhealthy|starting)
++ echo Databases still starting... (attempt 2/60)
+Databases still starting... (attempt 2/60)
++ sleep 5
++ [ 2 -eq 60 ]
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps postgres mongo rabbitmq
++ grep -E (unhealthy|starting)
++ echo Databases still starting... (attempt 3/60)
+Databases still starting... (attempt 3/60)
++ sleep 5
++ [ 3 -eq 60 ]
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps postgres mongo rabbitmq
++ grep -E (unhealthy|starting)
++ echo Databases are healthy!
+Databases are healthy!
++ break
++ echo Starting application services...
+Starting application services...
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --no-build --force-recreate auth-service club-service event-service notify-service image-service frontend
+ Volume club-management-pipeline_notify_logs Creating 
+ Volume club-management-pipeline_notify_logs Created 
+ Container club_management_kong Creating 
+ Container club_management_postgres_e2e Running 
+ Container club_management_rabbitmq_e2e Running 
+ Container club_management_notify Creating 
+ Container club_management_mongo_e2e Running 
+ Container club_management_event Creating 
+ Container club_management_image Creating 
+ Container club_management_auth Creating 
+ Container club_management_club Creating 
+ Container club_management_club Created 
+ Container club_management_image Created 
+ Container club_management_event Created 
+ Container club_management_notify Created 
+ Container club_management_auth Created 
+ Container club_management_kong Created 
+ Container club_management_frontend Creating 
+ Container club_management_frontend Created 
+ Container club_management_kong Starting 
+ Container club_management_mongo_e2e Waiting 
+ Container club_management_rabbitmq_e2e Waiting 
+ Container club_management_postgres_e2e Waiting 
+ Container club_management_rabbitmq_e2e Waiting 
+ Container club_management_rabbitmq_e2e Waiting 
+ Container club_management_mongo_e2e Waiting 
+ Container club_management_kong Started 
+ Container club_management_frontend Starting 
+ Container club_management_frontend Started 
+ Container club_management_rabbitmq_e2e Healthy 
+ Container club_management_rabbitmq_e2e Healthy 
+ Container club_management_image Starting 
+ Container club_management_mongo_e2e Healthy 
+ Container club_management_event Starting 
+ Container club_management_postgres_e2e Healthy 
+ Container club_management_auth Starting 
+ Container club_management_mongo_e2e Healthy 
+ Container club_management_club Starting 
+ Container club_management_rabbitmq_e2e Healthy 
+ Container club_management_notify Starting 
+ Container club_management_auth Started 
+ Container club_management_image Started 
+ Container club_management_event Started 
+ Container club_management_club Started 
+ Container club_management_notify Started 
++ echo Waiting for application services to be healthy...
+Waiting for application services to be healthy...
++ sleep 30
++ seq 1 90
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
++ grep -E (unhealthy|starting)
++ echo All services are healthy!
+All services are healthy!
++ break
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
+NAME                           IMAGE                                     COMMAND                  SERVICE          CREATED          STATUS                    PORTS
+club_management_auth           club-management-pipeline-auth-service     "docker-entrypoint.s…"   auth-service     31 seconds ago   Up 30 seconds (healthy)   0.0.0.0:3001->3001/tcp, [::]:3001->3001/tcp
+club_management_club           club-management-pipeline-club-service     "docker-entrypoint.s…"   club-service     31 seconds ago   Up 30 seconds (healthy)   0.0.0.0:3002->3002/tcp, [::]:3002->3002/tcp
+club_management_event          club-management-pipeline-event-service    "docker-entrypoint.s…"   event-service    31 seconds ago   Up 30 seconds (healthy)   0.0.0.0:3003->3003/tcp, [::]:3003->3003/tcp
+club_management_frontend       club-management-pipeline-frontend         "docker-entrypoint.s…"   frontend         31 seconds ago   Up 30 seconds (healthy)   0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
+club_management_image          club-management-pipeline-image-service    "docker-entrypoint.s…"   image-service    31 seconds ago   Up 30 seconds (healthy)   0.0.0.0:3004->3004/tcp, [::]:3004->3004/tcp
+club_management_kong           club-management-pipeline-kong             "/docker-entrypoint.…"   kong             31 seconds ago   Up 30 seconds (healthy)   0.0.0.0:8000-8001->8000-8001/tcp, [::]:8000-8001->8000-8001/tcp, 0.0.0.0:8443-8444->8443-8444/tcp, [::]:8443-8444->8443-8444/tcp
+club_management_mongo_e2e      mongo:6.0                                 "docker-entrypoint.s…"   mongo            47 seconds ago   Up 47 seconds (healthy)   0.0.0.0:27017->27017/tcp, [::]:27017->27017/tcp
+club_management_notify         club-management-pipeline-notify-service   "docker-entrypoint.s…"   notify-service   31 seconds ago   Up 30 seconds (healthy)   0.0.0.0:3005->3005/tcp, [::]:3005->3005/tcp
+club_management_postgres_e2e   postgres:15-alpine                        "docker-entrypoint.s…"   postgres         47 seconds ago   Up 47 seconds (healthy)   0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
+club_management_rabbitmq_e2e   rabbitmq:3-management                     "docker-entrypoint.s…"   rabbitmq         47 seconds ago   Up 47 seconds (healthy)   0.0.0.0:5672->5672/tcp, [::]:5672->5672/tcp, 0.0.0.0:15672->15672/tcp, [::]:15672->15672/tcp
++ echo ⏳ Waiting additional 30 seconds for services to stabilize...
+⏳ Waiting additional 30 seconds for services to stabilize...
++ sleep 30
++ echo 🔍 Verifying service connectivity...
+🔍 Verifying service connectivity...
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml exec -T frontend curl -s http://localhost:3000/api/health
+OCI runtime exec failed: exec failed: unable to start container process: exec: "curl": executable file not found in $PATH: unknown
++ echo ⚠️ Frontend health check failed
+⚠️ Frontend health check failed
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml exec -T kong curl -s http://localhost:8000/health
+OCI runtime exec failed: exec failed: unable to start container process: exec: "curl": executable file not found in $PATH: unknown
++ echo ⚠️ Kong health check failed
+⚠️ Kong health check failed
++ echo Building E2E runner image...
+Building E2E runner image...
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml build e2e-runner
+ Image club-management-pipeline-event-service Building 
+ Image club-management-pipeline-frontend Building 
+ Image club-management-pipeline-kong Building 
+ Image club-management-pipeline-club-service Building 
+ Image club-management-pipeline-e2e-runner Building 
+ Image club-management-pipeline-auth-service Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 4.42kB done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile.e2e
+#2 transferring dockerfile: 4.38kB done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for mcr.microsoft.com/playwright:v1.57.0-jammy
+#3 DONE 0.5s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 744B done
+#4 DONE 0.0s
+
+#5 [deps 1/4] FROM mcr.microsoft.com/playwright:v1.57.0-jammy@sha256:6aca677c27a967caf7673d108ac67ffaf8fed134f27e17b27a05464ca0ace831
+#5 resolve mcr.microsoft.com/playwright:v1.57.0-jammy@sha256:6aca677c27a967caf7673d108ac67ffaf8fed134f27e17b27a05464ca0ace831 done
+#5 DONE 0.0s
+
+#6 [internal] load build context
+#6 transferring context: 41.54kB 0.0s done
+#6 DONE 0.0s
+
+#7 [deps 2/4] WORKDIR /app
+#7 CACHED
+
+#8 [deps 4/4] RUN npm ci
+#8 CACHED
+
+#9 [runner 3/8] COPY --from=deps /app/node_modules ./node_modules
+#9 CACHED
+
+#10 [deps 3/4] COPY package*.json ./
+#10 CACHED
+
+#11 [runner 4/8] COPY package*.json ./
+#11 CACHED
+
+#12 [runner 5/8] COPY playwright.config.ts ./
+#12 DONE 0.0s
+
+#13 [runner 6/8] COPY tests/ ./tests/
+#13 DONE 0.0s
+
+#14 [runner 7/8] COPY . .
+#14 DONE 0.1s
+
+#15 [runner 8/8] RUN echo '#!/bin/bash\n    set -ex\n    echo "========================================"\n    echo "🎭 Starting E2E Test Execution"\n    echo "========================================"\n    echo "Environment:"\n    echo "  - BASE_URL: ${BASE_URL:-not set}"\n    echo "  - API_GATEWAY_URL: ${API_GATEWAY_URL:-not set}"\n    echo "  - CI: ${CI:-false}"\n    echo "  - Working Directory: $(pwd)"\n    echo "  - User: $(whoami)"\n    echo "========================================"\n    echo ""\n    echo "📁 Checking test files..."\n    echo "Test directory structure:"\n    ls -la tests/e2e/ || echo "⚠️ tests/e2e/ not found"\n    echo ""\n    echo "Test spec files:"\n    find tests/e2e -name "*.spec.ts" -type f 2>/dev/null || echo "⚠️ No spec files found"\n    echo ""\n    echo "Playwright config:"\n    if [ -f "playwright.config.ts" ]; then\n        echo "✅ playwright.config.ts exists"\n        echo "Config content (first 20 lines):"\n        head -20 playwright.config.ts\n    else\n        echo "❌ playwright.config.ts NOT found"\n    fi\n    echo ""\n    echo "Node modules check:"\n    ls node_modules/@playwright/test > /dev/null && echo "✅ Playwright installed" || echo "❌ Playwright NOT installed"\n    echo ""\n    echo "Package.json check:"\n    if [ -f "package.json" ]; then\n        echo "✅ package.json exists"\n    else\n        echo "❌ package.json NOT found"\n    fi\n    echo "========================================"\n    echo ""\n    echo "🚀 Running Playwright tests..."\n    echo "Command: npx playwright test --reporter=list,html,junit"\n    echo ""\n    \n    npx playwright test --reporter=list,html,junit || EXIT_CODE=$?\n    \n    echo ""\n    echo "========================================"\n    echo "📊 Test Execution Summary"\n    echo "========================================"\n    echo "Exit Code: ${EXIT_CODE:-0}"\n    \n    echo ""\n    echo "Checking generated files..."\n    if [ -f "test-results/e2e-results.json" ]; then\n        echo "✅ e2e-results.json generated"\n        echo "Content preview:"\n        head -10 test-results/e2e-results.json || cat test-results/e2e-results.json\n    else\n        echo "⚠️  Warning: e2e-results.json not found"\n    fi\n    \n    if [ -f "test-results/e2e-results.xml" ]; then\n        echo "✅ e2e-results.xml generated"\n    else\n        echo "⚠️  Warning: e2e-results.xml not found"\n    fi\n    \n    if [ -f "playwright-report/index.html" ]; then\n        echo "✅ HTML report generated"\n    else\n        echo "⚠️  Warning: HTML report not found"\n    fi\n    \n    echo ""\n    echo "Test results directory contents:"\n    ls -la test-results/ 2>/dev/null || echo "test-results directory is empty or not found"\n    \n    echo "========================================"\n    exit ${EXIT_CODE:-0}\n    ' > /app/run-tests.sh && chmod +x /app/run-tests.sh
+#15 DONE 0.1s
+
+#16 exporting to image
+#16 exporting layers
+#16 exporting layers 0.2s done
+#16 exporting manifest sha256:fe31ff6cd79a27ed5b2aa2b10fb409f5dec3f31b920ad82e14e1e920bf15227c done
+#16 exporting config sha256:05e822c82311a9ab6eb88c50c4cdf9271002a7bc140d3f95229eff811ab17716 done
+#16 exporting attestation manifest sha256:0442571eeb384092abed2362aadd78844c09967a647701cd911086c726c84a3e done
+#16 exporting manifest list sha256:4c90cf9d610d9a70e6e7e93aadac5757b0e41215300ec2b39ea05d0ba2d816b3 done
+#16 naming to docker.io/library/club-management-pipeline-e2e-runner:latest done
+#16 unpacking to docker.io/library/club-management-pipeline-e2e-runner:latest 0.1s done
+#16 DONE 0.3s
+
+#17 resolving provenance for metadata file
+#17 DONE 0.0s
+ Image club-management-pipeline-e2e-runner Built 
+[Pipeline] sh
++ id -u
++ [ 0 = 0 ]
++ DOCKER_CMD=docker
++ echo ✓ Using docker as root user
++ set +e
++ echo 🚀 Starting E2E test runner...
++ echo ==========================================
++ mkdir -p test-results playwright-report
++ chmod 777 test-results playwright-report
++ CONTAINER_NAME=e2e-runner-24
++ set +e
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml run --name e2e-runner-24 e2e-runner
+time="2026-01-16T04:56:22Z" level=warning msg="No services to build"
+ Container club_management_postgres_e2e Running 
+ Container club_management_mongo_e2e Running 
+ Container club_management_event Running 
+ Container club_management_kong Running 
+ Container club_management_frontend Running 
+ Container club_management_rabbitmq_e2e Running 
+ Container club_management_auth Running 
+ Container club_management_club Running 
+ Container club_management_rabbitmq_e2e Waiting 
+ Container club_management_postgres_e2e Waiting 
+ Container club_management_mongo_e2e Waiting 
+ Container club_management_mongo_e2e Waiting 
+ Container club_management_mongo_e2e Healthy 
+ Container club_management_mongo_e2e Healthy 
+ Container club_management_rabbitmq_e2e Healthy 
+ Container club_management_postgres_e2e Healthy 
+time="2026-01-16T04:56:22Z" level=warning msg="No services to build"
+ Container club_management_event Waiting 
+ Container club_management_frontend Waiting 
+ Container club_management_kong Waiting 
+ Container club_management_auth Waiting 
+ Container club_management_club Waiting 
+ Container club_management_kong Healthy 
+ Container club_management_club Healthy 
+ Container club_management_event Healthy 
+ Container club_management_frontend Healthy 
+ Container club_management_auth Healthy 
+ Container e2e-runner-24 Creating 
+ Container e2e-runner-24 Created 
++ echo ========================================
++ echo '🎭 Starting E2E Test Execution'
++ echo ========================================
++ echo Environment:
++ echo '  - BASE_URL: http://frontend:3000'
++ echo '  - API_GATEWAY_URL: http://kong:8000'
++ echo '  - CI: true'
+++ pwd
++ echo '  - Working Directory: /app'
+++ whoami
++ echo '  - User: root'
++ echo ========================================
++ echo ''
++ echo '📁 Checking test files...'
++ echo 'Test directory structure:'
++ ls -la tests/e2e/
++ echo ''
++ echo 'Test spec files:'
++ find tests/e2e -name '*.spec.ts' -type f
++ echo ''
++ echo 'Playwright config:'
++ '[' -f playwright.config.ts ']'
++ echo '✅ playwright.config.ts exists'
++ echo 'Config content (first 20 lines):'
++ head -20 playwright.config.ts
++ echo ''
++ echo 'Node modules check:'
++ ls node_modules/@playwright/test
++ echo '✅ Playwright installed'
++ echo ''
++ echo 'Package.json check:'
++ '[' -f package.json ']'
++ echo '✅ package.json exists'
++ echo ========================================
++ echo ''
++ echo '🚀 Running Playwright tests...'
++ echo 'Command: npx playwright test --reporter=list,html,junit'
++ echo ''
++ npx playwright test --reporter=list,html,junit
++ echo ''
++ echo ========================================
++ echo '📊 Test Execution Summary'
++ echo ========================================
++ echo 'Exit Code: 0'
++ echo ''
++ echo 'Checking generated files...'
++ '[' -f test-results/e2e-results.json ']'
++ echo '⚠️  Warning: e2e-results.json not found'
++ '[' -f test-results/e2e-results.xml ']'
++ echo '⚠️  Warning: e2e-results.xml not found'
++ '[' -f playwright-report/index.html ']'
++ echo '✅ HTML report generated'
++ echo ''
++ echo 'Test results directory contents:'
++ ls -la test-results/
++ echo ========================================
++ exit 0
++ EXIT_CODE=0
++ set -e
++ echo ==========================================
++ echo 📦 Container execution completed with exit code: 0
++ echo 📋 Container logs:
++ docker logs e2e-runner-24
++ echo ==========================================
++ echo 📦 Copying test results from container...
++ docker cp e2e-runner-24:/app/test-results/. test-results/
++ docker cp e2e-runner-24:/app/playwright-report/. playwright-report/
++ docker rm -f e2e-runner-24
++ echo ==========================================
++ echo 📦 Verifying test results...
++ [ -d test-results ]
++ echo ✅ test-results directory exists
++ ls -lh test-results/
++ head -10
++ [ -d playwright-report ]
++ echo ✅ playwright-report directory exists
++ echo ==========================================
++ echo 
++ echo E2E_EXIT_CODE:0
++ echo 📊 E2E tests completed with exit code: 0
++ exit 0
+[Pipeline] echo
+E2E tests finished with exit code: 0
+[Pipeline] echo
+Exit code line found: E2E_EXIT_CODE:0
+[Pipeline] sh
++ chmod +x scripts/analyze-e2e-results.sh
+[Pipeline] fileExists
+[Pipeline] sh
++ ./scripts/analyze-e2e-results.sh
+🔍 Analyzing E2E test results from test-results...
+==========================================
+📊 E2E Test Results Summary
+==========================================
+Total Tests:   0
+✅ Passed:      0
+❌ Failed:      0
+⏭️  Skipped:     0
+📈 Failure Rate: 0%
+==========================================
+
+🎯 Failure Thresholds:
+  Percentage:  10%
+  Absolute:    24 tests
+  Mode:        both
+==========================================
+✅ Tests are within both thresholds
+==========================================
+📝 Test summary saved to e2e-test-summary.json
+==========================================
+🎉 All tests passed!
+[Pipeline] readJSON
+[Pipeline] echo
+
+📊 E2E Test Summary:
+   Total:        0
+   ✅ Passed:     0
+   ❌ Failed:     0
+   ⏭️ Skipped:    0
+   📈 Fail Rate:  0%
+
+[Pipeline] echo
+✅ All E2E tests passed!
+[Pipeline] }
+[Pipeline] // script
+Post stage
+[Pipeline] script
+[Pipeline] {
+[Pipeline] sh
++ cat
++ [ -f e2e-test-summary.json ]
++ jq -r .total e2e-test-summary.json
++ TOTAL=0
++ jq -r .passed e2e-test-summary.json
++ PASSED=0
++ jq -r .failed e2e-test-summary.json
++ FAILED=0
++ jq -r .skipped e2e-test-summary.json
++ SKIPPED=0
++ jq -r .failureRate e2e-test-summary.json
++ FAILURE_RATE=0
++ jq -r .thresholdPercent e2e-test-summary.json
++ THRESHOLD_PERCENT=10
++ jq -r .thresholdAbsolute e2e-test-summary.json
++ THRESHOLD_ABSOLUTE=24
++ jq -r .thresholdMode e2e-test-summary.json
++ THRESHOLD_MODE=both
++ STATUS=<span class='status-badge status-success'>✅ ALL PASSED</span>
++ [ 0 -gt 0 ]
++ sed -i s/__TOTAL__/0/g e2e-summary.html
++ sed -i s/__PASSED__/0/g e2e-summary.html
++ sed -i s/__FAILED__/0/g e2e-summary.html
++ sed -i s/__SKIPPED__/0/g e2e-summary.html
++ sed -i s/__FAILURE_RATE__/0/g e2e-summary.html
++ sed -i s/__THRESHOLD_PERCENT__/10/g e2e-summary.html
++ sed -i s/__THRESHOLD_ABSOLUTE__/24/g e2e-summary.html
++ sed -i s/__THRESHOLD_MODE__/both/g e2e-summary.html
++ sed -i s|__STATUS__|<span class='status-badge status-success'>✅ ALL PASSED</span>|g e2e-summary.html
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] publishHTML
+[htmlpublisher] Archiving HTML reports...
+[htmlpublisher] Archiving at BUILD level /home/jenkins/agent/workspace/club-management-pipeline to E2E_20Test_20Summary
+[htmlpublisher] Copying recursive using current thread
+[Pipeline] publishHTML
+[htmlpublisher] Archiving HTML reports...
+[htmlpublisher] Archiving at BUILD level /home/jenkins/agent/workspace/club-management-pipeline/playwright-report to Playwright_20E2E_20Test_20Report
+[htmlpublisher] Copying recursive using current thread
+[Pipeline] junit
+Recording test results
+None of the test reports contained any result
+[Checks API] No suitable checks publisher found.
+[Pipeline] archiveArtifacts
+Archiving artifacts
+[Pipeline] sh
++ id -u
++ [ 0 = 0 ]
++ DOCKER_CMD=docker
++ echo Collecting service logs...
+Collecting service logs...
++ mkdir -p logs
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs
+[Pipeline] archiveArtifacts
+Archiving artifacts
+[Pipeline] sh
++ id -u
++ [ 0 = 0 ]
++ DOCKER_CMD=docker
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v
+ Container club_management_frontend Stopping 
+ Container club_management_image Stopping 
+ Container club_management_club Stopping 
+ Container club_management_event Stopping 
+ Container club_management_auth Stopping 
+ Container club_management_notify Stopping 
+ Container club_management_frontend Stopped 
+ Container club_management_frontend Removing 
+ Container club_management_auth Stopped 
+ Container club_management_auth Removing 
+ Container club_management_frontend Removed 
+ Container club_management_kong Stopping 
+ Container club_management_event Stopped 
+ Container club_management_event Removing 
+ Container club_management_auth Removed 
+ Container club_management_postgres_e2e Stopping 
+ Container club_management_image Stopped 
+ Container club_management_image Removing 
+ Container club_management_event Removed 
+No test report files were found. Configuration error?
+ Container club_management_image Removed 
+ Container club_management_postgres_e2e Stopped 
+ Container club_management_postgres_e2e Removing 
+ Container club_management_postgres_e2e Removed 
+ Container club_management_club Stopped 
+ Container club_management_club Removing 
+ Container club_management_club Removed 
+ Container club_management_mongo_e2e Stopping 
+ Container club_management_mongo_e2e Stopped 
+ Container club_management_mongo_e2e Removing 
+ Container club_management_mongo_e2e Removed 
+ Container club_management_notify Stopped 
+ Container club_management_notify Removing 
+ Container club_management_notify Removed 
+ Container club_management_rabbitmq_e2e Stopping 
+ Container club_management_kong Stopped 
+ Container club_management_kong Removing 
+ Container club_management_kong Removed 
+ Container club_management_rabbitmq_e2e Stopped 
+ Container club_management_rabbitmq_e2e Removing 
+ Container club_management_rabbitmq_e2e Removed 
+ Volume club-management-pipeline_rabbitmq_e2e_data Removing 
+ Volume club-management-pipeline_notify_logs Removing 
+ Network club-management-pipeline_club_network Removing 
+ Volume club-management-pipeline_notify_logs Removed 
+ Volume club-management-pipeline_rabbitmq_e2e_data Removed 
+ Network club-management-pipeline_club_network Removed 
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Tag & Push Images)
+[Pipeline] node
+Running on build-agent in /home/jenkins/agent/workspace/club-management-pipeline
+[Pipeline] {
+[Pipeline] checkout
+The recommended git tool is: git
+No credentials specified
+Fetching changes from the remote Git repository
+ > git rev-parse --resolve-git-dir /home/jenkins/agent/workspace/club-management-pipeline/.git # timeout=10
+ > git config remote.origin.url https://github.com/quockhanh41/club-management-system # timeout=10
+Fetching upstream changes from https://github.com/quockhanh41/club-management-system
+ > git --version # timeout=10
+ > git --version # 'git version 2.39.5'
+ > git fetch --tags --force --progress -- https://github.com/quockhanh41/club-management-system +refs/heads/*:refs/remotes/origin/* # timeout=10
+Checking out Revision 3920068e3138992af3a00cbf218436af0517d787 (refs/remotes/origin/main)
+Commit message: "fix: explicitly copy tests directory in E2E Dockerfile"
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+Stage "Tag & Push Images" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Deploy to Environment)
+[Pipeline] node
+Running on deploy-agent in /home/jenkins/agent/workspace/club-management-pipeline
+[Pipeline] {
+[Pipeline] checkout
+The recommended git tool is: git
+No credentials specified
+Fetching changes from the remote Git repository
+ > git rev-parse refs/remotes/origin/main^{commit} # timeout=10
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 3920068e3138992af3a00cbf218436af0517d787 # timeout=10
+ > git rev-parse --resolve-git-dir /home/jenkins/agent/workspace/club-management-pipeline/.git # timeout=10
+ > git config remote.origin.url https://github.com/quockhanh41/club-management-system # timeout=10
+Fetching upstream changes from https://github.com/quockhanh41/club-management-system
+ > git --version # timeout=10
+ > git --version # 'git version 2.39.5'
+ > git fetch --tags --force --progress -- https://github.com/quockhanh41/club-management-system +refs/heads/*:refs/remotes/origin/* # timeout=10
+Checking out Revision 3920068e3138992af3a00cbf218436af0517d787 (refs/remotes/origin/main)
+Commit message: "fix: explicitly copy tests directory in E2E Dockerfile"
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+Stage "Deploy to Environment" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Security Scan)
+[Pipeline] node
+Running on build-agent in /home/jenkins/agent/workspace/club-management-pipeline
+[Pipeline] {
+[Pipeline] checkout
+The recommended git tool is: git
+No credentials specified
+Fetching changes from the remote Git repository
+ > git rev-parse refs/remotes/origin/main^{commit} # timeout=10
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 3920068e3138992af3a00cbf218436af0517d787 # timeout=10
+Checking out Revision 3920068e3138992af3a00cbf218436af0517d787 (refs/remotes/origin/main)
+Commit message: "fix: explicitly copy tests directory in E2E Dockerfile"
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+Stage "Security Scan" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Declarative: Post Actions)
+[Pipeline] node
+Running on e2e-agent in /home/jenkins/agent/workspace/club-management-pipeline
+[Pipeline] {
+[Pipeline] script
+[Pipeline] {
+[Pipeline] echo
+🧹 Cleaning up workspace
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] sh
+ > git rev-parse --resolve-git-dir /home/jenkins/agent/workspace/club-management-pipeline/.git # timeout=10
+ > git config remote.origin.url https://github.com/quockhanh41/club-management-system # timeout=10
+Fetching upstream changes from https://github.com/quockhanh41/club-management-system
+ > git --version # timeout=10
+ > git --version # 'git version 2.39.5'
+ > git fetch --tags --force --progress -- https://github.com/quockhanh41/club-management-system +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git rev-parse refs/remotes/origin/main^{commit} # timeout=10
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 3920068e3138992af3a00cbf218436af0517d787 # timeout=10
++ id -u
++ [ 0 = 0 ]
++ DOCKER_CMD=docker
++ docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v
++ docker image prune -f
+Total reclaimed space: 0B
+[Pipeline] cleanWs
+[WS-CLEANUP] Deleting project workspace...
+[WS-CLEANUP] Deferred wipeout is disabled by the job configuration...
+[WS-CLEANUP] done
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] script
+[Pipeline] {
+[Pipeline] echo
+✅ Pipeline completed successfully!
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // timeout
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] End of Pipeline
+Finished: SUCCESS

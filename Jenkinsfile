@@ -398,8 +398,10 @@ pipeline {
                         find test-results -type f -name "*.json" || echo "No JSON files found"
                     fi
                     
-                    # Exit with test exit code (preserve test failure status)
-                    exit ${TEST_EXIT_CODE}
+                    # Don't exit here - let threshold analysis in post block determine build status
+                    # TEST_EXIT_CODE is preserved and will be evaluated against thresholds
+                    echo "📊 Test execution completed with exit code: ${TEST_EXIT_CODE}"
+                    echo "⏭️  Proceeding to threshold analysis..."
                 '''
             }
             

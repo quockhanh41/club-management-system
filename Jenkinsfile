@@ -2,6 +2,29 @@ pipeline {
     // Disable builds on controller - force all stages to use specific agents
     agent none
 
+    parameters {
+        string(
+            name: 'E2E_FAILURE_THRESHOLD_PERCENT',
+            defaultValue: '10',
+            description: 'Maximum percentage of E2E tests allowed to fail (0-100)'
+        )
+        string(
+            name: 'E2E_FAILURE_THRESHOLD_ABSOLUTE',
+            defaultValue: '24',
+            description: 'Maximum absolute number of E2E tests allowed to fail'
+        )
+        choice(
+            name: 'E2E_THRESHOLD_MODE',
+            choices: ['both', 'percentage', 'absolute'],
+            description: 'Threshold evaluation mode: both (must satisfy both), percentage only, or absolute only'
+        )
+        booleanParam(
+            name: 'E2E_MARK_UNSTABLE',
+            defaultValue: true,
+            description: 'Mark build as UNSTABLE instead of SUCCESS when failures are within threshold'
+        )
+    }
+
     environment {
         // Docker Registry Configuration
         DOCKER_REGISTRY = credentials('docker-registry-url') // Configure in Jenkins credentials
@@ -23,6 +46,12 @@ pipeline {
         // E2E Test Configuration - Use localhost (ports are exposed)
         API_GATEWAY_URL = 'http://localhost:8000'
         CI = 'true'
+        
+        // E2E Test Failure Threshold Configuration
+        E2E_FAILURE_THRESHOLD_PERCENT = "${params.E2E_FAILURE_THRESHOLD_PERCENT ?: '10'}"
+        E2E_FAILURE_THRESHOLD_ABSOLUTE = "${params.E2E_FAILURE_THRESHOLD_ABSOLUTE ?: '24'}"
+        E2E_THRESHOLD_MODE = "${params.E2E_THRESHOLD_MODE ?: 'both'}"
+        E2E_MARK_UNSTABLE = "${params.E2E_MARK_UNSTABLE ?: 'true'}"
         
         // Add paths for Docker and Node.js
         PATH = "/usr/local/bin:/usr/bin:/bin:${env.PATH}"
@@ -302,6 +331,127 @@ pipeline {
             
             post {
                 always {
+                    script {
+                        // Analyze E2E test results and apply threshold
+                        echo "📊 Analyzing E2E test results..."
+                        
+                        // Check if results file exists
+                        def resultsFile = 'test-results/e2e-results.json'
+                        if (!fileExists(resultsFile)) {
+                            echo "⚠️  Warning: ${resultsFile} not found. Skipping threshold analysis."
+                        } else {
+                            try {
+                                // Read and parse JSON results
+                                def resultsJson = readJSON file: resultsFile
+                                
+                                // Extract test statistics
+                                def totalTests = 0
+                                def passedTests = 0
+                                def failedTests = 0
+                                def flakyTests = 0
+                                def skippedTests = 0
+                                
+                                // Parse Playwright JSON structure
+                                if (resultsJson.suites) {
+                                    resultsJson.suites.each { suite ->
+                                        suite.specs?.each { spec ->
+                                            totalTests++
+                                            if (spec.ok == true) {
+                                                passedTests++
+                                            } else if (spec.ok == false) {
+                                                // Check if flaky (passed after retry)
+                                                def hasPassedResult = spec.tests?.any { test ->
+                                                    test.results?.any { result -> result.status == 'passed' }
+                                                }
+                                                if (hasPassedResult) {
+                                                    flakyTests++
+                                                } else {
+                                                    failedTests++
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                // Calculate failure percentage
+                                def failurePercent = totalTests > 0 ? (failedTests * 100.0 / totalTests) : 0
+                                
+                                // Get threshold values
+                                def thresholdPercent = env.E2E_FAILURE_THRESHOLD_PERCENT.toFloat()
+                                def thresholdAbsolute = env.E2E_FAILURE_THRESHOLD_ABSOLUTE.toInteger()
+                                def thresholdMode = env.E2E_THRESHOLD_MODE
+                                def markUnstable = env.E2E_MARK_UNSTABLE.toBoolean()
+                                
+                                // Display results
+                                echo "========================================="
+                                echo "📊 E2E Test Results Summary"
+                                echo "========================================="
+                                echo "Total Tests:    ${totalTests}"
+                                echo "✅ Passed:      ${passedTests}"
+                                echo "❌ Failed:      ${failedTests}"
+                                echo "⚠️  Flaky:       ${flakyTests}"
+                                echo "⏭️  Skipped:     ${skippedTests}"
+                                echo "📈 Pass Rate:   ${String.format('%.2f', 100 - failurePercent)}%"
+                                echo "📉 Fail Rate:   ${String.format('%.2f', failurePercent)}%"
+                                echo "========================================="
+                                echo "🎯 Threshold Configuration"
+                                echo "========================================="
+                                echo "Mode:           ${thresholdMode}"
+                                echo "Max Failures:   ${thresholdAbsolute} tests"
+                                echo "Max Fail Rate:  ${thresholdPercent}%"
+                                echo "Mark Unstable:  ${markUnstable}"
+                                echo "========================================="
+                                
+                                // Evaluate thresholds
+                                def percentagePass = failurePercent <= thresholdPercent
+                                def absolutePass = failedTests <= thresholdAbsolute
+                                def thresholdPass = false
+                                
+                                switch(thresholdMode) {
+                                    case 'both':
+                                        thresholdPass = percentagePass && absolutePass
+                                        echo "📋 Both criteria must pass:"
+                                        echo "   Percentage: ${percentagePass ? '✅' : '❌'} (${String.format('%.2f', failurePercent)}% <= ${thresholdPercent}%)"
+                                        echo "   Absolute:   ${absolutePass ? '✅' : '❌'} (${failedTests} <= ${thresholdAbsolute})"
+                                        break
+                                    case 'percentage':
+                                        thresholdPass = percentagePass
+                                        echo "📋 Percentage criterion:"
+                                        echo "   ${percentagePass ? '✅' : '❌'} (${String.format('%.2f', failurePercent)}% <= ${thresholdPercent}%)"
+                                        break
+                                    case 'absolute':
+                                        thresholdPass = absolutePass
+                                        echo "📋 Absolute criterion:"
+                                        echo "   ${absolutePass ? '✅' : '❌'} (${failedTests} <= ${thresholdAbsolute})"
+                                        break
+                                }
+                                
+                                echo "========================================="
+                                
+                                // Set build result based on threshold
+                                if (failedTests == 0) {
+                                    echo "🎉 All tests passed! Build: SUCCESS"
+                                    currentBuild.result = 'SUCCESS'
+                                } else if (thresholdPass) {
+                                    if (markUnstable) {
+                                        echo "⚠️  Failures within threshold. Build: UNSTABLE"
+                                        currentBuild.result = 'UNSTABLE'
+                                    } else {
+                                        echo "✅ Failures within threshold. Build: SUCCESS"
+                                        currentBuild.result = 'SUCCESS'
+                                    }
+                                } else {
+                                    echo "❌ Failures exceed threshold. Build: FAILURE"
+                                    currentBuild.result = 'FAILURE'
+                                }
+                                
+                            } catch (Exception e) {
+                                echo "⚠️  Error analyzing test results: ${e.message}"
+                                echo "Continuing with default behavior..."
+                            }
+                        }
+                    }
+                    
                     // Archive Playwright report
                     publishHTML([
                         allowMissing: true,

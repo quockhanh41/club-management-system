@@ -376,8 +376,9 @@ pipeline {
                     echo "📦 Copying test results from container (exit code: ${TEST_EXIT_CODE})..."
                     
                     # Copy results from container to workspace
-                    docker cp ${CONTAINER_NAME}:/app/test-results ./test-results || echo "⚠️ Warning: Could not copy test-results"
-                    docker cp ${CONTAINER_NAME}:/app/playwright-report ./playwright-report || echo "⚠️ Warning: Could not copy playwright-report"
+                    # Note: Use /. to copy directory contents, avoiding nested structure
+                    docker cp ${CONTAINER_NAME}:/app/test-results/. ./test-results/ || echo "⚠️ Warning: Could not copy test-results"
+                    docker cp ${CONTAINER_NAME}:/app/playwright-report/. ./playwright-report/ || echo "⚠️ Warning: Could not copy playwright-report"
                     
                     # Clean up container
                     echo "🧹 Cleaning up test container..."

@@ -358,26 +358,47 @@ pipeline {
                         echo "▶️  Running all E2E tests"
                     fi
                     
-                    # Run Playwright tests in Docker container on same network
-                    echo "Running E2E tests in Docker container..."
-                    # Note: Reporters are configured in playwright.config.ts with outputFile paths
-                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
-                        run --rm e2e-runner npx playwright test ${TEST_FILTER} || true
+                    # Generate unique container name
+                    CONTAINER_NAME="e2e-runner-${BUILD_NUMBER}"
                     
-                    # Debug: List test-results directory
-                    echo "📁 Checking test-results directory..."
+                    echo "🚀 Running E2E tests in container: ${CONTAINER_NAME}"
+                    
+                    # Run tests in container (no --rm so we can copy files after)
+                    # Note: Reporters are configured in playwright.config.ts with outputFile paths
+                    set +e
+                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
+                        run --name ${CONTAINER_NAME} \
+                        e2e-runner npx playwright test ${TEST_FILTER}
+                    
+                    TEST_EXIT_CODE=$?
+                    set -e
+                    
+                    echo "📦 Copying test results from container (exit code: ${TEST_EXIT_CODE})..."
+                    
+                    # Copy results from container to workspace
+                    docker cp ${CONTAINER_NAME}:/app/test-results ./test-results || echo "⚠️ Warning: Could not copy test-results"
+                    docker cp ${CONTAINER_NAME}:/app/playwright-report ./playwright-report || echo "⚠️ Warning: Could not copy playwright-report"
+                    
+                    # Clean up container
+                    echo "🧹 Cleaning up test container..."
+                    docker rm -f ${CONTAINER_NAME} || true
+                    
+                    # Debug: Check copied files
+                    echo "📁 Checking copied test results..."
                     ls -la test-results/ || echo "test-results directory not found"
                     
-                    # Debug: Check for JSON file
                     if [ -f "test-results/e2e-results.json" ]; then
                         echo "✅ JSON results file found"
-                        echo "📄 First 50 lines of JSON:"
-                        head -50 test-results/e2e-results.json
+                        echo "📄 JSON preview (first 30 lines):"
+                        head -30 test-results/e2e-results.json
                     else
                         echo "❌ JSON results file NOT found"
                         echo "Available files:"
                         find test-results -type f -name "*.json" || echo "No JSON files found"
                     fi
+                    
+                    # Exit with test exit code (preserve test failure status)
+                    exit ${TEST_EXIT_CODE}
                 '''
             }
             

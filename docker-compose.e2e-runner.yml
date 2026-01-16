@@ -13,10 +13,8 @@ services:
       - API_GATEWAY_URL=http://kong:8000
       - NEXT_PUBLIC_API_BASE_URL=http://kong:8000
       - API_GATEWAY_SECRET=test-secret-e2e
-    volumes:
-      # Mount test-results and playwright-report to persist output
-      - ./test-results:/app/test-results
-      - ./playwright-report:/app/playwright-report
+    # No volumes - using docker cp to extract results after test completion
+    # This avoids Docker-in-Docker volume mount issues in Jenkins
     depends_on:
       frontend:
         condition: service_healthy

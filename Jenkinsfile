@@ -9,7 +9,7 @@ pipeline {
         
         // Image naming
         IMAGE_PREFIX = 'club-management'
-        IMAGE_TAG = "${env.BUILD_NUMBER}-${env.GIT_COMMIT?.take(7) ?: 'latest'}"
+        IMAGE_TAG = 'latest' // Will be set dynamically in Checkout stage
         
         // Service names
         SERVICES = 'auth club event notify image'
@@ -54,6 +54,10 @@ pipeline {
                         script: 'git rev-parse --short HEAD',
                         returnStdout: true
                     ).trim()
+                    
+                    // Set IMAGE_TAG dynamically after checkout
+                    env.IMAGE_TAG = env.BUILD_NUMBER + '-' + env.GIT_COMMIT_SHORT
+                    echo "📦 Image tag set to: ${env.IMAGE_TAG}"
                     
                     env.BUILD_TIME = sh(
                         script: 'date -u +%Y-%m-%dT%H:%M:%SZ',
@@ -487,51 +491,55 @@ pipeline {
         }
         
         failure {
-            script {
-                echo "❌ Pipeline failed!"
-                
-                // Collect debugging information
-                sh '''
-                    echo "Collecting failure diagnostics..."
-                    docker ps -a > failure-diagnostics.txt || true
-                    docker images >> failure-diagnostics.txt || true
-                '''
-                
-                archiveArtifacts(
-                    artifacts: 'failure-diagnostics.txt',
-                    allowEmptyArchive: true
-                )
+            node('build') {
+                script {
+                    echo "❌ Pipeline failed!"
+                    
+                    // Collect debugging information
+                    sh '''
+                        echo "Collecting failure diagnostics..."
+                        docker ps -a > failure-diagnostics.txt || true
+                        docker images >> failure-diagnostics.txt || true
+                    '''
+                    
+                    archiveArtifacts(
+                        artifacts: 'failure-diagnostics.txt',
+                        allowEmptyArchive: true
+                    )
+                }
             }
         }
         
         always {
-            script {
-                echo "🧹 Cleaning up workspace"
+            node('build') {
+                script {
+                    echo "🧹 Cleaning up workspace"
+                }
+                
+                // Clean up Docker resources
+                sh '''
+                    # Stop and remove containers (including E2E infrastructure)
+                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v || true
+                    
+                    # Remove dangling images
+                    docker image prune -f || true
+                    
+                    # Clean up playwright browsers cache if needed
+                    # rm -rf ${PLAYWRIGHT_BROWSERS_PATH} || true
+                '''
+                
+                // Clean workspace
+                cleanWs(
+                    deleteDirs: true,
+                    disableDeferredWipeout: true,
+                    notFailBuild: true,
+                    patterns: [
+                        [pattern: 'node_modules', type: 'INCLUDE'],
+                        [pattern: 'playwright-browsers', type: 'INCLUDE'],
+                        [pattern: '.npm', type: 'INCLUDE']
+                    ]
+                )
             }
-            
-            // Clean up Docker resources
-            sh '''
-                # Stop and remove containers (including E2E infrastructure)
-                docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v || true
-                
-                # Remove dangling images
-                docker image prune -f || true
-                
-                # Clean up playwright browsers cache if needed
-                # rm -rf ${PLAYWRIGHT_BROWSERS_PATH} || true
-            '''
-            
-            // Clean workspace
-            cleanWs(
-                deleteDirs: true,
-                disableDeferredWipeout: true,
-                notFailBuild: true,
-                patterns: [
-                    [pattern: 'node_modules', type: 'INCLUDE'],
-                    [pattern: 'playwright-browsers', type: 'INCLUDE'],
-                    [pattern: '.npm', type: 'INCLUDE']
-                ]
-            )
         }
     }
 }

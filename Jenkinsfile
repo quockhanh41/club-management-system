@@ -3,6 +3,16 @@ pipeline {
     agent none
 
     parameters {
+        booleanParam(
+            name: 'LOCAL_DEBUG',
+            defaultValue: false,
+            description: 'Use local mounted workspace instead of git checkout for debugging'
+        )
+        string(
+            name: 'E2E_TEST_FILTER',
+            defaultValue: '',
+            description: 'Filter E2E tests by pattern (e.g., "00-smoke" to run only smoke tests). Leave empty to run all tests.'
+        )
         string(
             name: 'E2E_FAILURE_THRESHOLD_PERCENT',
             defaultValue: '10',
@@ -75,8 +85,25 @@ pipeline {
             }
             steps {
                 script {
-                    echo "🔄 Checking out code from ${env.GIT_BRANCH}"
-                    checkout scm
+                    echo "🔄 Checking out code"
+                    
+                    // Check if LOCAL_DEBUG is enabled to use mounted workspace instead of git checkout
+                    if (params.LOCAL_DEBUG) {
+                        echo "🐛 LOCAL_DEBUG enabled - using mounted workspace at /workspace"
+                        sh '''
+                            # Copy from mounted local workspace to Jenkins workspace
+                            if [ -d /workspace/.git ]; then
+                                echo "Syncing from /workspace to $PWD"
+                                rsync -av --exclude='.git' --exclude='node_modules' --exclude='dist' /workspace/ ./ || cp -r /workspace/* ./
+                            else
+                                echo "ERROR: /workspace not found or not mounted"
+                                exit 1
+                            fi
+                        '''
+                    } else {
+                        echo "Using git checkout from SCM"
+                        checkout scm
+                    }
                     
                     // Get Git commit info
                     env.GIT_COMMIT_SHORT = sh(
@@ -322,10 +349,34 @@ pipeline {
                     echo "Building E2E runner image..."
                     docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml build e2e-runner
                     
+                    # Prepare test filter command
+                    TEST_FILTER=""
+                    if [ -n "${E2E_TEST_FILTER}" ]; then
+                        echo "🔍 Test filter enabled: ${E2E_TEST_FILTER}"
+                        TEST_FILTER="--grep ${E2E_TEST_FILTER}"
+                    else
+                        echo "▶️  Running all E2E tests"
+                    fi
+                    
                     # Run Playwright tests in Docker container on same network
                     echo "Running E2E tests in Docker container..."
                     docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
-                        run --rm e2e-runner
+                        run --rm e2e-runner npx playwright test ${TEST_FILTER} --reporter=list,html,junit,json || true
+                    
+                    # Debug: List test-results directory
+                    echo "📁 Checking test-results directory..."
+                    ls -la test-results/ || echo "test-results directory not found"
+                    
+                    # Debug: Check for JSON file
+                    if [ -f "test-results/e2e-results.json" ]; then
+                        echo "✅ JSON results file found"
+                        echo "📄 First 50 lines of JSON:"
+                        head -50 test-results/e2e-results.json
+                    else
+                        echo "❌ JSON results file NOT found"
+                        echo "Available files:"
+                        find test-results -type f -name "*.json" || echo "No JSON files found"
+                    fi
                 '''
             }
             

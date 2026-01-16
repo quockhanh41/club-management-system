@@ -87,10 +87,4 @@ export default defineConfig({
       POSTGRES_URL: 'postgresql://postgres:postgres@localhost:5432/auth_e2e_test',
     },
   },
-
-  /* Timeout settings - increased for CI stability */
-  timeout: process.env.CI ? 60000 : 30000,
-  expect: {
-    timeout: process.env.CI ? 20000 : 10000,
-  },
 });

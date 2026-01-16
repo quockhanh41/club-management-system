@@ -1,34 +1,6 @@
 pipeline {
     // Disable builds on controller - force all stages to use specific agents
     agent none
-    
-    parameters {
-        booleanParam(
-            name: 'LOCAL_DEBUG',
-            defaultValue: true,
-            description: 'Use local mounted workspace instead of git checkout for debugging'
-        )
-        string(
-            name: 'E2E_FAILURE_THRESHOLD_PERCENT',
-            defaultValue: '10',
-            description: 'Maximum percentage of E2E tests allowed to fail (0-100)'
-        )
-        string(
-            name: 'E2E_FAILURE_THRESHOLD_ABSOLUTE',
-            defaultValue: '24',
-            description: 'Maximum absolute number of E2E tests allowed to fail'
-        )
-        choice(
-            name: 'E2E_THRESHOLD_MODE',
-            choices: ['both', 'percentage', 'absolute'],
-            description: 'Threshold evaluation mode: both (stricter), percentage, or absolute'
-        )
-        booleanParam(
-            name: 'E2E_MARK_UNSTABLE',
-            defaultValue: true,
-            description: 'Mark build as UNSTABLE instead of SUCCESS when failures are within threshold'
-        )
-    }
 
     environment {
         // Docker Registry Configuration
@@ -37,7 +9,7 @@ pipeline {
         
         // Image naming
         IMAGE_PREFIX = 'club-management'
-        IMAGE_TAG = 'latest' // Will be set dynamically in Checkout stage
+        IMAGE_TAG = "${env.BUILD_NUMBER}-${env.GIT_COMMIT?.take(7) ?: 'latest'}"
         
         // Service names
         SERVICES = 'auth club event notify image'
@@ -51,16 +23,6 @@ pipeline {
         // E2E Test Configuration - Use localhost (ports are exposed)
         API_GATEWAY_URL = 'http://localhost:8000'
         CI = 'true'
-        
-        // E2E Test Failure Threshold Configuration
-        // Maximum percentage of tests allowed to fail (0-100)
-        E2E_FAILURE_THRESHOLD_PERCENT = "${params.E2E_FAILURE_THRESHOLD_PERCENT ?: '5'}"
-        // Maximum absolute number of tests allowed to fail
-        E2E_FAILURE_THRESHOLD_ABSOLUTE = "${params.E2E_FAILURE_THRESHOLD_ABSOLUTE ?: '12'}"
-        // Which threshold to use: 'percentage', 'absolute', or 'both' (stricter)
-        E2E_THRESHOLD_MODE = "${params.E2E_THRESHOLD_MODE ?: 'both'}"
-        // Mark build as UNSTABLE instead of SUCCESS when failures are within threshold
-        E2E_MARK_UNSTABLE = "${params.E2E_MARK_UNSTABLE ?: 'true'}"
         
         // Add paths for Docker and Node.js
         PATH = "/usr/local/bin:/usr/bin:/bin:${env.PATH}"
@@ -84,35 +46,14 @@ pipeline {
             }
             steps {
                 script {
-                    echo "🔄 Checking out code"
-                    
-                    // Check if LOCAL_DEBUG is enabled to use mounted workspace instead of git checkout
-                    if (env.LOCAL_DEBUG == 'true') {
-                        echo "🐛 LOCAL_DEBUG enabled - using mounted workspace at /workspace"
-                        sh '''
-                            # Copy from mounted local workspace to Jenkins workspace
-                            if [ -d /workspace/.git ]; then
-                                echo "Syncing from /workspace to $PWD"
-                                rsync -av --exclude='.git' --exclude='node_modules' --exclude='dist' /workspace/ ./ || cp -r /workspace/* ./
-                            else
-                                echo "ERROR: /workspace not found or not mounted"
-                                exit 1
-                            fi
-                        '''
-                    } else {
-                        echo "Using git checkout from SCM"
-                        checkout scm
-                    }
+                    echo "🔄 Checking out code from ${env.GIT_BRANCH}"
+                    checkout scm
                     
                     // Get Git commit info
                     env.GIT_COMMIT_SHORT = sh(
                         script: 'git rev-parse --short HEAD',
                         returnStdout: true
                     ).trim()
-                    
-                    // Set IMAGE_TAG dynamically after checkout
-                    env.IMAGE_TAG = env.BUILD_NUMBER + '-' + env.GIT_COMMIT_SHORT
-                    echo "📦 Image tag set to: ${env.IMAGE_TAG}"
                     
                     env.BUILD_TIME = sh(
                         script: 'date -u +%Y-%m-%dT%H:%M:%SZ',
@@ -129,40 +70,10 @@ pipeline {
             steps {
                 script {
                     echo "🔧 Setting up Node.js environment"
-                    echo "📦 Installing essential tools (jq, bc) if not present"
                 }
                 
-                // Install essential tools (jq and bc) for JSON parsing and calculations
+                // Install Node.js using NodeJS plugin or Docker
                 sh '''
-                    # Check and install jq if not present
-                    if ! command -v jq &> /dev/null; then
-                        echo "Installing jq..."
-                        apt-get update && apt-get install -y jq
-                    else
-                        echo "✓ jq already installed"
-                    fi
-                    
-                    # Check and install bc if not present
-                    if ! command -v bc &> /dev/null; then
-                        echo "Installing bc..."
-                        apt-get update && apt-get install -y bc
-                    else
-                        echo "✓ bc already installed"
-                    fi
-                '''
-                
-                // Install Node.js if not present
-                sh '''
-                    # Check if Node.js is already installed
-                    if ! command -v node &> /dev/null; then
-                        echo "📦 Installing Node.js ${NODE_VERSION}..."
-                        curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
-                        apt-get install -y nodejs
-                        echo "✓ Node.js installed successfully"
-                    else
-                        echo "✓ Node.js already installed"
-                    fi
-                    
                     node --version
                     npm --version
                 '''
@@ -195,15 +106,6 @@ pipeline {
                         label 'build'
                     }
                     steps {
-                        // Ensure Node.js is available
-                        sh '''
-                            if ! command -v node &> /dev/null; then
-                                echo "📦 Installing Node.js..."
-                                curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
-                                apt-get install -y nodejs
-                            fi
-                        '''
-                        
                         script {
                             echo "🔍 Running lint checks on backend services"
                             def services = ['auth', 'club', 'event', 'notify']
@@ -233,15 +135,6 @@ pipeline {
                         label 'build'
                     }
                     steps {
-                        // Ensure Node.js is available
-                        sh '''
-                            if ! command -v node &> /dev/null; then
-                                echo "📦 Installing Node.js..."
-                                curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
-                                apt-get install -y nodejs
-                            fi
-                        '''
-                        
                         script {
                             echo "🔍 Running lint checks on frontend"
                             sh '''
@@ -262,25 +155,12 @@ pipeline {
 
         stage('Unit Tests') {
             agent {
-                label 'test'
+                label 'build'
             }
             steps {
                 script {
                     echo "🧪 Running unit tests for all services"
                 }
-                
-                // Ensure Node.js is installed on test agent
-                sh '''
-                    # Check if Node.js is already installed
-                    if ! command -v node &> /dev/null; then
-                        echo "📦 Installing Node.js ${NODE_VERSION}..."
-                        curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
-                        apt-get install -y nodejs
-                        echo "✓ Node.js installed successfully"
-                    else
-                        echo "✓ Node.js already installed: $(node --version)"
-                    fi
-                '''
                 
                 sh '''
                     mkdir -p test-results/unit
@@ -321,499 +201,103 @@ pipeline {
 
         stage('Build Docker Images') {
             agent {
-                label 'docker'
+                label 'build'
             }
             steps {
                 script {
                     echo "🐳 Building Docker images for all services"
                 }
                 
-                sh '''
-                    # Check if docker binary exists and is executable
-                    echo "Checking docker installation..."
-                    
-                    # Try to find docker in common locations
-                    DOCKER_PATHS="/usr/bin/docker /usr/local/bin/docker /snap/bin/docker /opt/docker/bin/docker"
-                    DOCKER_FOUND=""
-                    
-                    if command -v docker >/dev/null 2>&1; then
-                        DOCKER_FOUND=$(command -v docker)
-                        echo "Found docker in PATH: $DOCKER_FOUND"
-                    else
-                        echo "Docker not in PATH, checking common locations..."
-                        for docker_path in $DOCKER_PATHS; do
-                            # Check if it's an executable FILE (not directory)
-                            if [ -f "$docker_path" ] && [ -x "$docker_path" ]; then
-                                DOCKER_FOUND="$docker_path"
-                                echo "Found docker at: $docker_path"
-                                break
-                            fi
-                        done
-                    fi
-                    
-                    if [ -z "$DOCKER_FOUND" ]; then
-                        echo "❌ Error: docker command not found"
-                        echo "PATH: $PATH"
-                        echo "Checked locations: $DOCKER_PATHS"
-                        echo ""
-                        echo "Searching for docker binary..."
-                        find /usr -name docker -type f -executable 2>/dev/null | head -5 || true
-                        echo ""
-                        echo "Docker needs to be installed on this Jenkins agent."
-                        exit 1
-                    fi
-                    
-                    echo "Docker binary: $DOCKER_FOUND"
-                    ls -lh "$DOCKER_FOUND" 2>/dev/null || echo "Cannot list docker binary"
-                    
-                    # Setup docker command with or without sudo based on permissions
-                    if [ "$(id -u)" = "0" ]; then
-                        # Running as root, use docker directly
-                        DOCKER_CMD="$DOCKER_FOUND"
-                        echo "✓ Using docker as root user"
-                    elif groups | grep -q docker; then
-                        DOCKER_CMD="$DOCKER_FOUND"
-                        echo "✓ Using docker without sudo (user in docker group)"
-                    elif command -v sudo >/dev/null 2>&1 && sudo -n $DOCKER_FOUND ps >/dev/null 2>&1; then
-                        DOCKER_CMD="sudo $DOCKER_FOUND"
-                        echo "✓ Using docker with sudo"
-                    elif $DOCKER_FOUND ps >/dev/null 2>&1; then
-                        DOCKER_CMD="$DOCKER_FOUND"
-                        echo "✓ Using docker without sudo"
-                    else
-                        echo "❌ Error: Cannot access docker (permission denied)"
-                        echo "User: $(whoami), Groups: $(groups)"
-                        exit 1
-                    fi
-                    
-                    # Verify docker is actually accessible
-                    echo "Testing docker access..."
-                    if ! ${DOCKER_CMD} ps >/dev/null 2>&1; then
-                        echo "❌ Error: Cannot connect to docker daemon"
-                        echo ""
-                        if [ -S /var/run/docker.sock ]; then
-                            echo "Docker socket found:"
-                            ls -lh /var/run/docker.sock
-                        else
-                            echo "Docker socket NOT found at /var/run/docker.sock"
-                        fi
-                        echo ""
-                        echo "Checking docker service status..."
-                        if command -v systemctl >/dev/null 2>&1; then
-                            systemctl is-active docker 2>/dev/null || echo "Docker service not running"
-                        elif command -v service >/dev/null 2>&1; then
-                            service docker status 2>/dev/null || echo "Cannot check docker service"
-                        else
-                            echo "Cannot check service status (no systemctl/service)"
-                        fi
-                        echo ""
-                        echo "Solution: Ensure docker daemon is running on this Jenkins agent"
-                        exit 1
-                    fi
-                    echo "✓ Docker is accessible and working"
-                    
+                sh """
                     # Build services with CI configuration (production targets, no volume mounts)
                     # Using --no-cache to ensure fresh builds without stale layers
                     # Include docker-compose.e2e.yml for E2E-specific build args (e.g. NEXT_PUBLIC_API_BASE_URL)
-                    ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml build --no-cache \
-                        --build-arg GIT_COMMIT=''' + "${env.GIT_COMMIT}" + ''' \
-                        --build-arg BUILD_NUMBER=''' + "${env.BUILD_NUMBER}" + ''' \
-                        --build-arg BUILD_TIME=''' + "${env.BUILD_TIME}" + ''' \
+                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml build --no-cache \\
+                        --build-arg GIT_COMMIT=${env.GIT_COMMIT} \\
+                        --build-arg BUILD_NUMBER=${env.BUILD_NUMBER} \\
+                        --build-arg BUILD_TIME=${env.BUILD_TIME} \\
                         auth-service club-service event-service notify-service image-service frontend
-                '''
+                """
             }
         }
 
         stage('E2E Tests') {
             agent {
-                label 'e2e'
+                label 'e2e-agent'
             }
             steps {
                 script {
-                    echo "🧪 Running E2E tests with Docker infrastructure"
-                    echo "📋 Failure Thresholds: ${env.E2E_FAILURE_THRESHOLD_PERCENT}% or ${env.E2E_FAILURE_THRESHOLD_ABSOLUTE} tests (Mode: ${env.E2E_THRESHOLD_MODE})"
+                    echo "🎭 Running End-to-End tests with Playwright"
+                }
+                
+                sh '''
+                    # Create required directories
+                    mkdir -p artifacts test-results logs
                     
-                    // Start services
-                    sh '''
-                        # Setup docker command with or without sudo based on permissions
-                        if [ "$(id -u)" = "0" ]; then
-                            # Running as root, use docker directly
-                            DOCKER_CMD="docker"
-                            echo "✓ Using docker as root user"
-                        elif groups | grep -q docker; then
-                            DOCKER_CMD="docker"
-                            echo "✓ Using docker without sudo (user in docker group)"
-                        elif command -v sudo >/dev/null 2>&1 && sudo -n docker ps >/dev/null 2>&1; then
-                            DOCKER_CMD="sudo docker"
-                            echo "✓ Using docker with sudo"
-                        elif docker ps >/dev/null 2>&1; then
-                            DOCKER_CMD="docker"
-                            echo "✓ Using docker without sudo"
+                    # Start infrastructure services first (databases and message queue)
+                    echo "Starting infrastructure services (postgres, mongodb, rabbitmq)..."
+                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --force-recreate postgres mongo rabbitmq
+                    
+                    # Wait for databases to be ready
+                    echo "Waiting for databases to be ready..."
+                    for i in $(seq 1 60); do
+                        if docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps postgres mongo rabbitmq | grep -E "(unhealthy|starting)" > /dev/null; then
+                            echo "Databases still starting... (attempt $i/60)"
+                            sleep 5
                         else
-                            echo "❌ Error: Cannot access docker (permission denied)"
-                            echo "User: $(whoami), Groups: $(groups)"
-                            exit 1
+                            echo "Databases are healthy!"
+                            break
                         fi
                         
-                        echo "Starting services for E2E tests..."
-                        
-                        # Create required directories
-                        mkdir -p artifacts test-results logs
-                        
-                        # Start infrastructure services first (databases and message queue)
-                        echo "Starting infrastructure services (postgres, mongodb, rabbitmq)..."
-                        ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --force-recreate postgres mongo rabbitmq
-                        
-                        # Wait for databases to be ready
-                        echo "Waiting for databases to be ready..."
-                        for i in $(seq 1 60); do
-                            if ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps postgres mongo rabbitmq | grep -E "(unhealthy|starting)" > /dev/null; then
-                                echo "Databases still starting... (attempt $i/60)"
-                                sleep 5
-                            else
-                                echo "Databases are healthy!"
-                                break
-                            fi
-                            
-                            if [ $i -eq 60 ]; then
-                                echo "Databases failed to become healthy"
-                                ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
-                                ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs postgres mongo rabbitmq
-                                exit 1
-                            fi
-                        done
-                        
-                        # Start application services (use pre-built images from previous stage)
-                        echo "Starting application services..."
-                        ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --no-build --force-recreate auth-service club-service event-service notify-service image-service frontend
-                        
-                        # Wait for services to be healthy (increased timeout for notify-service)
-                        echo "Waiting for application services to be healthy..."
-                        sleep 30
-                        
-                        for i in $(seq 1 90); do
-                            if ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps | grep -E "(unhealthy|starting)" > /dev/null; then
-                                echo "Services still starting... (attempt $i/90)"
-                                sleep 10
-                            else
-                                echo "All services are healthy!"
-                                break
-                            fi
-                            
-                            if [ $i -eq 90 ]; then
-                                echo "Services failed to become healthy within 15 minutes"
-                                ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
-                                ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs
-                                exit 1
-                            fi
-                        done
-                        
-                        # Show service status
-                        ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
-                        
-                        # Extra wait to ensure services are fully ready (not just healthy)
-                        echo "⏳ Waiting additional 30 seconds for services to stabilize..."
-                        sleep 30
-                        
-                        # Verify services are responding
-                        echo "🔍 Verifying service connectivity..."
-                        ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml exec -T frontend curl -s http://localhost:3000/api/health || echo "⚠️ Frontend health check failed"
-                        ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml exec -T kong curl -s http://localhost:8000/health || echo "⚠️ Kong health check failed"
-                        
-                        # Build E2E runner image with code baked in (avoids volume mount issues)
-                        echo "Building E2E runner image..."
-                        ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml build e2e-runner
-                    '''
+                        if [ $i -eq 60 ]; then
+                            echo "Databases failed to become healthy"
+                            docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
+                            docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs postgres mongo rabbitmq
+                            exit 1
+                        fi
+                    done
                     
-                    // Run E2E tests and capture exit code (don't fail immediately)
-                    def e2eOutput = sh(
-                        script: '''
-                            # Setup docker command
-                            if [ "$(id -u)" = "0" ]; then
-                                # Running as root, use docker directly
-                                DOCKER_CMD="docker"
-                                echo "✓ Using docker as root user"
-                            elif groups | grep -q docker; then
-                                DOCKER_CMD="docker"
-                                echo "✓ Using docker without sudo (user in docker group)"
-                            elif command -v sudo >/dev/null 2>&1 && sudo -n docker ps >/dev/null 2>&1; then
-                                DOCKER_CMD="sudo docker"
-                                echo "✓ Using docker with sudo"
-                            elif docker ps >/dev/null 2>&1; then
-                                DOCKER_CMD="docker"
-                                echo "✓ Using docker without sudo"
-                            else
-                                echo "❌ Error: Cannot access docker (permission denied)"
-                                echo "User: $(whoami), Groups: $(groups)"
-                                exit 1
-                            fi
-                            
-                            set +e  # Don't exit on error
-                            echo "🚀 Running E2E tests in Docker container..."
-                            
-                            # Run tests with --rm for automatic cleanup
-                            # Output streams directly to Jenkins console (no TTY flags needed)
-                            ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
-                                run --rm e2e-runner
-                            EXIT_CODE=$?
-                            set -e
-                            
-                            echo "E2E_EXIT_CODE:${EXIT_CODE}"
-                            echo "📊 E2E tests completed with exit code: ${EXIT_CODE}"
-                            
-                            exit 0
-                        ''',
-                        returnStdout: true
-                    ).trim()
+                    # Start application services (use pre-built images from previous stage)
+                    echo "Starting application services..."
+                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --no-build --force-recreate auth-service club-service event-service notify-service image-service frontend
                     
-                    // Extract exit code from output (use simple string parsing to avoid serialization issues)
-                    // This avoids creating non-serializable Matcher objects that cause jenkins CPS errors
-                    def actualExitCode = 1 // default to failure
-                    def exitCodeLine = ''
+                    # Wait for services to be healthy (increased timeout for notify-service)
+                    echo "Waiting for application services to be healthy..."
+                    sleep 30
                     
-                    // Find the line containing E2E_EXIT_CODE using indexOf instead of regex
-                    def lines = e2eOutput.split('\n')
-                    for (int i = 0; i < lines.length; i++) {
-                        def line = lines[i]
-                        if (line.indexOf('E2E_EXIT_CODE:') >= 0) {
-                            exitCodeLine = line
-                            // Extract number after colon using indexOf and substring
-                            def colonIndex = line.indexOf(':')
-                            if (colonIndex >= 0 && colonIndex < line.length() - 1) {
-                                def exitCodeStr = line.substring(colonIndex + 1).trim()
-                                try {
-                                    actualExitCode = exitCodeStr.toInteger()
-                                } catch (NumberFormatException e) {
-                                    echo "⚠️  Warning: Could not parse exit code from: ${exitCodeStr}"
-                                    actualExitCode = 1
-                                }
-                            }
+                    for i in $(seq 1 90); do
+                        if docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps | grep -E "(unhealthy|starting)" > /dev/null; then
+                            echo "Services still starting... (attempt $i/90)"
+                            sleep 10
+                        else
+                            echo "All services are healthy!"
                             break
-                        }
-                    }
-                    
-                    echo "E2E tests finished with exit code: ${actualExitCode}"
-                    echo "Exit code line found: ${exitCodeLine ?: 'NOT FOUND'}"
-                    
-                    // Analyze test results
-                    sh 'chmod +x scripts/analyze-e2e-results.sh'
-                    
-                    // Check if summary file was created
-                    def summaryExists = fileExists('e2e-test-summary.json')
-                    
-                    if (!summaryExists) {
-                        echo "⚠️  Warning: e2e-test-summary.json not found. E2E tests may have failed to run."
-                        echo "Creating default summary for failure case..."
+                        fi
                         
-                        sh '''
-                            cat > e2e-test-summary.json <<'EOF'
-{
-  "total": 0,
-  "passed": 0,
-  "failed": 1,
-  "skipped": 0,
-  "failureRate": 100,
-  "thresholdPercent": 5,
-  "thresholdAbsolute": 12,
-  "thresholdMode": "both",
-  "withinThreshold": false,
-  "message": "E2E tests failed to execute or summary file not generated",
-  "exitCode": 1
-}
-EOF
-                        '''
-                    }
+                        if [ $i -eq 90 ]; then
+                            echo "Services failed to become healthy within 15 minutes"
+                            docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
+                            docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs
+                            exit 1
+                        fi
+                    done
                     
-                    def analysisExitCode = sh(
-                        script: './scripts/analyze-e2e-results.sh',
-                        returnStatus: true
-                    )
+                    # Show service status
+                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
                     
-                    // Read summary (now guaranteed to exist)
-                    def summary = readJSON file: 'e2e-test-summary.json'
+                    # Build E2E runner image with code baked in (avoids volume mount issues)
+                    echo "Building E2E runner image..."
+                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml build e2e-runner
                     
-                    echo """
-📊 E2E Test Summary:
-   Total:        ${summary.total}
-   ✅ Passed:     ${summary.passed}
-   ❌ Failed:     ${summary.failed}
-   ⏭️ Skipped:    ${summary.skipped}
-   📈 Fail Rate:  ${summary.failureRate}%
-"""
-                    
-                    // Determine build status based on analysis
-                    if (analysisExitCode == 0 && summary.failed == 0) {
-                        // All tests passed
-                        currentBuild.result = 'SUCCESS'
-                        echo "✅ All E2E tests passed!"
-                    } else if (analysisExitCode == 2) {
-                        // Failures within threshold
-                        if (env.E2E_MARK_UNSTABLE == 'true') {
-                            currentBuild.result = 'UNSTABLE'
-                            echo "⚠️  Build marked UNSTABLE: ${summary.failed} tests failed (within acceptable threshold)"
-                        } else {
-                            currentBuild.result = 'SUCCESS'
-                            echo "✅ Build passed with acceptable failures: ${summary.failed} tests (${summary.failureRate}%)"
-                        }
-                    } else {
-                        // Exceeds threshold - fail the build
-                        currentBuild.result = 'FAILURE'
-                        error("❌ E2E tests exceeded failure threshold: ${summary.failed} failed (${summary.failureRate}%)")
-                    }
-                }
+                    # Run Playwright tests in Docker container on same network
+                    echo "Running E2E tests in Docker container..."
+                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
+                        run --rm e2e-runner
+                '''
             }
             
             post {
                 always {
-                    script {
-                        // Generate detailed HTML summary report
-                        sh '''
-                            cat > e2e-summary.html <<'HTMLEOF'
-<!DOCTYPE html>
-<html>
-<head>
-    <title>E2E Test Summary - Build #${BUILD_NUMBER}</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1 { color: #333; border-bottom: 3px solid #007bff; padding-bottom: 10px; }
-        .summary { display: flex; justify-content: space-around; margin: 30px 0; }
-        .metric { text-align: center; padding: 20px; border-radius: 8px; min-width: 150px; }
-        .metric-label { font-size: 14px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
-        .metric-value { font-size: 48px; font-weight: bold; margin: 10px 0; }
-        .total { background: #e3f2fd; }
-        .passed { background: #e8f5e9; color: #2e7d32; }
-        .failed { background: #ffebee; color: #c62828; }
-        .skipped { background: #fff3e0; color: #f57c00; }
-        .threshold { background: #f8f9fa; padding: 20px; margin: 20px 0; border-left: 4px solid #007bff; border-radius: 4px; }
-        .threshold h3 { margin-top: 0; color: #007bff; }
-        .threshold-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #dee2e6; }
-        .threshold-item:last-child { border-bottom: none; }
-        .status-badge { display: inline-block; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; }
-        .status-success { background: #4caf50; color: white; }
-        .status-unstable { background: #ff9800; color: white; }
-        .status-failed { background: #f44336; color: white; }
-        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6; color: #666; font-size: 12px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🧪 E2E Test Execution Summary</h1>
-        <div class="summary">
-            <div class="metric total">
-                <div class="metric-label">Total Tests</div>
-                <div class="metric-value">__TOTAL__</div>
-            </div>
-            <div class="metric passed">
-                <div class="metric-label">✅ Passed</div>
-                <div class="metric-value">__PASSED__</div>
-            </div>
-            <div class="metric failed">
-                <div class="metric-label">❌ Failed</div>
-                <div class="metric-value">__FAILED__</div>
-            </div>
-            <div class="metric skipped">
-                <div class="metric-label">⏭️ Skipped</div>
-                <div class="metric-value">__SKIPPED__</div>
-            </div>
-        </div>
-        
-        <div class="threshold">
-            <h3>📊 Failure Threshold Analysis</h3>
-            <div class="threshold-item">
-                <span><strong>Threshold Mode:</strong></span>
-                <span>__THRESHOLD_MODE__</span>
-            </div>
-            <div class="threshold-item">
-                <span><strong>Percentage Threshold:</strong></span>
-                <span>__THRESHOLD_PERCENT__%</span>
-            </div>
-            <div class="threshold-item">
-                <span><strong>Absolute Threshold:</strong></span>
-                <span>__THRESHOLD_ABSOLUTE__ tests</span>
-            </div>
-            <div class="threshold-item">
-                <span><strong>Current Failure Rate:</strong></span>
-                <span><strong>__FAILURE_RATE__%</strong></span>
-            </div>
-            <div class="threshold-item">
-                <span><strong>Build Status:</strong></span>
-                <span>__STATUS__</span>
-            </div>
-        </div>
-        
-        <div class="footer">
-            <p>Build #${BUILD_NUMBER} | ${BUILD_TIME} | ${GIT_COMMIT_SHORT}</p>
-            <p>Generated by Jenkins Pipeline</p>
-        </div>
-    </div>
-</body>
-</html>
-HTMLEOF
-                            
-                            # Replace placeholders with actual values
-                            if [ -f e2e-test-summary.json ]; then
-                                TOTAL=$(jq -r '.total' e2e-test-summary.json)
-                                PASSED=$(jq -r '.passed' e2e-test-summary.json)
-                                FAILED=$(jq -r '.failed' e2e-test-summary.json)
-                                SKIPPED=$(jq -r '.skipped' e2e-test-summary.json)
-                                FAILURE_RATE=$(jq -r '.failureRate' e2e-test-summary.json)
-                                THRESHOLD_PERCENT=$(jq -r '.thresholdPercent' e2e-test-summary.json)
-                                THRESHOLD_ABSOLUTE=$(jq -r '.thresholdAbsolute' e2e-test-summary.json)
-                                THRESHOLD_MODE=$(jq -r '.thresholdMode' e2e-test-summary.json)
-                                
-                                STATUS="<span class='status-badge status-success'>✅ ALL PASSED</span>"
-                                if [ "$FAILED" -gt "0" ]; then
-                                    # Check if within threshold
-                                    WITHIN_THRESHOLD=0
-                                    case "$THRESHOLD_MODE" in
-                                        "percentage")
-                                            if (( $(echo "$FAILURE_RATE <= $THRESHOLD_PERCENT" | bc -l) )); then
-                                                WITHIN_THRESHOLD=1
-                                            fi
-                                            ;;
-                                        "absolute")
-                                            if [ "$FAILED" -le "$THRESHOLD_ABSOLUTE" ]; then
-                                                WITHIN_THRESHOLD=1
-                                            fi
-                                            ;;
-                                        "both")
-                                            if (( $(echo "$FAILURE_RATE <= $THRESHOLD_PERCENT" | bc -l) )) && [ "$FAILED" -le "$THRESHOLD_ABSOLUTE" ]; then
-                                                WITHIN_THRESHOLD=1
-                                            fi
-                                            ;;
-                                    esac
-                                    
-                                    if [ "$WITHIN_THRESHOLD" -eq 1 ]; then
-                                        STATUS="<span class='status-badge status-unstable'>⚠️ UNSTABLE (within threshold)</span>"
-                                    else
-                                        STATUS="<span class='status-badge status-failed'>❌ FAILED (exceeds threshold)</span>"
-                                    fi
-                                fi
-                                
-                                sed -i "s/__TOTAL__/$TOTAL/g" e2e-summary.html
-                                sed -i "s/__PASSED__/$PASSED/g" e2e-summary.html
-                                sed -i "s/__FAILED__/$FAILED/g" e2e-summary.html
-                                sed -i "s/__SKIPPED__/$SKIPPED/g" e2e-summary.html
-                                sed -i "s/__FAILURE_RATE__/$FAILURE_RATE/g" e2e-summary.html
-                                sed -i "s/__THRESHOLD_PERCENT__/$THRESHOLD_PERCENT/g" e2e-summary.html
-                                sed -i "s/__THRESHOLD_ABSOLUTE__/$THRESHOLD_ABSOLUTE/g" e2e-summary.html
-                                sed -i "s/__THRESHOLD_MODE__/$THRESHOLD_MODE/g" e2e-summary.html
-                                sed -i "s|__STATUS__|$STATUS|g" e2e-summary.html
-                            fi
-                        '''
-                    }
-                    
-                    // Publish HTML summary
-                    publishHTML([
-                        allowMissing: true,
-                        alwaysLinkToLastBuild: true,
-                        keepAll: true,
-                        reportDir: '.',
-                        reportFiles: 'e2e-summary.html',
-                        reportName: 'E2E Test Summary'
-                    ])
-                    
                     // Archive Playwright report
                     publishHTML([
                         allowMissing: true,
@@ -830,53 +314,21 @@ HTMLEOF
                         allowEmptyResults: true
                     )
                     
-                    // Archive analysis results
-                    archiveArtifacts(
-                        artifacts: 'e2e-test-summary.json,e2e-summary.html',
-                        allowEmptyArchive: true
-                    )
-                    
                     // Collect service logs
                     sh '''
-                        # Setup docker command
-                        if [ "$(id -u)" = "0" ]; then
-                            DOCKER_CMD="docker"
-                        elif groups | grep -q docker; then
-                            DOCKER_CMD="docker"
-                        elif command -v sudo >/dev/null 2>&1 && sudo -n docker ps >/dev/null 2>&1; then
-                            DOCKER_CMD="sudo docker"
-                        elif docker ps >/dev/null 2>&1; then
-                            DOCKER_CMD="docker"
-                        else
-                            DOCKER_CMD="docker"  # Fallback
-                        fi
-                        
                         echo "Collecting service logs..."
                         mkdir -p logs
-                        ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs > logs/services.log 2>&1 || true
+                        docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml logs > logs/services.log 2>&1 || true
                     '''
                     
                     archiveArtifacts(
-                        artifacts: 'logs/**/*',
+                        artifacts: 'logs/**/*.log,test-results/**/*,playwright-report/**/*',
                         allowEmptyArchive: true
                     )
                     
-                    // Stop and remove all containers
+                    // Stop and remove containers
                     sh '''
-                        # Setup docker command
-                        if [ "$(id -u)" = "0" ]; then
-                            DOCKER_CMD="docker"
-                        elif groups | grep -q docker; then
-                            DOCKER_CMD="docker"
-                        elif command -v sudo >/dev/null 2>&1 && sudo -n docker ps >/dev/null 2>&1; then
-                            DOCKER_CMD="sudo docker"
-                        elif docker ps >/dev/null 2>&1; then
-                            DOCKER_CMD="docker"
-                        else
-                            DOCKER_CMD="docker"  # Fallback
-                        fi
-                        
-                        ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v || true
+                        docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v || true
                     '''
                 }
             }
@@ -884,7 +336,7 @@ HTMLEOF
 
         stage('Tag & Push Images') {
             agent {
-                label 'docker'
+                label 'build'
             }
             when {
                 anyOf {
@@ -898,21 +350,6 @@ HTMLEOF
                 script {
                     echo "🏷️  Tagging and pushing Docker images to registry"
                     
-                    // Setup docker command
-                    def dockerCmd = sh(script: '''
-                        if [ "$(id -u)" = "0" ]; then
-                            echo "docker"
-                        elif groups | grep -q docker; then
-                            echo "docker"
-                        elif command -v sudo >/dev/null 2>&1 && sudo -n docker ps >/dev/null 2>&1; then
-                            echo "sudo docker"
-                        elif docker ps >/dev/null 2>&1; then
-                            echo "docker"
-                        else
-                            echo "docker"
-                        fi
-                    ''', returnStdout: true).trim()
-                    
                     docker.withRegistry("https://${env.DOCKER_REGISTRY}", env.DOCKER_CREDENTIALS_ID) {
                         def services = ['auth', 'club', 'event', 'notify', 'image', 'frontend']
                         
@@ -925,15 +362,15 @@ HTMLEOF
                             
                             // Tag and push with build number
                             sh """
-                                ${dockerCmd} tag club-management-system-${service}:latest ${fullImageName}
-                                ${dockerCmd} push ${fullImageName}
+                                docker tag club-management-system-${service}:latest ${fullImageName}
+                                docker push ${fullImageName}
                             """
                             
                             // Tag and push as latest
                             if (env.BRANCH_NAME == 'main') {
                                 sh """
-                                    ${dockerCmd} tag club-management-system-${service}:latest ${latestImageName}
-                                    ${dockerCmd} push ${latestImageName}
+                                    docker tag club-management-system-${service}:latest ${latestImageName}
+                                    docker push ${latestImageName}
                                 """
                             }
                         }
@@ -944,7 +381,7 @@ HTMLEOF
 
         stage('Deploy to Environment') {
             agent {
-                label 'deploy'
+                label 'build'
             }
             when {
                 anyOf {
@@ -990,7 +427,7 @@ HTMLEOF
 
         stage('Security Scan') {
             agent {
-                label 'docker'
+                label 'build'
             }
             when {
                 anyOf {
@@ -1050,81 +487,51 @@ HTMLEOF
         }
         
         failure {
-            node('docker') {
-                script {
-                    echo "❌ Pipeline failed!"
-                    
-                    // Collect debugging information
-                    sh '''
-                        # Setup docker command
-                        if [ "$(id -u)" = "0" ]; then
-                            DOCKER_CMD="docker"
-                        elif groups | grep -q docker; then
-                            DOCKER_CMD="docker"
-                        elif command -v sudo >/dev/null 2>&1 && sudo -n docker ps >/dev/null 2>&1; then
-                            DOCKER_CMD="sudo docker"
-                        elif docker ps >/dev/null 2>&1; then
-                            DOCKER_CMD="docker"
-                        else
-                            DOCKER_CMD="docker"  # Fallback
-                        fi
-                        
-                        echo "Collecting failure diagnostics..."
-                        ${DOCKER_CMD} ps -a > failure-diagnostics.txt || echo "No docker access" > failure-diagnostics.txt
-                        ${DOCKER_CMD} images >> failure-diagnostics.txt || echo "No docker access" >> failure-diagnostics.txt
-                    '''
-                    
-                    archiveArtifacts(
-                        artifacts: 'failure-diagnostics.txt',
-                        allowEmptyArchive: true
-                    )
-                }
+            script {
+                echo "❌ Pipeline failed!"
+                
+                // Collect debugging information
+                sh '''
+                    echo "Collecting failure diagnostics..."
+                    docker ps -a > failure-diagnostics.txt || true
+                    docker images >> failure-diagnostics.txt || true
+                '''
+                
+                archiveArtifacts(
+                    artifacts: 'failure-diagnostics.txt',
+                    allowEmptyArchive: true
+                )
             }
         }
         
         always {
-            node('docker') {
-                script {
-                    echo "🧹 Cleaning up workspace"
-                }
-                
-                // Clean up Docker resources
-                sh '''
-                    # Setup docker command
-                    if [ "$(id -u)" = "0" ]; then
-                        DOCKER_CMD="docker"
-                    elif groups | grep -q docker; then
-                        DOCKER_CMD="docker"
-                    elif command -v sudo >/dev/null 2>&1 && sudo -n docker ps >/dev/null 2>&1; then
-                        DOCKER_CMD="sudo docker"
-                    elif docker ps >/dev/null 2>&1; then
-                        DOCKER_CMD="docker"
-                    else
-                        DOCKER_CMD="docker"  # Fallback
-                    fi
-                    
-                    # Stop and remove containers (including E2E infrastructure)
-                    ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v 2>/dev/null || true
-                    
-                    # Remove dangling images
-                    ${DOCKER_CMD} image prune -f 2>/dev/null || true
-                    
-                    # Clean up playwright browsers cache if needed
-                    # rm -rf ${PLAYWRIGHT_BROWSERS_PATH} || true
-                '''
-                
-                // Clean workspace
-                cleanWs(
-                    deleteDirs: true,
-                    disableDeferredWipeout: true,
-                    notFailBuild: true,
-                    patterns: [
-                        [pattern: 'node_modules', type: 'INCLUDE'],
-                        [pattern: 'playwright-browsers', type: 'INCLUDE'],
-                        [pattern: '.npm', type: 'INCLUDE']
-                    ]
-                )
+            script {
+                echo "🧹 Cleaning up workspace"
             }
+            
+            // Clean up Docker resources
+            sh '''
+                # Stop and remove containers (including E2E infrastructure)
+                docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v || true
+                
+                # Remove dangling images
+                docker image prune -f || true
+                
+                # Clean up playwright browsers cache if needed
+                # rm -rf ${PLAYWRIGHT_BROWSERS_PATH} || true
+            '''
+            
+            // Clean workspace
+            cleanWs(
+                deleteDirs: true,
+                disableDeferredWipeout: true,
+                notFailBuild: true,
+                patterns: [
+                    [pattern: 'node_modules', type: 'INCLUDE'],
+                    [pattern: 'playwright-browsers', type: 'INCLUDE'],
+                    [pattern: '.npm', type: 'INCLUDE']
+                ]
+            )
         }
     }
 }

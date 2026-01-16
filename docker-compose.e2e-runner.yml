@@ -13,8 +13,6 @@ services:
       - API_GATEWAY_URL=http://kong:8000
       - NEXT_PUBLIC_API_BASE_URL=http://kong:8000
       - API_GATEWAY_SECRET=test-secret-e2e
-    # Note: test-results are copied from container after execution via docker cp
-    # Volume mounts don't work reliably in Jenkins Docker-in-Docker setup
     depends_on:
       frontend:
         condition: service_healthy

@@ -560,19 +560,21 @@ pipeline {
                             CONTAINER_NAME="e2e-runner-${BUILD_NUMBER}"
                             
                             # Run tests WITHOUT --rm so we can copy results after
-                            # Capture exit code but continue execution
+                            # Use --no-TTY to avoid TTY allocation issues in Jenkins
+                            # Capture all output including container logs
                             set +e
+                            echo "🚀 Starting E2E test container: ${CONTAINER_NAME}"
                             ${DOCKER_CMD} compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
-                                run --name "${CONTAINER_NAME}" e2e-runner
+                                run --name "${CONTAINER_NAME}" --no-TTY e2e-runner 2>&1
                             EXIT_CODE=$?
                             set -e
                             
                             echo "=========================================="
                             echo "📦 Container execution completed with exit code: ${EXIT_CODE}"
                             
-                            # Show container logs to debug
-                            echo "📋 Container logs:"
-                            ${DOCKER_CMD} logs "${CONTAINER_NAME}" 2>&1 || echo "⚠️ Could not retrieve container logs"
+                            # Also try to get logs in case run command didn't show them
+                            echo "📋 Retrieving container logs..."
+                            ${DOCKER_CMD} logs "${CONTAINER_NAME}" 2>&1 || echo "⚠️ Could not retrieve additional logs"
                             
                             echo "=========================================="
                             echo "📦 Copying test results from container..."

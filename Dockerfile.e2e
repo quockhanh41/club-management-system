@@ -40,7 +40,7 @@ ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # Create entrypoint script for better output handling
 RUN echo '#!/bin/bash\n\
-    set -e\n\
+    set -ex\n\
     echo "========================================"\n\
     echo "🎭 Starting E2E Test Execution"\n\
     echo "========================================"\n\
@@ -49,6 +49,7 @@ RUN echo '#!/bin/bash\n\
     echo "  - API_GATEWAY_URL: ${API_GATEWAY_URL:-not set}"\n\
     echo "  - CI: ${CI:-false}"\n\
     echo "  - Working Directory: $(pwd)"\n\
+    echo "  - User: $(whoami)"\n\
     echo "========================================"\n\
     echo ""\n\
     echo "📁 Checking test files..."\n\
@@ -56,20 +57,31 @@ RUN echo '#!/bin/bash\n\
     ls -la tests/e2e/ || echo "⚠️ tests/e2e/ not found"\n\
     echo ""\n\
     echo "Test spec files:"\n\
-    find tests/e2e -name "*.spec.ts" -type f || echo "⚠️ No spec files found"\n\
+    find tests/e2e -name "*.spec.ts" -type f 2>/dev/null || echo "⚠️ No spec files found"\n\
     echo ""\n\
     echo "Playwright config:"\n\
     if [ -f "playwright.config.ts" ]; then\n\
         echo "✅ playwright.config.ts exists"\n\
+        echo "Config content (first 20 lines):"\n\
+        head -20 playwright.config.ts\n\
     else\n\
         echo "❌ playwright.config.ts NOT found"\n\
     fi\n\
     echo ""\n\
     echo "Node modules check:"\n\
     ls node_modules/@playwright/test > /dev/null && echo "✅ Playwright installed" || echo "❌ Playwright NOT installed"\n\
+    echo ""\n\
+    echo "Package.json check:"\n\
+    if [ -f "package.json" ]; then\n\
+        echo "✅ package.json exists"\n\
+    else\n\
+        echo "❌ package.json NOT found"\n\
+    fi\n\
     echo "========================================"\n\
     echo ""\n\
     echo "🚀 Running Playwright tests..."\n\
+    echo "Command: npx playwright test --reporter=list,html,junit"\n\
+    echo ""\n\
     \n\
     # Run Playwright tests with multiple reporters\n\
     npx playwright test --reporter=list,html,junit || EXIT_CODE=$?\n\
@@ -80,8 +92,12 @@ RUN echo '#!/bin/bash\n\
     echo "========================================"\n\
     echo "Exit Code: ${EXIT_CODE:-0}"\n\
     \n\
+    echo ""\n\
+    echo "Checking generated files..."\n\
     if [ -f "test-results/e2e-results.json" ]; then\n\
         echo "✅ e2e-results.json generated"\n\
+        echo "Content preview:"\n\
+        head -10 test-results/e2e-results.json || cat test-results/e2e-results.json\n\
     else\n\
         echo "⚠️  Warning: e2e-results.json not found"\n\
     fi\n\
@@ -97,6 +113,10 @@ RUN echo '#!/bin/bash\n\
     else\n\
         echo "⚠️  Warning: HTML report not found"\n\
     fi\n\
+    \n\
+    echo ""\n\
+    echo "Test results directory contents:"\n\
+    ls -la test-results/ 2>/dev/null || echo "test-results directory is empty or not found"\n\
     \n\
     echo "========================================"\n\
     exit ${EXIT_CODE:-0}\n\

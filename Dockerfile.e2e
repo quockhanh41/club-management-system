@@ -87,8 +87,9 @@ RUN echo '#!/bin/bash\n\
     echo "Command: npx playwright test --reporter=list,html,junit"\n\
     echo ""\n\
     \n\
-    # Run Playwright tests with multiple reporters\n\
-    npx playwright test --reporter=list,html,junit || EXIT_CODE=$?\n\
+    # Run Playwright tests with unbuffered output for Jenkins visibility\n\
+    # Force line-buffered output to ensure logs appear in Jenkins\n\
+    stdbuf -oL -eL npx playwright test --reporter=list,html,junit 2>&1 || EXIT_CODE=$?\n\
     \n\
     echo ""\n\
     echo "========================================"\n\

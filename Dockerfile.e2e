@@ -40,4 +40,4 @@ ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # Default command runs E2E tests with real-time output
 # line reporter shows progress, list shows final summary
-CMD ["npx", "playwright", "test", "--reporter=list,html,junit"]
+CMD ["npx", "playwright", "test", "--reporter=list,html,junit,json"]

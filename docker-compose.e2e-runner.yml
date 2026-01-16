@@ -17,7 +17,6 @@ services:
       # Mount test-results and playwright-report to persist output
       - ./test-results:/app/test-results
       - ./playwright-report:/app/playwright-report
-      - ./artifacts:/app/artifacts
     depends_on:
       frontend:
         condition: service_healthy

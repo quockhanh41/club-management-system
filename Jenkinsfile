@@ -360,8 +360,9 @@ pipeline {
                     
                     # Run Playwright tests in Docker container on same network
                     echo "Running E2E tests in Docker container..."
+                    # Note: Reporters are configured in playwright.config.ts with outputFile paths
                     docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
-                        run --rm e2e-runner npx playwright test ${TEST_FILTER} --reporter=list,html,junit,json || true
+                        run --rm e2e-runner npx playwright test ${TEST_FILTER} || true
                     
                     # Debug: List test-results directory
                     echo "📁 Checking test-results directory..."

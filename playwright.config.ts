@@ -76,8 +76,9 @@ export default defineConfig({
   ],
 
   /* Global setup and teardown */
-  globalSetup: require.resolve('./tests/e2e/global-setup.ts'),
-  globalTeardown: require.resolve('./tests/e2e/global-teardown.ts'),
+  /* TEMPORARILY DISABLED FOR DEBUGGING NETWORK ISSUES */
+  // globalSetup: require.resolve('./tests/e2e/global-setup.ts'),
+  // globalTeardown: require.resolve('./tests/e2e/global-teardown.ts'),
 
   /* Run your local dev server before starting the tests */
   webServer: process.env.CI ? undefined : {

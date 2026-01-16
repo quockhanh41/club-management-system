@@ -5,8 +5,6 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests/e2e',
-  /* Temporarily run only smoke tests for debugging */
-  testMatch: '**/00-smoke-test.spec.ts',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -16,9 +14,9 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   
-  /* TEMPORARILY DISABLE GLOBAL SETUP FOR DEBUGGING */
-  // globalSetup: require.resolve('./tests/e2e/global-setup'),
-  // globalTeardown: require.resolve('./tests/e2e/global-teardown'),
+  /* Global setup and teardown */
+  globalSetup: require.resolve('./tests/e2e/global-setup.ts'),
+  globalTeardown: require.resolve('./tests/e2e/global-teardown.ts'),
   
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [

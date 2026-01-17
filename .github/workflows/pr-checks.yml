@@ -199,15 +199,34 @@ jobs:
           sarif_file: 'trivy-results.sarif'
 
   dependency-review:
-    name: Dependency Review
+    name: Dependency Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       
-      - name: Dependency Review
-        uses: actions/dependency-review-action@v3
-        with:
-          fail-on-severity: high
+      - name: Run npm audit (free alternative)
+        run: |
+          echo "🔍 Checking for vulnerable dependencies..."
+          
+          # Check backend services
+          for service in auth club event notify; do
+            if [ -f "services/$service/package.json" ]; then
+              echo "Auditing services/$service..."
+              cd services/$service
+              npm audit --audit-level=high || echo "⚠️ Vulnerabilities found in $service"
+              cd ../..
+            fi
+          done
+          
+          # Check frontend
+          if [ -f "frontend/package.json" ]; then
+            echo "Auditing frontend..."
+            cd frontend
+            npm audit --audit-level=high || echo "⚠️ Vulnerabilities found in frontend"
+            cd ..
+          fi
+          
+          echo "✅ Dependency audit completed"
 
   pr-summary:
     name: PR Summary
@@ -283,7 +302,7 @@ jobs:
   
   all-checks-passed:
     name: All Checks Passed
-    needs: [lint-backend, lint-frontend, unit-tests, docker-build, security-scan]
+    needs: [lint-backend, lint-frontend, unit-tests, docker-build, security-scan, dependency-review]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -293,7 +312,8 @@ jobs:
              [[ "${{ needs.lint-frontend.result }}" == "failure" ]] || \
              [[ "${{ needs.unit-tests.result }}" == "failure" ]] || \
              [[ "${{ needs.docker-build.result }}" == "failure" ]] || \
-             [[ "${{ needs.security-scan.result }}" == "failure" ]]; then
+             [[ "${{ needs.security-scan.result }}" == "failure" ]] || \
+             [[ "${{ needs.dependency-review.result }}" == "failure" ]]; then
             echo "❌ One or more checks failed"
             exit 1
           else

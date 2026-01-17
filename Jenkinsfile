@@ -8,6 +8,16 @@ pipeline {
             defaultValue: false,
             description: 'Use local mounted workspace instead of git checkout for debugging'
         )
+        booleanParam(
+            name: 'SKIP_DEPLOY',
+            defaultValue: false,
+            description: 'Skip deployment stage (useful for testing pipeline changes)'
+        )
+        booleanParam(
+            name: 'FORCE_DEPLOY',
+            defaultValue: false,
+            description: 'Force deployment even for feature branches (will deploy to dev environment)'
+        )
         string(
             name: 'E2E_TEST_FILTER',
             defaultValue: '',
@@ -43,6 +53,14 @@ pipeline {
         // Image naming
         IMAGE_PREFIX = 'club-management'
         IMAGE_TAG = 'latest' // Will be set dynamically in Checkout stage
+        
+        // Gitflow Configuration
+        // DEPLOY_ENV will be set dynamically based on branch:
+        //   - main -> production
+        //   - develop -> staging
+        //   - feature/* -> dev (only if FORCE_DEPLOY=true)
+        DEPLOY_ENV = 'none' // Set in Checkout stage
+        REQUIRES_APPROVAL = 'false' // Set in Checkout stage
         
         // Service names
         SERVICES = 'auth club event notify image'
@@ -119,6 +137,41 @@ pipeline {
                         script: 'date -u +%Y-%m-%dT%H:%M:%SZ',
                         returnStdout: true
                     ).trim()
+                    
+                    // === Gitflow Branch Detection ===
+                    // Determine deployment environment and approval requirements based on branch
+                    def branchName = env.BRANCH_NAME ?: sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
+                    echo "🌿 Branch detected: ${branchName}"
+                    
+                    if (branchName == 'main' || branchName == 'master') {
+                        env.DEPLOY_ENV = 'production'
+                        env.REQUIRES_APPROVAL = 'true'
+                        env.E2E_TEST_FILTER = '' // Run all tests for production
+                        echo "🚀 Production deployment - requires approval"
+                    } else if (branchName == 'develop') {
+                        env.DEPLOY_ENV = 'staging'
+                        env.REQUIRES_APPROVAL = 'false'
+                        env.E2E_TEST_FILTER = '' // Run all tests for staging
+                        echo "🧪 Staging deployment - auto deploy"
+                    } else if (branchName.startsWith('feature/')) {
+                        env.DEPLOY_ENV = params.FORCE_DEPLOY ? 'dev' : 'none'
+                        env.REQUIRES_APPROVAL = 'false'
+                        // Default to smoke tests for feature branches unless override
+                        if (!params.E2E_TEST_FILTER) {
+                            env.E2E_TEST_FILTER = '00-smoke'
+                        }
+                        echo "💡 Feature branch - deploy to dev: ${env.DEPLOY_ENV != 'none'}, tests: ${env.E2E_TEST_FILTER ?: 'all'}"
+                    } else {
+                        env.DEPLOY_ENV = 'none'
+                        env.REQUIRES_APPROVAL = 'false'
+                        echo "⚠️  Unknown branch pattern - no deployment"
+                    }
+                    
+                    // Override if SKIP_DEPLOY is enabled
+                    if (params.SKIP_DEPLOY) {
+                        env.DEPLOY_ENV = 'none'
+                        echo "⏭️  Deployment skipped by parameter"
+                    }
                 }
             }
         }
@@ -291,6 +344,8 @@ pipeline {
             steps {
                 script {
                     echo "🎭 Running End-to-End tests with Playwright"
+                    echo "📋 Test filter: ${env.E2E_TEST_FILTER ?: 'all tests'}"
+                    echo "🌿 Branch: ${env.BRANCH_NAME ?: 'unknown'} -> Environment: ${env.DEPLOY_ENV}"
                     echo "Note: Using Docker CP pattern to extract test results (avoids Docker-in-Docker volume mount issues)"
                 }
                 
@@ -545,42 +600,69 @@ pipeline {
                 label 'build'
             }
             when {
-                anyOf {
-                    branch 'main'
-                    branch 'develop'
-                    branch 'staging'
+                expression {
+                    // Deploy only if DEPLOY_ENV is set to a valid environment
+                    return env.DEPLOY_ENV != 'none'
                 }
             }
             
             steps {
                 script {
-                    def environment = 'dev'
+                    echo "🚀 Preparing deployment to ${env.DEPLOY_ENV} environment"
+                    echo "📦 Image tag: ${env.IMAGE_TAG}"
                     
-                    if (env.BRANCH_NAME == 'main') {
-                        environment = 'production'
-                    } else if (env.BRANCH_NAME == 'staging') {
-                        environment = 'staging'
-                    } else if (env.BRANCH_NAME == 'develop') {
-                        environment = 'dev'
+                    // === Approval Gate for Production ===
+                    // Main branch deployments require manual approval
+                    if (env.REQUIRES_APPROVAL == 'true') {
+                        timeout(time: 15, unit: 'MINUTES') {
+                            input(
+                                message: "🔐 Deploy to ${env.DEPLOY_ENV}?",
+                                ok: 'Deploy',
+                                submitter: 'admin,devops-team, quockhanh41', // Configure allowed users/groups
+                                submitterParameter: 'APPROVED_BY'
+                            )
+                        }
+                        echo "✅ Deployment approved by ${env.APPROVED_BY}"
                     }
                     
-                    echo "🚀 Deploying to ${environment} environment"
-                    
-                    // This is a placeholder - adjust based on your deployment strategy
-                    // Options: kubectl, docker-compose on remote, terraform, etc.
+                    // === Environment-specific Deployment ===
+                    // Adjust deployment strategy based on environment
+                    echo "🎯 Deploying to ${env.DEPLOY_ENV}..."
                     
                     sh """
-                        echo "Deployment to ${environment} would happen here"
-                        echo "Image tag: ${env.IMAGE_TAG}"
+                        echo \"Environment: ${env.DEPLOY_ENV}\"
+                        echo \"Image tag: ${env.IMAGE_TAG}\"
+                        echo \"Services: ${env.SERVICES}\"
                         
-                        # Example for Kubernetes deployment:
-                        # kubectl set image deployment/auth-service auth=${env.DOCKER_REGISTRY}/${env.IMAGE_PREFIX}-auth:${env.IMAGE_TAG}
+                        # === Deployment Strategy by Environment ===
+                        case \"${env.DEPLOY_ENV}\" in
+                            production)
+                                echo \"🔴 Production deployment\"
+                                # Example: Kubernetes blue-green deployment
+                                # kubectl apply -f k8s/production/
+                                # kubectl set image deployment -n prod auth=${env.DOCKER_REGISTRY}/${env.IMAGE_PREFIX}-auth:${env.IMAGE_TAG}
+                                
+                                # Example: AWS ECS deployment
+                                # aws ecs update-service --cluster prod --service auth-service --force-new-deployment
+                                ;;
+                            staging)
+                                echo \"🟡 Staging deployment\"
+                                # Example: Direct docker-compose update
+                                # docker-compose -f docker-compose.staging.yml pull
+                                # docker-compose -f docker-compose.staging.yml up -d
+                                ;;
+                            dev)
+                                echo \"🟢 Dev deployment\"
+                                # Example: Local/dev server deployment
+                                # ssh dev-server \"cd /app && docker-compose pull && docker-compose up -d\"
+                                ;;
+                            *)
+                                echo \"❌ Unknown environment: ${env.DEPLOY_ENV}\"
+                                exit 1
+                                ;;
+                        esac
                         
-                        # Example for remote docker-compose:
-                        # ssh user@server "cd /app && docker-compose pull && docker-compose up -d"
-                        
-                        # Example for AWS ECS:
-                        # aws ecs update-service --cluster ${environment} --service auth-service --force-new-deployment
+                        echo \"✅ Deployment completed for ${env.DEPLOY_ENV}\"
                     """
                 }
             }

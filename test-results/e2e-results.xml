@@ -1,0 +1,72 @@
+<testsuites id="" name="" tests="10" failures="0" skipped="0" errors="0" time="22.516686999999997">
+<testsuite name="specs/00-smoke-test.spec.ts" timestamp="2026-01-16T10:57:23.359Z" hostname="chromium" tests="2" failures="0" skipped="0" time="0.824" errors="0">
+<testcase name="Smoke Tests › basic playwright is working" classname="specs/00-smoke-test.spec.ts" time="0.417">
+<system-out>
+<![CDATA[✅ Smoke test passed - Playwright is working
+]]>
+</system-out>
+</testcase>
+<testcase name="Smoke Tests › can reach frontend service" classname="specs/00-smoke-test.spec.ts" time="0.407">
+<system-out>
+<![CDATA[Frontend response status: 200
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="specs/00-smoke-test.spec.ts" timestamp="2026-01-16T10:57:23.359Z" hostname="firefox" tests="2" failures="0" skipped="0" time="1.252" errors="0">
+<testcase name="Smoke Tests › basic playwright is working" classname="specs/00-smoke-test.spec.ts" time="0.828">
+<system-out>
+<![CDATA[✅ Smoke test passed - Playwright is working
+]]>
+</system-out>
+</testcase>
+<testcase name="Smoke Tests › can reach frontend service" classname="specs/00-smoke-test.spec.ts" time="0.424">
+<system-out>
+<![CDATA[Frontend response status: 200
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="specs/00-smoke-test.spec.ts" timestamp="2026-01-16T10:57:23.359Z" hostname="webkit" tests="2" failures="0" skipped="0" time="5.537" errors="0">
+<testcase name="Smoke Tests › basic playwright is working" classname="specs/00-smoke-test.spec.ts" time="1.015">
+<system-out>
+<![CDATA[✅ Smoke test passed - Playwright is working
+]]>
+</system-out>
+</testcase>
+<testcase name="Smoke Tests › can reach frontend service" classname="specs/00-smoke-test.spec.ts" time="4.522">
+<system-out>
+<![CDATA[Frontend response status: 200
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="specs/00-smoke-test.spec.ts" timestamp="2026-01-16T10:57:23.359Z" hostname="Mobile Chrome" tests="2" failures="0" skipped="0" time="0.916" errors="0">
+<testcase name="Smoke Tests › basic playwright is working" classname="specs/00-smoke-test.spec.ts" time="0.342">
+<system-out>
+<![CDATA[✅ Smoke test passed - Playwright is working
+]]>
+</system-out>
+</testcase>
+<testcase name="Smoke Tests › can reach frontend service" classname="specs/00-smoke-test.spec.ts" time="0.574">
+<system-out>
+<![CDATA[Frontend response status: 200
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="specs/00-smoke-test.spec.ts" timestamp="2026-01-16T10:57:23.359Z" hostname="Mobile Safari" tests="2" failures="0" skipped="0" time="2.17" errors="0">
+<testcase name="Smoke Tests › basic playwright is working" classname="specs/00-smoke-test.spec.ts" time="0.377">
+<system-out>
+<![CDATA[✅ Smoke test passed - Playwright is working
+]]>
+</system-out>
+</testcase>
+<testcase name="Smoke Tests › can reach frontend service" classname="specs/00-smoke-test.spec.ts" time="1.793">
+<system-out>
+<![CDATA[Frontend response status: 200
+]]>
+</system-out>
+</testcase>
+</testsuite>
+</testsuites>

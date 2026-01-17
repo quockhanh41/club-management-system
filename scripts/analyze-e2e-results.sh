@@ -154,25 +154,3 @@ echo "💾 Summary saved to: e2e-test-summary.json"
 echo "🏁 Exit code: $EXIT_CODE ($BUILD_RESULT)"
 
 exit $EXIT_CODE
-  "thresholdMode": "$THRESHOLD_MODE",
-  "withinThreshold": $([ $SHOULD_FAIL -eq 0 ] && echo "true" || echo "false"),
-  "message": "E2E test execution completed",
-  "exitCode": $SHOULD_FAIL
-}
-EOF
-
-echo "📝 Test summary saved to e2e-test-summary.json"
-echo "=========================================="
-
-# Exit with appropriate code
-# 0 = success (all passed), 1 = exceeds threshold (fail build), 2 = within threshold (mark unstable)
-if [ $FAILED_TESTS -eq 0 ]; then
-    echo "🎉 All tests passed!"
-    exit 0
-elif [ $SHOULD_FAIL -eq 1 ]; then
-    echo "💥 Build should FAIL - exceeds failure threshold"
-    exit 1
-else
-    echo "⚠️  Build marked UNSTABLE - failures within acceptable range"
-    exit 2
-fi

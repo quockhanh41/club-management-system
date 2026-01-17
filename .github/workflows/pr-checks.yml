@@ -1,0 +1,301 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+      - develop
+
+concurrency:
+  group: pr-checks-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  # =============================================================================
+  # Quick validation jobs that provide fast feedback
+  # =============================================================================
+  
+  changed-files:
+    name: Detect Changed Files
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      docs: ${{ steps.filter.outputs.docs }}
+      docker: ${{ steps.filter.outputs.docker }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'services/**'
+              - 'shared/**'
+            frontend:
+              - 'frontend/**'
+            docs:
+              - '**.md'
+              - 'docs/**'
+            docker:
+              - '**/Dockerfile*'
+              - 'docker-compose*.yml'
+
+  lint-backend:
+    name: Lint Backend
+    needs: changed-files
+    if: needs.changed-files.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [auth, club, event, notify]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: services/${{ matrix.service }}/package-lock.json
+      
+      - name: Install dependencies
+        run: |
+          cd services/${{ matrix.service }}
+          npm ci
+      
+      - name: Run lint
+        run: |
+          cd services/${{ matrix.service }}
+          npm run lint
+
+  lint-frontend:
+    name: Lint Frontend
+    needs: changed-files
+    if: needs.changed-files.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+      
+      - name: Run lint
+        run: |
+          cd frontend
+          npm run lint
+      
+      - name: Type check
+        run: |
+          cd frontend
+          npm run build
+
+  unit-tests:
+    name: Unit Tests
+    needs: changed-files
+    if: needs.changed-files.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [auth, club, event, notify]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: services/${{ matrix.service }}/package-lock.json
+      
+      - name: Install dependencies
+        run: |
+          cd services/${{ matrix.service }}
+          npm ci
+      
+      - name: Run tests
+        run: |
+          cd services/${{ matrix.service }}
+          npm test
+      
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.service }}
+          path: services/${{ matrix.service }}/coverage
+          retention-days: 7
+
+  docker-build:
+    name: Docker Build Verification
+    needs: changed-files
+    if: |
+      needs.changed-files.outputs.backend == 'true' || 
+      needs.changed-files.outputs.frontend == 'true' ||
+      needs.changed-files.outputs.docker == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - { name: auth-service, dir: services/auth }
+          - { name: club-service, dir: services/club }
+          - { name: event-service, dir: services/event }
+          - { name: notify-service, dir: services/notify }
+          - { name: image-service, dir: services/image }
+          - { name: frontend, dir: frontend }
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ matrix.service.dir }}/Dockerfile
+          push: false
+          tags: ${{ matrix.service.name }}:pr-${{ github.event.pull_request.number }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            GIT_COMMIT=${{ github.sha }}
+            BUILD_NUMBER=${{ github.run_number }}
+
+  security-scan:
+    name: Security Scan
+    needs: changed-files
+    if: |
+      needs.changed-files.outputs.backend == 'true' || 
+      needs.changed-files.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+      
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v3
+        with:
+          fail-on-severity: high
+
+  pr-summary:
+    name: PR Summary
+    needs: [lint-backend, lint-frontend, unit-tests, docker-build]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Generate PR summary
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const jobs = [
+              { name: 'Lint Backend', status: '${{ needs.lint-backend.result }}' },
+              { name: 'Lint Frontend', status: '${{ needs.lint-frontend.result }}' },
+              { name: 'Unit Tests', status: '${{ needs.unit-tests.result }}' },
+              { name: 'Docker Build', status: '${{ needs.docker-build.result }}' }
+            ];
+            
+            const getEmoji = (status) => {
+              if (status === 'success') return '✅';
+              if (status === 'failure') return '❌';
+              if (status === 'skipped') return '⏭️';
+              return '⏳';
+            };
+            
+            let body = '## 🤖 GitHub Actions PR Checks\n\n';
+            body += '| Check | Status |\n';
+            body += '|-------|--------|\n';
+            
+            jobs.forEach(job => {
+              body += `| ${job.name} | ${getEmoji(job.status)} ${job.status} |\n`;
+            });
+            
+            body += '\n---\n';
+            body += `**Commit**: \`${context.sha.substring(0, 7)}\`\n`;
+            body += `**Workflow**: [View Run](${context.payload.repository.html_url}/actions/runs/${context.runId})`;
+            
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('🤖 GitHub Actions PR Checks')
+            );
+            
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }
+
+  # =============================================================================
+  # Final status check
+  # =============================================================================
+  
+  all-checks-passed:
+    name: All Checks Passed
+    needs: [lint-backend, lint-frontend, unit-tests, docker-build, security-scan]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all job statuses
+        run: |
+          if [[ "${{ needs.lint-backend.result }}" == "failure" ]] || \
+             [[ "${{ needs.lint-frontend.result }}" == "failure" ]] || \
+             [[ "${{ needs.unit-tests.result }}" == "failure" ]] || \
+             [[ "${{ needs.docker-build.result }}" == "failure" ]] || \
+             [[ "${{ needs.security-scan.result }}" == "failure" ]]; then
+            echo "❌ One or more checks failed"
+            exit 1
+          else
+            echo "✅ All checks passed"
+          fi

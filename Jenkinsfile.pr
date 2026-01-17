@@ -1,0 +1,428 @@
+// =============================================================================
+// CI Pipeline for Pull Requests
+// =============================================================================
+// Lightweight pipeline focused on fast feedback for PR validation
+// - No deployment steps
+// - Optimized for speed (target: < 10 minutes)
+// - Posts results as PR comments
+// =============================================================================
+
+pipeline {
+    agent none
+
+    parameters {
+        booleanParam(
+            name: 'SKIP_E2E',
+            defaultValue: true,
+            description: 'Skip E2E tests for faster PR validation (recommended for most PRs)'
+        )
+        booleanParam(
+            name: 'SKIP_DOCKER_BUILD',
+            defaultValue: false,
+            description: 'Skip Docker build (only for documentation-only changes)'
+        )
+    }
+
+    environment {
+        // Image naming
+        IMAGE_PREFIX = 'club-management'
+        IMAGE_TAG = 'pr-${CHANGE_ID}-${BUILD_NUMBER}'
+        
+        // Service names
+        SERVICES = 'auth club event notify image'
+        
+        // Node version
+        NODE_VERSION = '18'
+        
+        // CI environment
+        CI = 'true'
+        
+        // GitHub PR Info
+        PR_NUMBER = "${env.CHANGE_ID}"
+        PR_BRANCH = "${env.CHANGE_BRANCH}"
+        PR_TARGET = "${env.CHANGE_TARGET}"
+        PR_AUTHOR = "${env.CHANGE_AUTHOR}"
+        PR_TITLE = "${env.CHANGE_TITLE}"
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '20'))
+        timeout(time: 15, unit: 'MINUTES')
+        disableConcurrentBuilds()
+        skipDefaultCheckout()
+    }
+
+    stages {
+        stage('Checkout') {
+            agent {
+                label 'build'
+            }
+            steps {
+                script {
+                    echo "🔀 PR #${env.PR_NUMBER}: ${env.PR_TITLE}"
+                    echo "📝 Author: ${env.PR_AUTHOR}"
+                    echo "🌿 ${env.PR_BRANCH} → ${env.PR_TARGET}"
+                }
+                
+                checkout scm
+                
+                script {
+                    env.GIT_COMMIT_SHORT = sh(
+                        script: 'git rev-parse --short HEAD',
+                        returnStdout: true
+                    ).trim()
+                    
+                    env.BUILD_TIME = sh(
+                        script: 'date -u +%Y-%m-%dT%H:%M:%SZ',
+                        returnStdout: true
+                    ).trim()
+                    
+                    // Detect changed files for smart testing
+                    env.CHANGED_FILES = sh(
+                        script: "git diff --name-only origin/${env.PR_TARGET}...HEAD || echo 'all'",
+                        returnStdout: true
+                    ).trim()
+                    
+                    echo "📄 Changed files:\n${env.CHANGED_FILES}"
+                }
+            }
+        }
+
+        stage('Fast Validation') {
+            parallel {
+                stage('Lint Backend') {
+                    agent {
+                        label 'build'
+                    }
+                    steps {
+                        script {
+                            echo "🔍 Running lint checks on backend services"
+                            
+                            // Check if any backend files changed
+                            def backendChanged = sh(
+                                script: "echo '${env.CHANGED_FILES}' | grep -q 'services/' && echo 'true' || echo 'false'",
+                                returnStdout: true
+                            ).trim()
+                            
+                            if (backendChanged == 'false' && env.CHANGED_FILES != 'all') {
+                                echo "⏭️  No backend changes detected, skipping"
+                                return
+                            }
+                            
+                            def services = env.SERVICES.split().findAll { it != 'image' }
+                            
+                            services.each { service ->
+                                sh """
+                                    cd services/${service}
+                                    if [ -f package.json ]; then
+                                        npm ci --prefer-offline
+                                        
+                                        if grep -q '"lint"' package.json; then
+                                            echo "Linting ${service}..."
+                                            npm run lint
+                                        fi
+                                    fi
+                                """
+                            }
+                        }
+                    }
+                }
+                
+                stage('Lint Frontend') {
+                    agent {
+                        label 'build'
+                    }
+                    steps {
+                        script {
+                            echo "🔍 Running lint checks on frontend"
+                            
+                            def frontendChanged = sh(
+                                script: "echo '${env.CHANGED_FILES}' | grep -q 'frontend/' && echo 'true' || echo 'false'",
+                                returnStdout: true
+                            ).trim()
+                            
+                            if (frontendChanged == 'false' && env.CHANGED_FILES != 'all') {
+                                echo "⏭️  No frontend changes detected, skipping"
+                                return
+                            }
+                            
+                            sh """
+                                cd frontend
+                                npm ci --prefer-offline
+                                npm run lint
+                            """
+                        }
+                    }
+                }
+                
+                stage('Type Check Frontend') {
+                    agent {
+                        label 'build'
+                    }
+                    steps {
+                        script {
+                            echo "🔎 Running TypeScript type checking"
+                            
+                            def frontendChanged = sh(
+                                script: "echo '${env.CHANGED_FILES}' | grep -q 'frontend/' && echo 'true' || echo 'false'",
+                                returnStdout: true
+                            ).trim()
+                            
+                            if (frontendChanged == 'false' && env.CHANGED_FILES != 'all') {
+                                echo "⏭️  No frontend changes detected, skipping"
+                                return
+                            }
+                            
+                            sh """
+                                cd frontend
+                                npm ci --prefer-offline
+                                npm run build
+                            """
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Unit Tests') {
+            agent {
+                label 'build'
+            }
+            steps {
+                script {
+                    echo "🧪 Running unit tests"
+                }
+                
+                sh '''
+                    mkdir -p test-results/unit
+                    
+                    # Run unit tests for changed services only
+                    for service in auth club event notify; do
+                        if echo "${CHANGED_FILES}" | grep -q "services/$service" || [ "${CHANGED_FILES}" = "all" ]; then
+                            echo "Testing $service service..."
+                            cd services/$service
+                            
+                            if [ -f package.json ]; then
+                                npm ci --prefer-offline
+                                
+                                if grep -q '"test"' package.json; then
+                                    npm test || exit 1
+                                fi
+                            fi
+                            
+                            cd ../..
+                        else
+                            echo "⏭️  Skipping $service (no changes)"
+                        fi
+                    done
+                '''
+            }
+            
+            post {
+                always {
+                    junit(
+                        testResults: '**/test-results/**/*.xml',
+                        allowEmptyResults: true
+                    )
+                }
+            }
+        }
+
+        stage('Build Verification') {
+            agent {
+                label 'build'
+            }
+            when {
+                expression {
+                    return params.SKIP_DOCKER_BUILD == false
+                }
+            }
+            steps {
+                script {
+                    echo "🐳 Building Docker images to verify Dockerfiles"
+                    echo "Note: PR builds are not pushed to registry"
+                }
+                
+                sh """
+                    # Build only changed services for faster feedback
+                    SERVICES_TO_BUILD=""
+                    
+                    for service in auth-service club-service event-service notify-service image-service frontend; do
+                        service_dir=\$(echo \$service | sed 's/-service//')
+                        
+                        if [ "\$service" = "frontend" ]; then
+                            if echo "${CHANGED_FILES}" | grep -q "frontend/" || [ "${CHANGED_FILES}" = "all" ]; then
+                                SERVICES_TO_BUILD="\$SERVICES_TO_BUILD \$service"
+                            fi
+                        else
+                            if echo "${CHANGED_FILES}" | grep -q "services/\$service_dir" || [ "${CHANGED_FILES}" = "all" ]; then
+                                SERVICES_TO_BUILD="\$SERVICES_TO_BUILD \$service"
+                            fi
+                        fi
+                    done
+                    
+                    if [ -z "\$SERVICES_TO_BUILD" ]; then
+                        echo "⏭️  No services need building (documentation-only changes?)"
+                        exit 0
+                    fi
+                    
+                    echo "Building services: \$SERVICES_TO_BUILD"
+                    
+                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml build --no-cache \\
+                        --build-arg GIT_COMMIT=${env.GIT_COMMIT} \\
+                        --build-arg BUILD_NUMBER=${env.BUILD_NUMBER} \\
+                        --build-arg BUILD_TIME=${env.BUILD_TIME} \\
+                        \$SERVICES_TO_BUILD
+                    
+                    echo "✅ All builds successful"
+                """
+            }
+        }
+
+        stage('E2E Smoke Tests (Optional)') {
+            agent {
+                label 'e2e-agent'
+            }
+            when {
+                expression {
+                    return params.SKIP_E2E == false
+                }
+            }
+            steps {
+                script {
+                    echo "🎭 Running smoke tests only for PR validation"
+                    echo "⚡ Full E2E suite will run after merge"
+                }
+                
+                sh '''
+                    # Start infrastructure with CI configuration
+                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d \\
+                        auth-service club-service event-service notify-service image-service frontend postgres redis
+                    
+                    # Health check with shorter timeout for PRs
+                    timeout 120 bash -c '
+                        until curl -f http://localhost:8000/health > /dev/null 2>&1; do
+                            echo "Waiting for API Gateway..."
+                            sleep 2
+                        done
+                    '
+                    
+                    # Build and run E2E runner container with smoke tests only
+                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.e2e-runner.yml build e2e-runner
+                    
+                    # Run smoke tests only
+                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.e2e-runner.yml run \\
+                        --name pr-e2e-runner-${BUILD_NUMBER} \\
+                        -e E2E_TEST_FILTER=00-smoke \\
+                        e2e-runner || TEST_EXIT_CODE=$?
+                    
+                    # Extract results
+                    CONTAINER_NAME="pr-e2e-runner-${BUILD_NUMBER}"
+                    mkdir -p test-results
+                    docker cp ${CONTAINER_NAME}:/app/test-results/. ./test-results/ || echo "Failed to copy test results"
+                    
+                    # Cleanup
+                    docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v
+                    
+                    # Report results
+                    if [ -f test-results/e2e-results.json ]; then
+                        echo "✅ Smoke tests completed"
+                        cat test-results/e2e-results.json | head -50
+                    else
+                        echo "❌ No test results found"
+                        exit 1
+                    fi
+                '''
+            }
+            
+            post {
+                always {
+                    junit(
+                        testResults: 'test-results/e2e-results.xml',
+                        allowEmptyResults: true
+                    )
+                }
+            }
+        }
+
+        stage('Generate PR Comment') {
+            agent {
+                label 'build'
+            }
+            steps {
+                script {
+                    echo "💬 Generating PR comment with test results"
+                    
+                    // Call script to generate and post PR comment
+                    sh '''
+                        chmod +x scripts/post-pr-comment.sh
+                        scripts/post-pr-comment.sh
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            script {
+                echo "✅ PR validation passed!"
+                
+                // Set GitHub status check to success
+                // This requires GitHub plugin configured
+                // githubNotify context: 'Jenkins CI', 
+                //              description: 'All checks passed',
+                //              status: 'SUCCESS'
+            }
+        }
+        
+        failure {
+            node('build') {
+                script {
+                    echo "❌ PR validation failed!"
+                    
+                    // Collect failure info
+                    sh '''
+                        mkdir -p pr-diagnostics
+                        echo "Build failed at: $(date)" > pr-diagnostics/failure.txt
+                        echo "PR: #${PR_NUMBER}" >> pr-diagnostics/failure.txt
+                        echo "Branch: ${PR_BRANCH}" >> pr-diagnostics/failure.txt
+                    '''
+                    
+                    archiveArtifacts(
+                        artifacts: 'pr-diagnostics/**/*',
+                        allowEmptyArchive: true
+                    )
+                    
+                    // Set GitHub status check to failure
+                    // githubNotify context: 'Jenkins CI',
+                    //              description: 'Some checks failed',
+                    //              status: 'FAILURE'
+                }
+            }
+        }
+        
+        always {
+            node('build') {
+                script {
+                    echo "🧹 Cleaning up PR build artifacts"
+                }
+                
+                // Cleanup
+                sh '''
+                    # Remove PR-specific Docker images
+                    docker images | grep "pr-${CHANGE_ID}" | awk '{print $3}' | xargs -r docker rmi -f || true
+                    
+                    # Clean dangling images
+                    docker image prune -f || true
+                '''
+                
+                cleanWs(
+                    deleteDirs: true,
+                    disableDeferredWipeout: true,
+                    notFailBuild: true
+                )
+            }
+        }
+    }
+}

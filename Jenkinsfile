@@ -136,7 +136,7 @@ pipeline {
                     
                     // Extract version from git tags, or default to 1.0.0
                     // Try to get latest tag, if no tags exist use default
-                    def version = sh(
+                    env.VERSION = sh(
                         script: '''
                             # Check if any tags exist
                             if git describe --tags --abbrev=0 2>/dev/null; then
@@ -151,10 +151,10 @@ pipeline {
                     ).trim()
                     
                     // Build image tag with format: v{version}-{commit}
-                    env.IMAGE_TAG = "v${version}-${env.GIT_COMMIT_SHORT}"
+                    env.IMAGE_TAG = "v${env.VERSION}-${env.GIT_COMMIT_SHORT}"
                     echo "📦 Image tag: ${env.IMAGE_TAG}"
                     echo "📝 Full commit: ${env.GIT_COMMIT_FULL}"
-                    echo "🏷️  Version: ${version}"
+                    echo "🏷️  Version: ${env.VERSION}"
                     
                     // Get build timestamp in ISO 8601 format
                     env.BUILD_TIME = sh(

@@ -168,7 +168,8 @@ pipeline {
                     steps {
                         script {
                             echo "🔍 Running lint checks on backend services"
-                            def services = ['auth', 'club', 'event', 'notify']
+                            // Use SERVICES environment variable (excluding 'image' as it has no lint script)
+                            def services = env.SERVICES.split().findAll { it != 'image' }
                             
                             services.each { service ->
                                 echo "Linting ${service} service..."
@@ -225,7 +226,7 @@ pipeline {
                 sh '''
                     mkdir -p test-results/unit
                     
-                    # Run unit tests for each service
+                    # Run unit tests for each service (excluding image and frontend)
                     for service in auth club event notify; do
                         echo "Testing $service service..."
                         cd services/$service
@@ -269,9 +270,11 @@ pipeline {
                 }
                 
                 sh """
-                    # Build services with CI configuration (production targets, no volume mounts)
-                    # Using --no-cache to ensure fresh builds without stale layers
-                    # Include docker-compose.e2e.yml for E2E-specific build args (e.g. NEXT_PUBLIC_API_BASE_URL)
+                    # Build all services with CI configuration
+                    # - docker-compose.yml: Base service definitions
+                    # - docker-compose.e2e.yml: E2E-specific build args (e.g., NEXT_PUBLIC_API_BASE_URL)
+                    # - docker-compose.ci.yml: Production targets, no volume mounts
+                    # - --no-cache: Ensure fresh builds without stale layers
                     docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml build --no-cache \\
                         --build-arg GIT_COMMIT=${env.GIT_COMMIT} \\
                         --build-arg BUILD_NUMBER=${env.BUILD_NUMBER} \\
@@ -288,17 +291,21 @@ pipeline {
             steps {
                 script {
                     echo "🎭 Running End-to-End tests with Playwright"
+                    echo "Note: Using Docker CP pattern to extract test results (avoids Docker-in-Docker volume mount issues)"
                 }
                 
                 sh '''
-                    # Create required directories
+                    # Create required directories for test artifacts
                     mkdir -p artifacts test-results logs
                     
-                    # Start infrastructure services first (databases and message queue)
+                    # ===== Infrastructure Services Startup =====
+                    # Start databases and message queue first before application services
+                    # This ensures dependencies are ready when services start
                     echo "Starting infrastructure services (postgres, mongodb, rabbitmq)..."
                     docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --force-recreate postgres mongo rabbitmq
                     
-                    # Wait for databases to be ready
+                    # ===== Health Check: Infrastructure =====
+                    # Wait for databases to pass health checks (max 5 minutes)
                     echo "Waiting for databases to be ready..."
                     for i in $(seq 1 60); do
                         if docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps postgres mongo rabbitmq | grep -E "(unhealthy|starting)" > /dev/null; then
@@ -317,11 +324,16 @@ pipeline {
                         fi
                     done
                     
-                    # Start application services (use pre-built images from previous stage)
+                    # ===== Application Services Startup =====
+                    # Start all application services using pre-built images from Build stage
+                    # --no-build: Use existing images, don't rebuild
+                    # --force-recreate: Ensure clean state
                     echo "Starting application services..."
                     docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d --no-build --force-recreate auth-service club-service event-service notify-service image-service frontend
                     
-                    # Wait for services to be healthy (increased timeout for notify-service)
+                    # ===== Health Check: Application Services =====
+                    # Wait for all services to pass health checks (max 15 minutes)
+                    # Extended timeout needed for notify-service (RabbitMQ connection setup)
                     echo "Waiting for application services to be healthy..."
                     sleep 30
                     
@@ -342,13 +354,16 @@ pipeline {
                         fi
                     done
                     
-                    # Show service status
+                    # Show service status for debugging
                     docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml ps
                     
-                    # Build E2E runner image with code baked in (avoids volume mount issues)
+                    # ===== E2E Runner Image Build =====
+                    # Build E2E runner with test code baked into image
+                    # This avoids Docker-in-Docker volume mount issues in Jenkins agents
                     echo "Building E2E runner image..."
                     docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml build e2e-runner
                     
+                    # ===== Test Filter Configuration =====
                     # Prepare test filter command
                     TEST_FILTER=""
                     if [ -n "${E2E_TEST_FILTER}" ]; then
@@ -358,13 +373,15 @@ pipeline {
                         echo "▶️  Running all E2E tests"
                     fi
                     
-                    # Generate unique container name
+                    # ===== Test Execution with Docker CP Pattern =====
+                    # Generate unique container name for this build
                     CONTAINER_NAME="e2e-runner-${BUILD_NUMBER}"
                     
                     echo "🚀 Running E2E tests in container: ${CONTAINER_NAME}"
                     
-                    # Run tests in container (no --rm so we can copy files after)
-                    # Note: Reporters are configured in playwright.config.ts with outputFile paths
+                    # Run tests without --rm flag (allows file copying after execution)
+                    # Reporter configuration is in playwright.config.ts with outputFile paths
+                    # Do not add --reporter flags here as they override config
                     set +e
                     docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml -f docker-compose.e2e-runner.yml \
                         run --name ${CONTAINER_NAME} \
@@ -375,15 +392,27 @@ pipeline {
                     
                     echo "📦 Copying test results from container (exit code: ${TEST_EXIT_CODE})..."
                     
-                    # Copy results from container to workspace
-                    # Note: Use /. to copy directory contents, avoiding nested structure
+                    # ===== Docker CP Pattern Explanation =====
+                    # Why use 'docker cp' instead of volume mounts?
+                    # - Jenkins agent runs in Docker-in-Docker (DinD) environment
+                    # - Volume mount paths are relative to HOST filesystem, not agent container
+                    # - Jenkins workspace path (e.g., /home/jenkins/agent/workspace/...) doesn't exist on host
+                    # - 'docker cp' works because it copies directly from container to agent filesystem
+                    #
+                    # Syntax: docker cp <container>:/path/. <destination>/
+                    # - Use '/.' to copy directory CONTENTS (avoids nested directory structure)
+                    # - Without '/.', you'd get: ./test-results/test-results/...
                     docker cp ${CONTAINER_NAME}:/app/test-results/. ./test-results/ || echo "⚠️ Warning: Could not copy test-results"
                     docker cp ${CONTAINER_NAME}:/app/playwright-report/. ./playwright-report/ || echo "⚠️ Warning: Could not copy playwright-report"
                     
-                    # Clean up container
+                    # Clean up container after copying results
                     echo "🧹 Cleaning up test container..."
                     docker rm -f ${CONTAINER_NAME} || true
-                                       
+                    
+                    # ===== Threshold Analysis Strategy =====
+                    # Don't exit here based on TEST_EXIT_CODE
+                    # Let the post.always threshold analysis determine final build status
+                    # This allows controlled failures within acceptable thresholds
                     echo "📊 Test execution completed with exit code: ${TEST_EXIT_CODE}"
                     echo "⏭️  Proceeding to threshold analysis..."
                 '''
@@ -392,112 +421,41 @@ pipeline {
             post {
                 always {
                     script {
-                        // Analyze E2E test results and apply threshold
-                        echo "📊 Analyzing E2E test results..."
+                        // ===== Threshold Analysis with External Script =====
+                        // Use dedicated shell script for threshold evaluation
+                        // This separates concerns and makes the logic testable outside Jenkins
+                        echo "📊 Analyzing E2E test results with threshold evaluation..."
                         
-                        // Check if results file exists
-                        def resultsFile = 'test-results/e2e-results.json'
-                        if (!fileExists(resultsFile)) {
-                            echo "⚠️  Warning: ${resultsFile} not found. Skipping threshold analysis."
-                        } else {
-                            try {
-                                // Read and parse JSON results
-                                def resultsJson = readJSON file: resultsFile
+                        def analysisExitCode = sh(
+                            script: '''
+                                # Make script executable
+                                chmod +x scripts/analyze-e2e-results.sh
                                 
-                                // Extract test statistics from Playwright JSON stats object
-                                def totalTests = 0
-                                def passedTests = 0
-                                def failedTests = 0
-                                def flakyTests = 0
-                                def skippedTests = 0
-                                
-                                // Parse Playwright JSON structure (uses stats object in newer versions)
-                                if (resultsJson.stats) {
-                                    def stats = resultsJson.stats
-                                    passedTests = (stats.expected ?: 0) as Integer
-                                    failedTests = (stats.unexpected ?: 0) as Integer
-                                    flakyTests = (stats.flaky ?: 0) as Integer
-                                    skippedTests = (stats.skipped ?: 0) as Integer
-                                    totalTests = passedTests + failedTests + flakyTests + skippedTests
-                                }
-                                
-                                // Calculate failure percentage
-                                def failurePercent = totalTests > 0 ? (failedTests * 100.0 / totalTests) : 0
-                                
-                                // Get threshold values
-                                def thresholdPercent = env.E2E_FAILURE_THRESHOLD_PERCENT.toFloat()
-                                def thresholdAbsolute = env.E2E_FAILURE_THRESHOLD_ABSOLUTE.toInteger()
-                                def thresholdMode = env.E2E_THRESHOLD_MODE
-                                def markUnstable = env.E2E_MARK_UNSTABLE.toBoolean()
-                                
-                                // Display results
-                                echo "========================================="
-                                echo "📊 E2E Test Results Summary"
-                                echo "========================================="
-                                echo "Total Tests:    ${totalTests}"
-                                echo "✅ Passed:      ${passedTests}"
-                                echo "❌ Failed:      ${failedTests}"
-                                echo "⚠️  Flaky:       ${flakyTests}"
-                                echo "⏭️  Skipped:     ${skippedTests}"
-                                echo "📈 Pass Rate:   ${String.format('%.2f', 100 - failurePercent)}%"
-                                echo "📉 Fail Rate:   ${String.format('%.2f', failurePercent)}%"
-                                echo "========================================="
-                                echo "🎯 Threshold Configuration"
-                                echo "========================================="
-                                echo "Mode:           ${thresholdMode}"
-                                echo "Max Failures:   ${thresholdAbsolute} tests"
-                                echo "Max Fail Rate:  ${thresholdPercent}%"
-                                echo "Mark Unstable:  ${markUnstable}"
-                                echo "========================================="
-                                
-                                // Evaluate thresholds
-                                def percentagePass = failurePercent <= thresholdPercent
-                                def absolutePass = failedTests <= thresholdAbsolute
-                                def thresholdPass = false
-                                
-                                switch(thresholdMode) {
-                                    case 'both':
-                                        thresholdPass = percentagePass && absolutePass
-                                        echo "📋 Both criteria must pass:"
-                                        echo "   Percentage: ${percentagePass ? '✅' : '❌'} (${String.format('%.2f', failurePercent)}% <= ${thresholdPercent}%)"
-                                        echo "   Absolute:   ${absolutePass ? '✅' : '❌'} (${failedTests} <= ${thresholdAbsolute})"
-                                        break
-                                    case 'percentage':
-                                        thresholdPass = percentagePass
-                                        echo "📋 Percentage criterion:"
-                                        echo "   ${percentagePass ? '✅' : '❌'} (${String.format('%.2f', failurePercent)}% <= ${thresholdPercent}%)"
-                                        break
-                                    case 'absolute':
-                                        thresholdPass = absolutePass
-                                        echo "📋 Absolute criterion:"
-                                        echo "   ${absolutePass ? '✅' : '❌'} (${failedTests} <= ${thresholdAbsolute})"
-                                        break
-                                }
-                                
-                                echo "========================================="
-                                
-                                // Set build result based on threshold
-                                if (failedTests == 0) {
-                                    echo "🎉 All tests passed! Build: SUCCESS"
-                                    currentBuild.result = 'SUCCESS'
-                                } else if (thresholdPass) {
-                                    if (markUnstable) {
-                                        echo "⚠️  Failures within threshold. Build: UNSTABLE"
-                                        currentBuild.result = 'UNSTABLE'
-                                    } else {
-                                        echo "✅ Failures within threshold. Build: SUCCESS"
-                                        currentBuild.result = 'SUCCESS'
-                                    }
-                                } else {
-                                    echo "❌ Failures exceed threshold. Build: FAILURE"
-                                    currentBuild.result = 'FAILURE'
-                                }
-                                
-                            } catch (Exception e) {
-                                echo "⚠️  Error analyzing test results: ${e.message}"
-                                echo "Continuing with default behavior..."
-                            }
+                                # Run analysis script with environment variables
+                                scripts/analyze-e2e-results.sh test-results/e2e-results.json
+                            ''',
+                            returnStatus: true
+                        )
+                        
+                        // Set build result based on script exit code
+                        // Exit code 0 = SUCCESS, 1 = UNSTABLE, 2 = FAILURE
+                        switch(analysisExitCode) {
+                            case 0:
+                                currentBuild.result = 'SUCCESS'
+                                break
+                            case 1:
+                                currentBuild.result = 'UNSTABLE'
+                                break
+                            case 2:
+                                currentBuild.result = 'FAILURE'
+                                break
+                            default:
+                                echo "⚠️  Unknown exit code: ${analysisExitCode}"
+                                currentBuild.result = 'FAILURE'
+                                break
                         }
+                        
+                        echo "🏁 Final build result: ${currentBuild.result}"
                     }
                     
                     // Archive Playwright report
@@ -553,7 +511,8 @@ pipeline {
                     echo "🏷️  Tagging and pushing Docker images to registry"
                     
                     docker.withRegistry("https://${env.DOCKER_REGISTRY}", env.DOCKER_CREDENTIALS_ID) {
-                        def services = ['auth', 'club', 'event', 'notify', 'image', 'frontend']
+                        // Use SERVICES variable plus frontend
+                        def services = (env.SERVICES.split() + ['frontend']) as List
                         
                         services.each { service ->
                             echo "Processing ${service} service..."

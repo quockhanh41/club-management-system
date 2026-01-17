@@ -134,14 +134,23 @@ pipeline {
                         returnStdout: true
                     ).trim()
                     
-                    // Set IMAGE_TAG with semantic versioning format
-                    // Format: v{version}-{commit} (e.g., v1.0.0-a1b2c3d)
-                    // Using build number as version for simplicity, or extract from git tags
+                    // Extract version from git tags, or default to 1.0.0
+                    // Try to get latest tag, if no tags exist use default
                     def version = sh(
-                        script: 'git describe --tags --always --abbrev=0 2>/dev/null || echo "1.0.0"',
+                        script: '''
+                            # Check if any tags exist
+                            if git describe --tags --abbrev=0 2>/dev/null; then
+                                # Tags exist, use the latest
+                                git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'
+                            else
+                                # No tags, use default
+                                echo "1.0.0"
+                            fi
+                        ''',
                         returnStdout: true
                     ).trim()
                     
+                    // Build image tag with format: v{version}-{commit}
                     env.IMAGE_TAG = "v${version}-${env.GIT_COMMIT_SHORT}"
                     echo "📦 Image tag: ${env.IMAGE_TAG}"
                     echo "📝 Full commit: ${env.GIT_COMMIT_FULL}"

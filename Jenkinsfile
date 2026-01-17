@@ -52,7 +52,8 @@ pipeline {
         
         // Image naming
         IMAGE_PREFIX = 'club-management'
-        IMAGE_TAG = 'latest' // Will be set dynamically in Checkout stage
+        // IMAGE_TAG will be set dynamically in Checkout stage
+        // Do not initialize here to avoid override issues
         
         // Gitflow Configuration
         // DEPLOY_ENV will be set dynamically based on branch:

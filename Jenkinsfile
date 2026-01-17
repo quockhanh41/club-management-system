@@ -129,18 +129,47 @@ pipeline {
                         returnStdout: true
                     ).trim()
                     
-                    // Set IMAGE_TAG dynamically after checkout
-                    env.IMAGE_TAG = env.BUILD_NUMBER + '-' + env.GIT_COMMIT_SHORT
-                    echo "📦 Image tag set to: ${env.IMAGE_TAG}"
-                    
-                    env.BUILD_TIME = sh(
-                        script: 'date -u +%Y-%m-%dT%H:%M:%SZ',
+                    env.GIT_COMMIT_FULL = sh(
+                        script: 'git rev-parse HEAD',
                         returnStdout: true
                     ).trim()
                     
+                    // Set IMAGE_TAG with semantic versioning format
+                    // Format: v{version}-{commit} (e.g., v1.0.0-a1b2c3d)
+                    // Using build number as version for simplicity, or extract from git tags
+                    def version = sh(
+                        script: 'git describe --tags --always --abbrev=0 2>/dev/null || echo "1.0.0"',
+                        returnStdout: true
+                    ).trim()
+                    
+                    env.IMAGE_TAG = "v${version}-${env.GIT_COMMIT_SHORT}"
+                    echo "📦 Image tag: ${env.IMAGE_TAG}"
+                    echo "📝 Full commit: ${env.GIT_COMMIT_FULL}"
+                    echo "🏷️  Version: ${version}"
+                    
+                    // Get build timestamp in ISO 8601 format
+                    env.BUILD_TIME = sh(
+                        script: 'date -u +"%Y-%m-%dT%H:%M:%SZ"',
+                        returnStdout: true
+                    ).trim()
+                    echo "🕐 Build time: ${env.BUILD_TIME}"
+                    
                     // === Gitflow Branch Detection ===
-                    // Determine deployment environment and approval requirements based on branch
-                    def branchName = env.BRANCH_NAME ?: sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
+                    // Fix: git rev-parse --abbrev-ref HEAD returns "HEAD" in detached state (Jenkins default)
+                    // Use BRANCH_NAME env var (set by Jenkins) or GIT_BRANCH, or extract from git log
+                    def branchName = env.BRANCH_NAME ?: env.GIT_BRANCH ?: sh(
+                        script: '''
+                            # Try multiple methods to get branch name
+                            git symbolic-ref --short HEAD 2>/dev/null || \
+                            git branch -r --contains HEAD | grep origin | head -1 | sed 's|.*origin/||' || \
+                            echo "main"
+                        ''',
+                        returnStdout: true
+                    ).trim()
+                    
+                    // Remove 'origin/' prefix if present
+                    branchName = branchName.replaceAll('^origin/', '')
+                    
                     echo "🌿 Branch detected: ${branchName}"
                     
                     if (branchName == 'main' || branchName == 'master') {

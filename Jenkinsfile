@@ -383,23 +383,7 @@ pipeline {
                     # Clean up container
                     echo "🧹 Cleaning up test container..."
                     docker rm -f ${CONTAINER_NAME} || true
-                    
-                    # Debug: Check copied files
-                    echo "📁 Checking copied test results..."
-                    ls -la test-results/ || echo "test-results directory not found"
-                    
-                    if [ -f "test-results/e2e-results.json" ]; then
-                        echo "✅ JSON results file found"
-                        echo "📄 JSON preview (first 30 lines):"
-                        head -30 test-results/e2e-results.json
-                    else
-                        echo "❌ JSON results file NOT found"
-                        echo "Available files:"
-                        find test-results -type f -name "*.json" || echo "No JSON files found"
-                    fi
-                    
-                    # Don't exit here - let threshold analysis in post block determine build status
-                    # TEST_EXIT_CODE is preserved and will be evaluated against thresholds
+                                       
                     echo "📊 Test execution completed with exit code: ${TEST_EXIT_CODE}"
                     echo "⏭️  Proceeding to threshold analysis..."
                 '''

@@ -254,14 +254,14 @@ jobs:
 
       - name: Start services
         run: |
-          docker-compose -f docker-compose.yml -f docker-compose.e2e.yml up -d
+          docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d
           echo "⏳ Waiting for services to be healthy..."
           sleep 30
 
       - name: Check services health
         run: |
           echo "🏥 Checking service health..."
-          docker-compose ps
+          docker compose ps
           
           # Wait for services to be ready (max 2 minutes)
           timeout=120
@@ -333,7 +333,7 @@ jobs:
 
       - name: Cleanup
         if: always()
-        run: docker-compose down -v
+        run: docker compose down -v
 
   # ============================================================================
   # Stage 5: Build & Push Docker Images
@@ -773,24 +773,3 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-
-      - name: Comment on commit
-        if: always()
-        continue-on-error: true
-        uses: peter-evans/commit-comment@v3
-        with:
-          body: |
-            ## ${{ steps.status.outputs.emoji }} Post-Merge Pipeline: ${{ steps.status.outputs.status }}
-            
-            **Branch:** `${{ needs.setup.outputs.branch }}`
-            **Version:** `${{ needs.setup.outputs.image_tag }}`
-            **Environment:** `${{ needs.setup.outputs.environment }}`
-            
-            **Results:**
-            - Build & Lint: ${{ needs.build-and-lint.result == 'success' && '✅' || '❌' }}
-            - Unit Tests: ${{ needs.test-unit.result == 'success' && '✅' || '❌' }}
-            - E2E Tests: ${{ needs.test-e2e.result == 'success' && '✅' || '❌' }}
-            - Docker Images: ${{ needs.build-images.result == 'success' && '✅' || '❌' }}
-            - Staging Deploy: ${{ needs.deploy-staging.result == 'success' && '✅' || needs.deploy-staging.result == 'skipped' && '⏭️' || '❌' }}
-            
-            [View Full Report](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})

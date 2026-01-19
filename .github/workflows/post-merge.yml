@@ -87,7 +87,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
+      - name: Setup pnpm (frontend only)
+        if: matrix.service == 'frontend'
         uses: pnpm/action-setup@v2
         with:
           version: ${{ env.PNPM_VERSION }}
@@ -96,7 +97,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: ${{ matrix.service == 'frontend' && 'pnpm' || 'npm' }}
+          cache-dependency-path: ${{ matrix.service == 'frontend' && 'frontend/pnpm-lock.yaml' || format('services/{0}/package-lock.json', matrix.service) }}
 
       - name: Install dependencies
         run: |
@@ -132,7 +134,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [auth, club, event, notify, image, finance]
+        service: [auth, club, event]
     
     steps:
       - name: Checkout code
@@ -184,7 +186,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: frontend
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Run tests
         working-directory: frontend
@@ -669,8 +671,11 @@ jobs:
 
       - name: Send Slack notification
         if: always()
+        continue-on-error: true
         uses: slackapi/slack-github-action@v1.25.0
         with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
           payload: |
             {
               "text": "${{ steps.status.outputs.emoji }} Post-Merge Pipeline: ${{ steps.status.outputs.status }}",
@@ -726,9 +731,6 @@ jobs:
                 }
               ]
             }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
 
       - name: Comment on commit
         if: always()

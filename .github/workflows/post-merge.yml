@@ -286,6 +286,10 @@ jobs:
             docker compose ps
             exit 1
           fi
+          
+          # Extra wait for all services to be fully ready
+          echo "⏳ Ensuring all services are stable..."
+          sleep 30
 
       - name: Setup Node.js for Playwright
         uses: actions/setup-node@v4

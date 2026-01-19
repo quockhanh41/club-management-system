@@ -6,7 +6,7 @@ A comprehensive microservices-based platform for managing clubs, events, members
 ## 🚀 Tech Stack
 - **Frontend**: Next.js 15, React 19, Tailwind CSS, Radix UI
 - **Backend**: Node.js, Express.js
-- **Databases**: PostgreSQL (Auth), MongoDB (Clubs, Events, Finance)
+- **Databases**: PostgreSQL (Auth), MongoDB (Clubs, Events)
 - **API Gateway**: Kong
 - **Authentication**: JWT, Role-based Access Control
 - **Payment**: Momo SDK
@@ -53,7 +53,7 @@ npm i && npm run dev
 - **Auth Service** - http://localhost:3001
 - **Club Service** - http://localhost:3002
 - **Event Service** - http://localhost:3003
-- **Finance Service** - http://localhost:3004
+
 - **Notify Service** - http://localhost:3005
 
 ## 🧪 API Documentation
@@ -90,7 +90,7 @@ For testing purposes, you can use these pre-configured demo accounts:
 - **Auth Service** (Port: 3001) - User authentication and authorization
 - **Club Service** (Port: 3002) - Club and member management
 - **Event Service** (Port: 3003) - Event creation and RSVP
-- **Finance Service** (Port: 3004) - Payment processing
+
 - **Notify Service** (Port: 3005) - Email and SMS notifications
 
 

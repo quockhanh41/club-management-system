@@ -14,7 +14,6 @@ locals {
     event  = 3003
     notify = 3004
     image  = 3005
-    finance = 3006
     frontend = 3000
   }
   

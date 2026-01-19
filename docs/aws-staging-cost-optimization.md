@@ -15,7 +15,7 @@
 
 **Databases:**
 - PostgreSQL (RDS) - Auth service
-- MongoDB (DocumentDB/Atlas) - Club, Event, Finance services
+- MongoDB (DocumentDB/Atlas) - Club, Event services
 - RabbitMQ (Amazon MQ) - Message queue
 
 **Infrastructure:**

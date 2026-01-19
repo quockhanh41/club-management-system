@@ -16,7 +16,7 @@ Based on the code analysis and "AWS-Ready" implementation, here is the recommend
 | **Event** | App Runner | **MongoDB Atlas** or DocumentDB | - | Internal Cron Jobs |
 | **Notify** | App Runner | - | - | **AWS SES** (for SMTP) |
 | **Image** | App Runner | - | **Cloudinary** (SaaS) | Uses Cloudinary API |
-| **Finance** | - | - | - | *(Not implemented)* |
+
 
 --- 
 
@@ -137,10 +137,6 @@ docker build --platform linux/amd64 -t club-image-service ./services/image
 docker tag club-image-service:latest 911167910785.dkr.ecr.ap-southeast-1.amazonaws.com/club-image-service:latest
 docker push 911167910785.dkr.ecr.ap-southeast-1.amazonaws.com/club-image-service:latest
 
-# finance service
-docker build -t club-finance-service ./services/finance
-docker tag club-finance-service:latest 911167910785.dkr.ecr.ap-southeast-1.amazonaws.com/club-finance-service:latest
-docker push 911167910785.dkr.ecr.ap-southeast-1.amazonaws.com/club-finance-service:latest
 
 
 

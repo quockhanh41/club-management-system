@@ -13,6 +13,9 @@ env:
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   NODE_VERSION: "20"
   PNPM_VERSION: "8"
+  # Service lists - Update here when adding/removing services
+  BACKEND_SERVICES: "auth club event notify image"
+  ALL_SERVICES: "auth club event notify image frontend"
 
 jobs:
   # ============================================================================
@@ -81,7 +84,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [auth, club, event, notify, image, finance, frontend]
+        # Update ALL_SERVICES env variable above when adding/removing services
+        service: [auth, club, event, notify, image, frontend]
 
     steps:
       - name: Checkout code
@@ -100,12 +104,6 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: ${{ matrix.service == 'frontend' && 'pnpm' || 'npm' }}
           cache-dependency-path: ${{ matrix.service == 'frontend' && 'frontend/pnpm-lock.yaml' || format('services/{0}/package-lock.json', matrix.service) }}
-
-      - name: Setup Node.js (no cache)
-        if: matrix.service == 'finance'
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
 
       - name: Install dependencies
         run: |
@@ -163,6 +161,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # SERVICES WITH UNIT TESTS: auth, club, event
+        # (notify and image don't have unit tests)
+        # See env.BACKEND_SERVICES above for full backend services list
         service: [auth, club, event]
 
     steps:
@@ -375,7 +376,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [auth, club, event, notify, image, finance, frontend]
+        # ALL SERVICES (backend + frontend)
+        # See env.ALL_SERVICES above - keep in sync!
+        service: [auth, club, event, notify, image, frontend]
 
     steps:
       - name: Checkout code

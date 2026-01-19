@@ -6,13 +6,13 @@ on:
     branches:
       - main
       - develop
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch: # Allow manual trigger
 
 env:
-  DOCKER_REGISTRY: docker.io  # Change to your registry
+  DOCKER_REGISTRY: docker.io # Change to your registry
   DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-  NODE_VERSION: '20'
-  PNPM_VERSION: '8'
+  NODE_VERSION: "20"
+  PNPM_VERSION: "8"
 
 jobs:
   # ============================================================================
@@ -26,12 +26,12 @@ jobs:
       image_tag: ${{ steps.version.outputs.image_tag }}
       branch: ${{ steps.version.outputs.branch }}
       environment: ${{ steps.env.outputs.environment }}
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history for version calculation
+          fetch-depth: 0 # Full history for version calculation
 
       - name: Calculate version
         id: version
@@ -42,17 +42,17 @@ jobs:
           else
             VERSION="1.0.0"
           fi
-          
+
           # Get short commit SHA
           COMMIT_SHORT=$(git rev-parse --short HEAD)
-          
+
           # Build image tag
           IMAGE_TAG="v${VERSION}-${COMMIT_SHORT}"
-          
+
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "image_tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
           echo "branch=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
-          
+
           echo "📦 Version: ${VERSION}"
           echo "🏷️  Image Tag: ${IMAGE_TAG}"
           echo "🌿 Branch: ${GITHUB_REF_NAME}"
@@ -82,7 +82,7 @@ jobs:
       fail-fast: false
       matrix:
         service: [auth, club, event, notify, image, finance, frontend]
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -164,7 +164,7 @@ jobs:
       fail-fast: false
       matrix:
         service: [auth, club, event]
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -173,7 +173,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
           cache-dependency-path: services/${{ matrix.service }}/package-lock.json
 
       - name: Install dependencies
@@ -208,7 +208,7 @@ jobs:
     name: Frontend Tests
     needs: setup
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -222,7 +222,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
+          cache: "pnpm"
           cache-dependency-path: frontend/pnpm-lock.yaml
 
       - name: Install dependencies
@@ -244,7 +244,7 @@ jobs:
     name: E2E Tests (Full Suite)
     needs: [setup, build-and-lint]
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -255,7 +255,7 @@ jobs:
       - name: Start services
         run: |
           echo "🚀 Starting Docker services..."
-          docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d
+          docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml up -d
           echo "⏳ Waiting for services to initialize..."
           sleep 60
 
@@ -264,7 +264,7 @@ jobs:
           echo "🏥 Checking service health..."
           docker compose ps
           docker compose logs frontend | tail -50
-          
+
           # Wait for frontend to be ready (max 3 minutes)
           timeout=180
           elapsed=0
@@ -277,7 +277,7 @@ jobs:
             sleep 10
             elapsed=$((elapsed + 10))
           done
-          
+
           if [ $elapsed -ge $timeout ]; then
             echo "❌ Frontend not ready after ${timeout}s"
             echo "📋 Frontend logs:"
@@ -286,7 +286,7 @@ jobs:
             docker compose ps
             exit 1
           fi
-          
+
           # Extra wait for all services to be fully ready
           echo "⏳ Ensuring all services are stable..."
           sleep 30
@@ -316,7 +316,7 @@ jobs:
         run: |
           chmod +x scripts/analyze-e2e-results.sh
           ./scripts/analyze-e2e-results.sh
-          
+
           # Check exit code
           EXIT_CODE=$?
           if [ $EXIT_CODE -eq 0 ]; then
@@ -348,7 +348,7 @@ jobs:
 
       - name: Cleanup
         if: always()
-        run: docker compose down -v
+        run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml -f docker-compose.ci.yml down -v
 
   # ============================================================================
   # Stage 5: Build & Push Docker Images
@@ -361,7 +361,7 @@ jobs:
       fail-fast: false
       matrix:
         service: [auth, club, event, notify, image, finance, frontend]
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -414,7 +414,7 @@ jobs:
     environment:
       name: staging
       url: http://${{ steps.get-alb.outputs.alb_dns }}
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -439,54 +439,54 @@ jobs:
       - name: Update ECS Auth Service
         run: |
           echo "🚀 Deploying auth service..."
-          
+
           # Get current task definition
           TASK_DEF=$(aws ecs describe-task-definition \
             --task-definition staging-club-auth \
             --query 'taskDefinition' \
             --output json)
-          
+
           # Update image tag in task definition
           NEW_TASK_DEF=$(echo $TASK_DEF | jq --arg IMAGE "${{ secrets.DOCKER_USERNAME }}/club-auth:${{ needs.setup.outputs.image_tag }}" \
             '.containerDefinitions[0].image = $IMAGE | 
              del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)')
-          
+
           # Register new task definition
           NEW_REVISION=$(aws ecs register-task-definition \
             --cli-input-json "$NEW_TASK_DEF" \
             --query 'taskDefinition.revision' \
             --output text)
-          
+
           echo "📦 New task definition revision: $NEW_REVISION"
-          
+
           # Update service with new task definition
           aws ecs update-service \
             --cluster staging-club-cluster \
             --service staging-club-auth \
             --task-definition staging-club-auth:$NEW_REVISION \
             --force-new-deployment
-          
+
           echo "✅ Auth service updated"
 
       - name: Wait for deployment
         run: |
           echo "⏳ Waiting for deployment to complete..."
-          
+
           aws ecs wait services-stable \
             --cluster staging-club-cluster \
             --services staging-club-auth
-          
+
           echo "✅ Deployment stable"
 
       - name: Health check
         run: |
           echo "🏥 Running health checks..."
-          
+
           ALB_DNS="${{ steps.get-alb.outputs.alb_dns }}"
-          
+
           # Wait for ALB to route to new tasks
           sleep 30
-          
+
           # Test auth service
           for i in {1..10}; do
             if curl -f -s "http://${ALB_DNS}/api/auth/health" > /dev/null; then
@@ -505,61 +505,61 @@ jobs:
       - name: Smoke tests
         run: |
           echo "🧪 Running smoke tests on staging..."
-          
+
           ALB_DNS="${{ steps.get-alb.outputs.alb_dns }}"
-          
+
           # Test auth endpoint
           echo "Testing auth health..."
           curl -f "http://${ALB_DNS}/api/auth/health" || {
             echo "❌ Auth health check failed"
             exit 1
           }
-          
+
           echo "✅ All smoke tests passed"
-          
+
       - name: Build and push seed scripts image
         run: |
           echo "📦 Building database seed scripts image..."
-          
+
           cd database_script
-          
+
           # Build seed scripts image
           docker build --platform linux/amd64 -t seed-scripts:${{ needs.setup.outputs.image_tag }} .
-          
+
           # Get seed ECR repository URL from AWS
           SEED_ECR_REPO=$(aws ecs describe-task-definition \
             --task-definition staging-club-management-seed-task \
             --query 'taskDefinition.containerDefinitions[0].image' \
             --output text | cut -d: -f1)
-          
+
           echo "📤 Pushing to ECR: ${SEED_ECR_REPO}"
-          
+
           # Tag and push
           docker tag seed-scripts:${{ needs.setup.outputs.image_tag }} ${SEED_ECR_REPO}:latest
           docker tag seed-scripts:${{ needs.setup.outputs.image_tag }} ${SEED_ECR_REPO}:${{ needs.setup.outputs.image_tag }}
           docker push ${SEED_ECR_REPO}:latest
           docker push ${SEED_ECR_REPO}:${{ needs.setup.outputs.image_tag }}
-          
+
           echo "✅ Seed scripts image pushed"
 
       - name: Run database seeding task
         run: |
           echo "🌱 Running database seeding task..."
-          
+
           # Get VPC configuration
           SUBNETS=$(aws ec2 describe-subnets \
             --filters "Name=tag:Name,Values=staging-private-*" \
             --query 'Subnets[0].SubnetId' \
             --output text)
-          
+
           SECURITY_GROUP=$(aws ec2 describe-security-groups \
             --filters "Name=tag:Name,Values=staging-ecs-tasks-sg" \
             --query 'SecurityGroups[0].GroupId' \
             --output text)
-          
+
           echo "Using subnet: ${SUBNETS}"
           echo "Using security group: ${SECURITY_GROUP}"
-          
+
           # Run the seed task
           TASK_ARN=$(aws ecs run-task \
             --cluster staging-club-cluster \
@@ -568,29 +568,29 @@ jobs:
             --network-configuration "awsvpcConfiguration={subnets=[${SUBNETS}],securityGroups=[${SECURITY_GROUP}],assignPublicIp=DISABLED}" \
             --query 'tasks[0].taskArn' \
             --output text)
-          
+
           echo "🚀 Seed task started: ${TASK_ARN}"
-          
+
           # Wait for task to complete (max 10 minutes)
           echo "⏳ Waiting for seed task to complete..."
           aws ecs wait tasks-stopped \
             --cluster staging-club-cluster \
             --tasks ${TASK_ARN} \
             --region ap-southeast-1 || true
-          
+
           # Check task exit code
           EXIT_CODE=$(aws ecs describe-tasks \
             --cluster staging-club-cluster \
             --tasks ${TASK_ARN} \
             --query 'tasks[0].containers[0].exitCode' \
             --output text)
-          
+
           echo "Seed task exit code: ${EXIT_CODE}"
-          
+
           # Show logs
           echo "📋 Seed task logs:"
           aws logs tail /ecs/staging-club-management-seed --since 10m
-          
+
           if [ "${EXIT_CODE}" != "0" ]; then
             echo "❌ Database seeding failed"
             echo "⚠️  Deployment will continue, but database may not be seeded"
@@ -627,7 +627,7 @@ jobs:
     needs: [setup, deploy-staging]
     if: always() && needs.setup.outputs.branch == 'develop'
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -635,30 +635,30 @@ jobs:
       - name: Check deployment status
         run: |
           echo "📊 Validating deployment..."
-          
+
           # Check for errors in logs (last 5 minutes)
           echo "Checking for errors..."
-          
+
           # Check metrics (if monitoring available)
           echo "Checking metrics..."
-          
+
           # Check database connections
           echo "Checking database..."
-          
+
           echo "✅ Validation complete"
 
       - name: Generate deployment report
         run: |
           cat << EOF > deployment-report.md
           # 🚀 Deployment Report - ${{ needs.setup.outputs.image_tag }}
-          
+
           **Branch:** ${{ needs.setup.outputs.branch }}
           **Environment:** ${{ needs.setup.outputs.environment }}
           **Version:** ${{ needs.setup.outputs.version }}
           **Commit:** ${{ github.sha }}
           **Triggered by:** ${{ github.actor }}
           **Time:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
-          
+
           ## 📦 Deployed Services
           - ✅ Auth Service
           - ✅ Club Service
@@ -667,22 +667,22 @@ jobs:
           - ✅ Image Service
           - ✅ Finance Service
           - ✅ Frontend
-          
+
           ## 🧪 Test Results
           - Unit Tests: ✅ Passed
           - Integration Tests: ✅ Passed
           - E2E Tests: ✅ Passed
-          
+
           ## 🏥 Health Checks
           - All services: ✅ Healthy
           - Database: ✅ Connected
           - Cache: ✅ Connected
           - Message Queue: ✅ Connected
-          
+
           ## 📊 Metrics
           - Build Duration: ${{ job.duration }}
           - Deployment Status: Success ✅
-          
+
           ## 🔗 Links
           - [Staging URL](https://staging.club-management.com)
           - [Commit](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
@@ -704,7 +704,7 @@ jobs:
     needs: [setup, build-images, deploy-staging]
     if: always()
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Determine status
         id: status

@@ -715,8 +715,6 @@ jobs:
         continue-on-error: true
         uses: slackapi/slack-github-action@v1.25.0
         with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
-          webhook-type: incoming-webhook
           payload: |
             {
               "text": "${{ steps.status.outputs.emoji }} Post-Merge Pipeline: ${{ steps.status.outputs.status }}",
@@ -772,6 +770,9 @@ jobs:
                 }
               ]
             }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
 
       - name: Comment on commit
         if: always()

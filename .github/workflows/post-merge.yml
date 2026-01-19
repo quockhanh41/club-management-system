@@ -254,27 +254,38 @@ jobs:
 
       - name: Start services
         run: |
+          echo "🚀 Starting Docker services..."
           docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d
-          echo "⏳ Waiting for services to be healthy..."
-          sleep 30
+          echo "⏳ Waiting for services to initialize..."
+          sleep 60
 
       - name: Check services health
         run: |
           echo "🏥 Checking service health..."
           docker compose ps
+          docker compose logs frontend | tail -50
           
-          # Wait for services to be ready (max 2 minutes)
-          timeout=120
+          # Wait for frontend to be ready (max 3 minutes)
+          timeout=180
           elapsed=0
           while [ $elapsed -lt $timeout ]; do
-            if curl -f http://localhost:3000/health 2>/dev/null; then
-              echo "✅ Services are healthy"
+            if curl -f http://localhost:3000 2>/dev/null; then
+              echo "✅ Frontend is ready"
               break
             fi
-            echo "⏳ Waiting for services... (${elapsed}s/${timeout}s)"
-            sleep 5
-            elapsed=$((elapsed + 5))
+            echo "⏳ Waiting for frontend... (${elapsed}s/${timeout}s)"
+            sleep 10
+            elapsed=$((elapsed + 10))
           done
+          
+          if [ $elapsed -ge $timeout ]; then
+            echo "❌ Frontend not ready after ${timeout}s"
+            echo "📋 Frontend logs:"
+            docker compose logs frontend
+            echo "📋 All services status:"
+            docker compose ps
+            exit 1
+          fi
 
       - name: Setup Node.js for Playwright
         uses: actions/setup-node@v4

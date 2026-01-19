@@ -52,7 +52,8 @@ pipeline {
         
         // Image naming
         IMAGE_PREFIX = 'club-management'
-        IMAGE_TAG = 'latest' // Will be set dynamically in Checkout stage
+        // IMAGE_TAG will be set dynamically in Checkout stage
+        // Do not initialize here to avoid override issues
         
         // Gitflow Configuration
         // DEPLOY_ENV will be set dynamically based on branch:
@@ -129,18 +130,56 @@ pipeline {
                         returnStdout: true
                     ).trim()
                     
-                    // Set IMAGE_TAG dynamically after checkout
-                    env.IMAGE_TAG = env.BUILD_NUMBER + '-' + env.GIT_COMMIT_SHORT
-                    echo "📦 Image tag set to: ${env.IMAGE_TAG}"
-                    
-                    env.BUILD_TIME = sh(
-                        script: 'date -u +%Y-%m-%dT%H:%M:%SZ',
+                    env.GIT_COMMIT_FULL = sh(
+                        script: 'git rev-parse HEAD',
                         returnStdout: true
                     ).trim()
                     
+                    // Extract version from git tags, or default to 1.0.0
+                    // Try to get latest tag, if no tags exist use default
+                    env.VERSION = sh(
+                        script: '''
+                            # Check if any tags exist
+                            if git describe --tags --abbrev=0 2>/dev/null; then
+                                # Tags exist, use the latest
+                                git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//'
+                            else
+                                # No tags, use default
+                                echo "1.0.0"
+                            fi
+                        ''',
+                        returnStdout: true
+                    ).trim()
+                    
+                    // Build image tag with format: v{version}-{commit}
+                    env.IMAGE_TAG = "v${env.VERSION}-${env.GIT_COMMIT_SHORT}"
+                    echo "📦 Image tag: ${env.IMAGE_TAG}"
+                    echo "📝 Full commit: ${env.GIT_COMMIT_FULL}"
+                    echo "🏷️  Version: ${env.VERSION}"
+                    
+                    // Get build timestamp in ISO 8601 format
+                    env.BUILD_TIME = sh(
+                        script: 'date -u +"%Y-%m-%dT%H:%M:%SZ"',
+                        returnStdout: true
+                    ).trim()
+                    echo "🕐 Build time: ${env.BUILD_TIME}"
+                    
                     // === Gitflow Branch Detection ===
-                    // Determine deployment environment and approval requirements based on branch
-                    def branchName = env.BRANCH_NAME ?: sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
+                    // Fix: git rev-parse --abbrev-ref HEAD returns "HEAD" in detached state (Jenkins default)
+                    // Use BRANCH_NAME env var (set by Jenkins) or GIT_BRANCH, or extract from git log
+                    def branchName = env.BRANCH_NAME ?: env.GIT_BRANCH ?: sh(
+                        script: '''
+                            # Try multiple methods to get branch name
+                            git symbolic-ref --short HEAD 2>/dev/null || \
+                            git branch -r --contains HEAD | grep origin | head -1 | sed 's|.*origin/||' || \
+                            echo "main"
+                        ''',
+                        returnStdout: true
+                    ).trim()
+                    
+                    // Remove 'origin/' prefix if present
+                    branchName = branchName.replaceAll('^origin/', '')
+                    
                     echo "🌿 Branch detected: ${branchName}"
                     
                     if (branchName == 'main' || branchName == 'master') {

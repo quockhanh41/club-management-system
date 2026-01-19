@@ -34,7 +34,7 @@ async function globalSetup(config: FullConfig) {
     // Wait for frontend to be accessible
     console.log('⏳ Waiting for frontend to be ready...');
     const apiHelper = new APIHelper();
-    await apiHelper.waitForDirectService('frontend', frontendUrl, 60000);
+    await apiHelper.waitForDirectService('frontend', frontendUrl, 120000); // Increased to 120s
     console.log('✅ Frontend is ready');
 
     // Check if API Gateway is ready
@@ -44,9 +44,9 @@ async function globalSetup(config: FullConfig) {
 
     // Check individual services directly (allow more time on cold starts)
     console.log('⏳ Checking microservices health...');
-    await apiHelper.waitForDirectService('auth', authUrl, 60000);
-    await apiHelper.waitForDirectService('club', clubUrl, 60000);
-    await apiHelper.waitForDirectService('event', eventUrl, 60000);
+    await apiHelper.waitForDirectService('auth', authUrl, 90000); // Increased to 90s
+    await apiHelper.waitForDirectService('club', clubUrl, 90000);
+    await apiHelper.waitForDirectService('event', eventUrl, 90000);
     console.log('✅ All microservices are ready');
 
     // Sanity-check gateway service routes (ensures Kong loaded declarative config)

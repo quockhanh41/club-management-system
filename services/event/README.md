@@ -343,7 +343,7 @@ NODE_ENV=development
 # External Services
 AUTH_SERVICE_URL=http://localhost:3001
 CLUB_SERVICE_URL=http://localhost:3002
-FINANCE_SERVICE_URL=http://localhost:3003
+
 ```
 
 ## 🧪 Testing the Join Event Endpoint

@@ -7,25 +7,13 @@ variable "aws_region" {
 variable "environment" {
   description = "Environment name"
   type        = string
-  default     = "production"
+  default     = "staging"
 }
 
 variable "vpc_cidr" {
   description = "CIDR block for VPC"
   type        = string
-  default     = "10.0.0.0/16"
-}
-
-variable "single_nat_gateway" {
-  description = "Use single NAT Gateway (cost saving)"
-  type        = bool
-  default     = true
-}
-
-variable "enable_deletion_protection" {
-  description = "Enable ALB deletion protection"
-  type        = bool
-  default     = false
+  default     = "10.1.0.0/16"  # Different from production
 }
 
 # Database Variables
@@ -39,145 +27,126 @@ variable "mq_password" {
   description = "Password for RabbitMQ"
   type        = string
   sensitive   = true
+  default     = "StagingRabbitMQ123!"
 }
 
 variable "mongodb_uri" {
-  description = "MongoDB Connection URI"
+  description = "MongoDB Connection URI (Atlas Free Tier)"
   type        = string
   sensitive   = true
+  # Default to Atlas free tier connection string
+  default = ""
 }
 
 variable "jwt_refresh_secret" {
   description = "JWT refresh token secret"
   type        = string
   sensitive   = true
+  default     = "staging-jwt-refresh-secret-change-me"
 }
 
 variable "api_gateway_secret" {
   description = "API Gateway shared secret"
   type        = string
   sensitive   = true
+  default     = "staging-api-gateway-secret-change-me"
 }
 
-# RDS Configuration
+# RDS Configuration (Right-sized for Staging)
 variable "rds_instance_class" {
   description = "RDS instance class"
   type        = string
-  default     = "db.t3.micro"
+  default     = "db.t3.micro"  # Smallest instance
 }
 
 variable "rds_allocated_storage" {
   description = "RDS allocated storage in GB"
   type        = number
-  default     = 20
-}
-
-variable "rds_multi_az" {
-  description = "Enable Multi-AZ for RDS"
-  type        = bool
-  default     = false
-}
-
-variable "rds_skip_final_snapshot" {
-  description = "Skip final snapshot on RDS deletion"
-  type        = bool
-  default     = true
-}
-
-# Amazon MQ Configuration
-variable "mq_instance_type" {
-  description = "Amazon MQ instance type"
-  type        = string
-  default     = "mq.t3.micro"
-}
-
-variable "mq_deployment_mode" {
-  description = "Amazon MQ deployment mode"
-  type        = string
-  default     = "SINGLE_INSTANCE"
+  default     = 20  # Minimum
 }
 
 # Email Configuration
 variable "email_host" {
-  description = "SMTP Host"
+  description = "SMTP host"
   type        = string
   default     = "smtp.gmail.com"
 }
 
-variable "email_user" {
-  description = "SMTP User"
-  type        = string
-  sensitive   = true
-}
-
-variable "email_password" {
-  description = "SMTP Password"
-  type        = string
-  sensitive   = true
-}
-
-variable "email_from" {
-  description = "Sender Email Address"
-  type        = string
-  default     = "Club Management System <hello.univibe@gmail.com>"
-}
-
 variable "email_service" {
-  description = "Email Service Provider"
+  description = "Email service provider"
   type        = string
   default     = "gmail"
 }
 
 variable "email_port" {
-  description = "SMTP Port"
+  description = "SMTP port"
   type        = string
   default     = "587"
 }
 
 variable "email_secure" {
-  description = "Use SSL/TLS"
+  description = "Use secure connection"
   type        = string
   default     = "false"
+}
+
+variable "email_from" {
+  description = "From email address"
+  type        = string
+  default     = "Club Management Staging <staging@club.com>"
+}
+
+variable "email_user" {
+  description = "Email username"
+  type        = string
+  default     = ""
+}
+
+variable "email_password" {
+  description = "Email password"
+  type        = string
+  sensitive   = true
+  default     = ""
 }
 
 # Service Images
 variable "auth_service_image" {
   description = "Docker image for auth service"
   type        = string
-  default     = "club-auth-service:latest"
+  default     = "club-auth-service:staging"
 }
 
 variable "club_service_image" {
   description = "Docker image for club service"
   type        = string
-  default     = "club-club-service:latest"
+  default     = "club-club-service:staging"
 }
 
 variable "event_service_image" {
   description = "Docker image for event service"
   type        = string
-  default     = "club-event-service:latest"
+  default     = "club-event-service:staging"
 }
 
 variable "image_service_image" {
   description = "Docker image for image service"
   type        = string
-  default     = "club-image-service:latest"
+  default     = "club-image-service:staging"
 }
 
 variable "notify_service_image" {
   description = "Docker image for notify service"
   type        = string
-  default     = "club-notify-service:latest"
+  default     = "club-notify-service:staging"
 }
 
 variable "frontend_image" {
   description = "Docker image for frontend"
   type        = string
-  default     = "club-frontend:latest"
+  default     = "club-frontend:staging"
 }
 
-# Cloudinary Configuration (for seed scripts)
+# Cloudinary Configuration
 variable "cloudinary_cloud_name" {
   description = "Cloudinary cloud name"
   type        = string
@@ -187,20 +156,13 @@ variable "cloudinary_cloud_name" {
 variable "cloudinary_api_key" {
   description = "Cloudinary API key"
   type        = string
-  default     = ""
   sensitive   = true
+  default     = ""
 }
 
 variable "cloudinary_api_secret" {
   description = "Cloudinary API secret"
   type        = string
-  default     = ""
   sensitive   = true
-}
-
-# Bastion Configuration
-variable "bastion_allowed_cidr_blocks" {
-  description = "CIDR blocks allowed to SSH to bastion"
-  type        = list(string)
-  default     = ["0.0.0.0/0"]
+  default     = ""
 }

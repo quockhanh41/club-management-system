@@ -1,0 +1,214 @@
+name: Seed Production Database (Manual)
+
+# Manual trigger only - never runs automatically
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "SEED_PRODUCTION" to confirm'
+        required: true
+        type: string
+      seed_version:
+        description: 'Seed scripts version (image tag)'
+        required: false
+        default: 'latest'
+        type: string
+
+env:
+  AWS_REGION: ap-southeast-1
+  CLUSTER_NAME: production-club-cluster
+  TASK_FAMILY: production-club-management-seed-task
+
+jobs:
+  validate-and-seed:
+    name: Validate & Seed Production Database
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - name: Validate confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "SEED_PRODUCTION" ]; then
+            echo "❌ Invalid confirmation. You must type 'SEED_PRODUCTION' exactly."
+            echo "This is a safety measure for production operations."
+            exit 1
+          fi
+          echo "✅ Confirmation validated"
+      
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      
+      - name: Get ECR repository URL
+        id: ecr-repo
+        run: |
+          ECR_REPO=$(aws ecs describe-task-definition \
+            --task-definition ${{ env.TASK_FAMILY }} \
+            --query 'taskDefinition.containerDefinitions[0].image' \
+            --output text | cut -d: -f1)
+          
+          echo "repository=$ECR_REPO" >> $GITHUB_OUTPUT
+          echo "📦 ECR Repository: $ECR_REPO"
+      
+      - name: Build seed scripts image
+        run: |
+          echo "🔨 Building seed scripts Docker image..."
+          cd database_script
+          docker build --platform linux/amd64 -t seed-scripts:${{ github.event.inputs.seed_version }} .
+          echo "✅ Build completed"
+      
+      - name: Tag and push to ECR
+        env:
+          ECR_REPO: ${{ steps.ecr-repo.outputs.repository }}
+          IMAGE_TAG: ${{ github.event.inputs.seed_version }}
+        run: |
+          echo "📤 Pushing to ECR: ${ECR_REPO}:${IMAGE_TAG}"
+          
+          docker tag seed-scripts:${IMAGE_TAG} ${ECR_REPO}:${IMAGE_TAG}
+          docker push ${ECR_REPO}:${IMAGE_TAG}
+          
+          # Also push as 'latest' if version is 'latest'
+          if [ "${IMAGE_TAG}" = "latest" ]; then
+            docker push ${ECR_REPO}:latest
+          fi
+          
+          echo "✅ Image pushed successfully"
+      
+      - name: Get VPC configuration
+        id: vpc-config
+        run: |
+          echo "🔍 Getting VPC configuration..."
+          
+          # Get private subnet (use first one)
+          SUBNET=$(aws ec2 describe-subnets \
+            --filters "Name=tag:Name,Values=production-*-private-*" \
+            --query 'Subnets[0].SubnetId' \
+            --output text)
+          
+          # Get security group for ECS tasks
+          SECURITY_GROUP=$(aws ec2 describe-security-groups \
+            --filters "Name=tag:Name,Values=production-ecs-tasks-sg" \
+            --query 'SecurityGroups[0].GroupId' \
+            --output text)
+          
+          echo "subnet=$SUBNET" >> $GITHUB_OUTPUT
+          echo "security_group=$SECURITY_GROUP" >> $GITHUB_OUTPUT
+          
+          echo "📍 Subnet: $SUBNET"
+          echo "🔒 Security Group: $SECURITY_GROUP"
+      
+      - name: Run database seeding task
+        id: run-task
+        env:
+          SUBNET: ${{ steps.vpc-config.outputs.subnet }}
+          SECURITY_GROUP: ${{ steps.vpc-config.outputs.security_group }}
+          IMAGE_TAG: ${{ github.event.inputs.seed_version }}
+        run: |
+          echo "🌱 Starting production database seeding..."
+          echo "⚠️  This will modify PRODUCTION data!"
+          
+          # Update task definition with new image if not 'latest'
+          if [ "${IMAGE_TAG}" != "latest" ]; then
+            echo "Updating task definition to use image tag: ${IMAGE_TAG}"
+            TASK_DEF=$(aws ecs describe-task-definition --task-definition ${{ env.TASK_FAMILY }})
+            NEW_TASK_DEF=$(echo $TASK_DEF | jq --arg IMAGE "${{ steps.ecr-repo.outputs.repository }}:${IMAGE_TAG}" \
+              '.taskDefinition | .containerDefinitions[0].image = $IMAGE | del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)')
+            
+            aws ecs register-task-definition --cli-input-json "$NEW_TASK_DEF" > /dev/null
+          fi
+          
+          # Run the seed task
+          TASK_ARN=$(aws ecs run-task \
+            --cluster ${{ env.CLUSTER_NAME }} \
+            --task-definition ${{ env.TASK_FAMILY }} \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[${SUBNET}],securityGroups=[${SECURITY_GROUP}],assignPublicIp=DISABLED}" \
+            --query 'tasks[0].taskArn' \
+            --output text)
+          
+          echo "task_arn=$TASK_ARN" >> $GITHUB_OUTPUT
+          echo "🚀 Seed task started: ${TASK_ARN}"
+      
+      - name: Wait for task completion
+        env:
+          TASK_ARN: ${{ steps.run-task.outputs.task_arn }}
+        run: |
+          echo "⏳ Waiting for seed task to complete (max 15 minutes)..."
+          
+          # Wait for task to stop (timeout 15 minutes)
+          aws ecs wait tasks-stopped \
+            --cluster ${{ env.CLUSTER_NAME }} \
+            --tasks ${TASK_ARN} \
+            --region ${{ env.AWS_REGION }} || {
+              echo "⚠️  Wait timeout reached (15 minutes)"
+            }
+          
+          echo "✅ Task stopped"
+      
+      - name: Check task result
+        env:
+          TASK_ARN: ${{ steps.run-task.outputs.task_arn }}
+        run: |
+          echo "🔍 Checking task exit code..."
+          
+          # Get task details
+          TASK_DETAILS=$(aws ecs describe-tasks \
+            --cluster ${{ env.CLUSTER_NAME }} \
+            --tasks ${TASK_ARN})
+          
+          EXIT_CODE=$(echo $TASK_DETAILS | jq -r '.tasks[0].containers[0].exitCode')
+          STOP_REASON=$(echo $TASK_DETAILS | jq -r '.tasks[0].stoppedReason // "N/A"')
+          
+          echo "Exit Code: ${EXIT_CODE}"
+          echo "Stop Reason: ${STOP_REASON}"
+          
+          # Show logs
+          echo ""
+          echo "📋 Recent seed task logs:"
+          echo "========================"
+          aws logs tail /ecs/${{ env.CLUSTER_NAME }}-seed --since 20m || echo "⚠️  Could not fetch logs"
+          
+          # Check exit code
+          if [ "${EXIT_CODE}" != "0" ] && [ "${EXIT_CODE}" != "null" ]; then
+            echo ""
+            echo "❌ DATABASE SEEDING FAILED!"
+            echo "Exit code: ${EXIT_CODE}"
+            echo "Stop reason: ${STOP_REASON}"
+            exit 1
+          fi
+          
+          echo ""
+          echo "✅ DATABASE SEEDING COMPLETED SUCCESSFULLY!"
+      
+      - name: Post-seeding summary
+        if: always()
+        run: |
+          echo ""
+          echo "================================================"
+          echo "📊 Production Database Seeding Summary"
+          echo "================================================"
+          echo "Environment: Production"
+          echo "Cluster: ${{ env.CLUSTER_NAME }}"
+          echo "Image Version: ${{ github.event.inputs.seed_version }}"
+          echo "Triggered By: ${{ github.actor }}"
+          echo "Task ARN: ${{ steps.run-task.outputs.task_arn }}"
+          echo ""
+          echo "⚠️  IMPORTANT REMINDERS:"
+          echo "1. Verify data in production databases"
+          echo "2. Test application functionality"
+          echo "3. Check CloudWatch logs: /ecs/${{ env.CLUSTER_NAME }}-seed"
+          echo "4. Monitor application for any issues"
+          echo ""
+          echo "📖 View full logs:"
+          echo "aws logs tail /ecs/${{ env.CLUSTER_NAME }}-seed --follow"
+          echo "================================================"

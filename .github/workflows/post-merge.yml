@@ -544,11 +544,40 @@ jobs:
           # Build seed scripts image
           docker build --platform linux/amd64 -t seed-scripts:${{ needs.setup.outputs.image_tag }} .
 
-          # Get seed ECR repository URL from AWS
-          SEED_ECR_REPO=$(aws ecs describe-task-definition \
-            --task-definition staging-club-management-seed-task \
-            --query 'taskDefinition.containerDefinitions[0].image' \
-            --output text | cut -d: -f1)
+          # Login to ECR
+          echo "🔐 Logging into ECR..."
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "AWS Account ID: ${AWS_ACCOUNT_ID}"
+
+          # Get ECR login password
+          ECR_PASSWORD=$(aws ecr get-login-password --region ap-southeast-1)
+          if [ -z "$ECR_PASSWORD" ]; then
+            echo "❌ Failed to get ECR login password"
+            exit 1
+          fi
+
+          # Login to ECR
+          echo "$ECR_PASSWORD" | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.ap-southeast-1.amazonaws.com
+          if [ $? -ne 0 ]; then
+            echo "❌ Failed to login to ECR"
+            exit 1
+          fi
+
+          echo "✅ Successfully logged into ECR"
+
+          # Get seed ECR repository URL directly from ECR
+          SEED_ECR_REPO=$(aws ecr describe-repositories \
+            --repository-names staging-club-management-seed-scripts \
+            --region ap-southeast-1 \
+            --query 'repositories[0].repositoryUri' \
+            --output text)
+
+          if [ -z "$SEED_ECR_REPO" ]; then
+            echo "❌ ECR repository 'staging-club-management-seed-scripts' not found"
+            echo "💡 Please apply Terraform to create the repository:"
+            echo "   cd terraform/environments/staging && terraform apply"
+            exit 1
+          fi
 
           echo "📤 Pushing to ECR: ${SEED_ECR_REPO}"
 

@@ -460,7 +460,7 @@ jobs:
 
           # Get current task definition
           TASK_DEF=$(aws ecs describe-task-definition \
-            --task-definition staging-club-auth \
+            --task-definition auth-service \
             --query 'taskDefinition' \
             --output json)
 
@@ -480,8 +480,8 @@ jobs:
           # Update service with new task definition
           aws ecs update-service \
             --cluster staging-club-cluster \
-            --service staging-club-auth \
-            --task-definition staging-club-auth:$NEW_REVISION \
+            --service auth-service \
+            --task-definition auth-service:$NEW_REVISION \
             --force-new-deployment
 
           echo "✅ Auth service updated"
@@ -492,7 +492,7 @@ jobs:
 
           aws ecs wait services-stable \
             --cluster staging-club-cluster \
-            --services staging-club-auth
+            --services auth-service
 
           echo "✅ Deployment stable"
 

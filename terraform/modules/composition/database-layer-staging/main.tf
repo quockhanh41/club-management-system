@@ -209,11 +209,8 @@ resource "aws_ecs_service" "rabbitmq" {
     assign_public_ip = false
   }
   
-  dynamic "service_registries" {
-    for_each = var.service_discovery_namespace_id != null ? [1] : []
-    content {
-      registry_arn = aws_service_discovery_service.rabbitmq[0].arn
-    }
+  service_registries {
+    registry_arn = aws_service_discovery_service.rabbitmq.arn
   }
   
   tags = merge(
@@ -225,9 +222,8 @@ resource "aws_ecs_service" "rabbitmq" {
   )
 }
 
-# Service Discovery for RabbitMQ (optional)
+# Service Discovery for RabbitMQ
 resource "aws_service_discovery_service" "rabbitmq" {
-  count = var.service_discovery_namespace_id != null ? 1 : 0
   
   name = "rabbitmq"
   

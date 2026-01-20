@@ -65,10 +65,8 @@ resource "aws_ecs_service" "this" {
     }
   }
   
-  deployment_configuration {
-    maximum_percent         = var.max_percent
-    minimum_healthy_percent = var.min_healthy_percent
-  }
+  # Removed deployment_configuration block as it's incompatible with AWS provider v6+
+  # Use deployment_circuit_breaker if needed for deployment control
   
   enable_execute_command = var.enable_execute_command
   

@@ -14,12 +14,12 @@ rds_instance_class    = "db.t3.micro"  # Smallest instance (Free tier eligible)
 rds_allocated_storage = 20             # Minimum storage
 
 # Service Images (will be updated by CI/CD)
-auth_service_image   = "club-auth-service:staging"
-club_service_image   = "club-club-service:staging"
-event_service_image  = "club-event-service:staging"
-image_service_image  = "club-image-service:staging"
-notify_service_image = "club-notify-service:staging"
-frontend_image       = "club-frontend:staging"
+auth_service_image   = "quockhanh41/club-auth:latest"
+club_service_image   = "quockhanh41/club-club:latest"
+event_service_image  = "quockhanh41/club-event:latest"
+image_service_image  = "quockhanh41/club-image:latest"
+notify_service_image = "quockhanh41/club-notify:latest"
+frontend_image       = "quockhanh41/club-frontend:latest"
 
 # Email Configuration (Staging)
 email_host    = "smtp.gmail.com"

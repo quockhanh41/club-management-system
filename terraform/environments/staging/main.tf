@@ -301,11 +301,11 @@ module "auth_service" {
   execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
   
   environment_variables = [
-    { name = "NODE_ENV", value = "staging" },
+    { name = "NODE_ENV", value = "production" },  # Changed from "staging" - app only accepts development/test/production
     { name = "PORT", value = "3001" },
     { name = "DATABASE_URL", value = "postgresql://auth_admin:${var.db_password}@${module.databases.rds_address}:${module.databases.rds_port}/auth_db" },
     { name = "RABBITMQ_URL", value = "amqp://rabbit_admin:${var.mq_password}@rabbitmq.${var.environment}.club.local:5672" },
-    { name = "JWT_REFRESH_SECRET", value = var.jwt_refresh_secret },
+    { name = "REFRESH_TOKEN_SECRET", value = var.jwt_refresh_secret },  # Changed from JWT_REFRESH_SECRET
     { name = "API_GATEWAY_SECRET", value = var.api_gateway_secret },
   ]
   

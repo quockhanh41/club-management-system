@@ -401,7 +401,7 @@ jobs:
           push: true
           tags: |
             ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/club-${{ matrix.service }}:${{ needs.setup.outputs.image_tag }}
-            ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/club-${{ matrix.service }}:latest
+            ${{ env.DOCKER_REGISTRY }}/${{ secrets.DOCKER_USERNAME }}/club-${{ matrix.service }}:${{ needs.setup.outputs.branch == 'develop' && 'staging' || 'latest' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |

@@ -14,11 +14,12 @@ rds_instance_class    = "db.t3.micro"  # Smallest instance (Free tier eligible)
 rds_allocated_storage = 20             # Minimum storage
 
 # Service Images (will be updated by CI/CD)
-auth_service_image   = "quockhanh41/club-auth:latest"
-club_service_image   = "quockhanh41/club-club:latest"
-event_service_image  = "quockhanh41/club-event:latest"
-image_service_image  = "quockhanh41/club-image:latest"
-notify_service_image = "quockhanh41/club-notify:latest"
+# Using ECR to avoid Docker Hub rate limits
+auth_service_image   = "911167910785.dkr.ecr.ap-southeast-1.amazonaws.com/club-auth-service:latest"
+club_service_image   = "911167910785.dkr.ecr.ap-southeast-1.amazonaws.com/club-club-service:latest"
+event_service_image  = "911167910785.dkr.ecr.ap-southeast-1.amazonaws.com/club-event-service:latest"
+image_service_image  = "911167910785.dkr.ecr.ap-southeast-1.amazonaws.com/club-image-service:latest"
+notify_service_image = "911167910785.dkr.ecr.ap-southeast-1.amazonaws.com/club-notify-service:latest"
 frontend_image       = "quockhanh41/club-frontend:latest"
 
 # Email Configuration (Staging)

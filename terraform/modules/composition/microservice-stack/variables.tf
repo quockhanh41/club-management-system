@@ -78,10 +78,17 @@ variable "alb_listener_arn" {
   default     = null
 }
 
+
 variable "alb_security_group_id" {
   description = "Security group ID of the ALB"
   type        = string
   default     = null
+}
+
+variable "additional_security_group_ids" {
+  description = "Additional security group IDs to attach to the service (e.g., for database access)"
+  type        = list(string)
+  default     = []
 }
 
 variable "listener_rule_priority" {

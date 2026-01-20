@@ -116,6 +116,16 @@ module "ecs_tasks_sg" {
     }
   ]
   
+  egress_rules = [
+    {
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = ["0.0.0.0/0"]
+      description = "Allow all outbound traffic"
+    }
+  ]
+  
   tags = local.common_tags
 }
 
@@ -300,12 +310,24 @@ module "auth_service" {
   
   execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
   
+  # Add ECS tasks security group for database access
+  additional_security_group_ids = [module.ecs_tasks_sg.security_group_id]
+  
   environment_variables = [
-    { name = "NODE_ENV", value = "production" },  # Changed from "staging" - app only accepts development/test/production
+    { name = "NODE_ENV", value = "production" },  
     { name = "PORT", value = "3001" },
-    { name = "DATABASE_URL", value = "postgresql://auth_admin:${var.db_password}@${module.databases.rds_address}:${module.databases.rds_port}/auth_db" },
+    # Use individual DB credentials instead of DATABASE_URL to avoid URL encoding issues with special characters
+    { name = "DB_HOST", value = module.databases.rds_address },
+    { name = "DB_PORT", value = tostring(module.databases.rds_port) },
+    { name = "DB_NAME", value = "auth_db" },
+    { name = "DB_USERNAME", value = "auth_admin" },
+    { name = "DB_PASSWORD", value = var.db_password },
+    { name = "DB_DIALECT", value = "postgres" },
+    { name = "DB_SSL", value = "true" },  # Enable SSL for secure connection
+    { name = "DB_LOGGING", value = "true" },  # Enable detailed database logging for debugging
+    { name = "AUTO_MIGRATE", value = "true" },  # Auto-migrate database schema on startup
     { name = "RABBITMQ_URL", value = "amqp://rabbit_admin:${var.mq_password}@rabbitmq.${var.environment}.club.local:5672" },
-    { name = "REFRESH_TOKEN_SECRET", value = var.jwt_refresh_secret },  # Changed from JWT_REFRESH_SECRET
+    { name = "REFRESH_TOKEN_SECRET", value = var.jwt_refresh_secret },
     { name = "API_GATEWAY_SECRET", value = var.api_gateway_secret },
   ]
   

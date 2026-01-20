@@ -98,7 +98,10 @@ module "ecs_service" {
   desired_count = var.desired_count
   
   subnet_ids         = var.private_subnet_ids
-  security_group_ids = [module.security_group.security_group_id]
+  security_group_ids = concat(
+    [module.security_group.security_group_id],
+    var.additional_security_group_ids
+  )
   assign_public_ip   = var.assign_public_ip
   
   execution_role_arn = var.execution_role_arn

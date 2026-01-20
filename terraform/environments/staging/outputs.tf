@@ -24,29 +24,30 @@ output "public_subnets" {
 
 output "alb_dns_name" {
   description = "ALB DNS name - Use this to access the staging environment"
-  value       = aws_lb.main.dns_name
+  value       = module.alb.alb_dns_name
 }
 
 output "alb_zone_id" {
   description = "ALB zone ID for Route53"
-  value       = aws_lb.main.zone_id
+  value       = module.alb.alb_zone_id
 }
 
 output "rds_endpoint" {
   description = "RDS PostgreSQL endpoint"
-  value       = aws_db_instance.auth_db.endpoint
+  value       = module.databases.rds_endpoint
   sensitive   = true
 }
 
 output "rds_connection_string" {
   description = "RDS connection string"
-  value       = "postgresql://auth_admin:***@${aws_db_instance.auth_db.endpoint}/auth_db"
+  value       = "postgresql://auth_admin:***@${module.databases.rds_endpoint}/auth_db"
   sensitive   = true
 }
 
 output "rabbitmq_endpoint" {
   description = "RabbitMQ endpoint (internal DNS)"
-  value       = "rabbitmq.${var.environment}.club.local:5672"
+  value       = module.databases.rabbitmq_endpoint
+  sensitive   = true
 }
 
 output "rabbitmq_management_url" {
@@ -101,13 +102,13 @@ output "access_instructions" {
   value = <<-EOT
     Staging Environment Access:
     
-    1. Frontend: http://${aws_lb.main.dns_name}
-    2. Auth API: http://${aws_lb.main.dns_name}/api/auth
-    3. Club API: http://${aws_lb.main.dns_name}/api/club
-    4. Event API: http://${aws_lb.main.dns_name}/api/event
+    1. Frontend: http://${module.alb.alb_dns_name}
+    2. Auth API: http://${module.alb.alb_dns_name}/api/auth
+    3. Club API: http://${module.alb.alb_dns_name}/api/club
+    4. Event API: http://${module.alb.alb_dns_name}/api/event
     
     Database (via Bastion):
-    - Host: ${aws_db_instance.auth_db.endpoint}
+    - Host: ${module.databases.rds_endpoint}
     - Database: auth_db
     - Username: auth_admin
     
@@ -122,15 +123,15 @@ output "access_instructions" {
   EOT
 }
 
-output "scheduler_configuration" {
-  description = "Scheduler configuration for Lambda function"
-  value = {
-    ecs_cluster_name = aws_ecs_cluster.main.name
-    ecs_services = [
-      aws_ecs_service.auth.name,
-      aws_ecs_service.rabbitmq.name
-    ]
-    rds_instance_id = aws_db_instance.auth_db.identifier
-    schedule_tag    = "business-hours"
-  }
-}
+# Commented out as scheduler.tf is disabled
+# output "scheduler_configuration" {
+#   description = "Scheduler configuration for Lambda function"
+#   value = {
+#     ecs_cluster_name = aws_ecs_cluster.main.name
+#     ecs_services = [
+#       module.auth_service.service_name
+#     ]
+#     rds_instance_id = module.databases.rds_instance_id
+#     schedule_tag    = "business-hours"
+#   }
+# }

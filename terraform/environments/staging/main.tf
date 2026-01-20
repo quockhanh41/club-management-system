@@ -310,6 +310,7 @@ module "auth_service" {
   ]
   
   log_retention_days = 7  # Short retention for staging
+  region             = var.aws_region
   
   tags = merge(
     local.common_tags,
@@ -320,30 +321,3 @@ module "auth_service" {
   )
 }
 
-# ==============================================================================
-# Outputs
-# ==============================================================================
-output "vpc_id" {
-  description = "VPC ID"
-  value       = module.vpc.vpc_id
-}
-
-output "alb_dns_name" {
-  description = "ALB DNS name"
-  value       = module.alb.alb_dns_name
-}
-
-output "rds_endpoint" {
-  description = "RDS endpoint"
-  value       = module.databases.rds_endpoint
-}
-
-output "rabbitmq_endpoint" {
-  description = "RabbitMQ endpoint (internal)"
-  value       = module.databases.rabbitmq_endpoint
-}
-
-output "ecs_cluster_name" {
-  description = "ECS cluster name"
-  value       = aws_ecs_cluster.main.name
-}

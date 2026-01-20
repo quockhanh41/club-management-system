@@ -3,27 +3,29 @@
 # Runs once to populate databases after deployment
 # ===============================================
 
+# Data sources for AWS account information
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
 # ECR Repository for seed scripts Docker image
 resource "aws_ecr_repository" "seed_scripts" {
-  name                 = "${var.environment}-${var.project_name}-seed-scripts"
+  name                 = "${var.environment}-club-management-seed-scripts"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
     scan_on_push = false # Not needed for one-time scripts
   }
 
-  tags = merge(
-    var.common_tags,
-    {
-      Name        = "${var.environment}-seed-scripts-repo"
-      Description = "Container repository for database seeding scripts"
-    }
-  )
+  tags = {
+    Environment = var.environment
+    Name        = "${var.environment}-seed-scripts-repo"
+    Description = "Container repository for database seeding scripts"
+  }
 }
 
 # IAM Role for Seed Task Execution
 resource "aws_iam_role" "seed_task_execution_role" {
-  name = "${var.environment}-${var.project_name}-seed-execution-role"
+  name = "${var.environment}-club-management-seed-execution-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -38,7 +40,9 @@ resource "aws_iam_role" "seed_task_execution_role" {
     ]
   })
 
-  tags = var.common_tags
+  tags = {
+    Environment = var.environment
+  }
 }
 
 # Attach AWS managed policy for ECS task execution
@@ -49,7 +53,7 @@ resource "aws_iam_role_policy_attachment" "seed_task_execution_policy" {
 
 # IAM Role for Seed Task (Runtime)
 resource "aws_iam_role" "seed_task_role" {
-  name = "${var.environment}-${var.project_name}-seed-task-role"
+  name = "${var.environment}-club-management-seed-task-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -64,25 +68,25 @@ resource "aws_iam_role" "seed_task_role" {
     ]
   })
 
-  tags = var.common_tags
+  tags = {
+    Environment = var.environment
+  }
 }
 
 # CloudWatch Log Group for Seed Task
 resource "aws_cloudwatch_log_group" "seed_task" {
-  name              = "/ecs/${var.environment}-${var.project_name}-seed"
+  name              = "/ecs/${var.environment}-club-management-seed"
   retention_in_days = 7 # Short retention for seed logs
 
-  tags = merge(
-    var.common_tags,
-    {
-      Name = "${var.environment}-seed-task-logs"
-    }
-  )
+  tags = {
+    Environment = var.environment
+    Name        = "${var.environment}-seed-task-logs"
+  }
 }
 
 # ECS Task Definition for Database Seeding
 resource "aws_ecs_task_definition" "seed_task" {
-  family                   = "${var.environment}-${var.project_name}-seed-task"
+  family                   = "${var.environment}-club-management-seed-task"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = "512"  # 0.5 vCPU - sufficient for seed scripts
@@ -100,19 +104,19 @@ resource "aws_ecs_task_definition" "seed_task" {
         # PostgreSQL Configuration (for Auth service)
         {
           name  = "DB_HOST"
-          value = aws_db_instance.auth_db.address
+          value = module.databases.rds_address
         },
         {
           name  = "DB_PORT"
-          value = tostring(aws_db_instance.auth_db.port)
+          value = tostring(module.databases.rds_port)
         },
         {
           name  = "DB_USER"
-          value = aws_db_instance.auth_db.username
+          value = "auth_admin"
         },
         {
           name  = "DB_NAME"
-          value = aws_db_instance.auth_db.db_name
+          value = "auth_db"
         },
         # MongoDB Configuration (for Club & Event services)
         {
@@ -163,11 +167,11 @@ resource "aws_ecs_task_definition" "seed_task" {
         # Sensitive values from variables
         {
           name      = "DB_PASSWORD"
-          valueFrom = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${var.environment}/${var.project_name}/db_password"
+          valueFrom = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${var.environment}/club-management/db_password"
         },
         {
           name      = "CLOUDINARY_API_SECRET"
-          valueFrom = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${var.environment}/${var.project_name}/cloudinary_secret"
+          valueFrom = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${var.environment}/club-management/cloudinary_secret"
         }
       ]
 
@@ -184,23 +188,23 @@ resource "aws_ecs_task_definition" "seed_task" {
     }
   ])
 
-  tags = merge(
-    var.common_tags,
-    {
-      Name        = "${var.environment}-seed-task"
-      Description = "One-time task to seed databases"
-    }
-  )
+  tags = {
+    Environment = var.environment
+    Name        = "${var.environment}-seed-task"
+    Description = "One-time task to seed databases"
+  }
 }
 
 # SSM Parameters for Secrets (if not already exists)
 resource "aws_ssm_parameter" "db_password" {
-  name        = "/${var.environment}/${var.project_name}/db_password"
+  name        = "/${var.environment}/club-management/db_password"
   description = "Database password for RDS PostgreSQL"
   type        = "SecureString"
   value       = var.db_password
 
-  tags = var.common_tags
+  tags = {
+    Environment = var.environment
+  }
 
   lifecycle {
     ignore_changes = [value] # Don't update if manually changed
@@ -208,12 +212,14 @@ resource "aws_ssm_parameter" "db_password" {
 }
 
 resource "aws_ssm_parameter" "cloudinary_secret" {
-  name        = "/${var.environment}/${var.project_name}/cloudinary_secret"
+  name        = "/${var.environment}/club-management/cloudinary_secret"
   description = "Cloudinary API secret"
   type        = "SecureString"
   value       = var.cloudinary_api_secret != "" ? var.cloudinary_api_secret : "placeholder"
 
-  tags = var.common_tags
+  tags = {
+    Environment = var.environment
+  }
 
   lifecycle {
     ignore_changes = [value]
@@ -222,7 +228,7 @@ resource "aws_ssm_parameter" "cloudinary_secret" {
 
 # Grant ECS Task Execution Role access to SSM parameters
 resource "aws_iam_role_policy" "seed_task_execution_ssm" {
-  name = "${var.environment}-${var.project_name}-seed-ssm-policy"
+  name = "${var.environment}-club-management-seed-ssm-policy"
   role = aws_iam_role.seed_task_execution_role.id
 
   policy = jsonencode({
@@ -276,7 +282,7 @@ output "seed_task_commands" {
       --cluster ${aws_ecs_cluster.main.name} \
       --task-definition ${aws_ecs_task_definition.seed_task.family} \
       --launch-type FARGATE \
-      --network-configuration "awsvpcConfiguration={subnets=[${aws_subnet.private[0].id}],securityGroups=[${aws_security_group.ecs_tasks.id}],assignPublicIp=DISABLED}" \
+      --network-configuration "awsvpcConfiguration={subnets=[REPLACE_WITH_SUBNET_ID],securityGroups=[REPLACE_WITH_SG_ID],assignPublicIp=DISABLED}" \
       --region ${data.aws_region.current.name}
     
     # View seed logs:
@@ -289,7 +295,7 @@ output "seed_task_build_commands" {
   value       = <<-EOF
     cd database_script && \
     docker build --platform linux/amd64 -t ${aws_ecr_repository.seed_scripts.repository_url}:latest . && \
-    aws ecr get-login-password --region ${data.aws_region.current.name} | docker login --username AWS --password-stdin ${split("/", aws_ecr_repository.seed_scripts.repository_url)[0]} && \
+    aws ecr get-login-password --region ${var.aws_region} | docker login --username AWS --password-stdin ${split("/", aws_ecr_repository.seed_scripts.repository_url)[0]} && \
     docker push ${aws_ecr_repository.seed_scripts.repository_url}:latest
   EOF
 }

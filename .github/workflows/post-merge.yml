@@ -595,7 +595,7 @@ jobs:
 
           # Get VPC configuration
           SUBNETS=$(aws ec2 describe-subnets \
-            --filters "Name=tag:Name,Values=staging-private-*" \
+            --filters "Name=tag:Name,Values=staging-club-vpc-private-*" \
             --query 'Subnets[0].SubnetId' \
             --output text)
 
@@ -606,6 +606,13 @@ jobs:
 
           echo "Using subnet: ${SUBNETS}"
           echo "Using security group: ${SECURITY_GROUP}"
+
+          if [ -z "$SUBNETS" ] || [ "$SUBNETS" == "None" ]; then
+            echo "❌ Failed to find private subnet"
+            echo "Available subnets:"
+            aws ec2 describe-subnets --filters "Name=tag:Name,Values=staging-*" --query 'Subnets[*].[SubnetId,Tags[?Key==`Name`].Value|[0]]' --output table
+            exit 1
+          fi
 
           # Run the seed task
           TASK_ARN=$(aws ecs run-task \

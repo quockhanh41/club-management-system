@@ -16,6 +16,7 @@ import random
 import json
 import os
 import sys
+import uuid
 
 # Add utils to path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'utils'))
@@ -92,6 +93,7 @@ def generate_users_data():
     # Generate admin users with realistic profile pictures
     admin_users = [
         {
+            'id': str(uuid.uuid4()),
             'email': 'admin@clubsystem.edu.vn',
             'password_hash': '$2b$12$LQv3c1yqBwdVHdDhzXCZl.j8kF9QzMKlGqE3gOQwHzHzFqZyK9tI2',
             'full_name': 'Nguyễn Văn Quân',
@@ -106,6 +108,7 @@ def generate_users_data():
             'email_verified': True
         },
         {
+            'id': str(uuid.uuid4()),
             'email': 'clubs.admin@clubsystem.edu.vn', 
             'password_hash': '$2b$12$LQv3c1yqBwdVHdDhzXCZl.j8kF9QzMKlGqE3gOQwHzHzFqZyK9tI2',
             'full_name': 'Trần Thị Linh',
@@ -172,6 +175,7 @@ def generate_users_data():
         profile_picture_url = generate_profile_picture_url(user_id, gender)
         
         user_data = {
+            'id': str(uuid.uuid4()),
             'email': email,
             'password_hash': '$2b$12$LQv3c1yqBwdVHdDhzXCZl.j8kF9QzMKlGqE3gOQwHzHzFqZyK9tI2',
             'full_name': full_name,
@@ -215,7 +219,7 @@ def seed_auth_service():
         print("Ensuring users table exists...")
         create_table_query = """
         CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
+            id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
             email VARCHAR(255) UNIQUE NOT NULL,
             password_hash VARCHAR(255) NOT NULL,
             full_name VARCHAR(255),
@@ -247,11 +251,11 @@ def seed_auth_service():
         print("Seeding users...")
         insert_query = """
         INSERT INTO users (
-            email, password_hash, full_name, role, phone, profile_picture_url,
+            id, email, password_hash, full_name, role, phone, profile_picture_url,
             bio, date_of_birth, gender, address, social_links, email_verified,
             created_at, updated_at
         ) VALUES (
-            %(email)s, %(password_hash)s, %(full_name)s, %(role)s, %(phone)s, %(profile_picture_url)s,
+            %(id)s, %(email)s, %(password_hash)s, %(full_name)s, %(role)s, %(phone)s, %(profile_picture_url)s,
             %(bio)s, %(date_of_birth)s, %(gender)s, %(address)s, %(social_links)s, %(email_verified)s,
             NOW(), NOW()
         )

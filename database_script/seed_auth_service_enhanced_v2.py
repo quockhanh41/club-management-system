@@ -298,7 +298,12 @@ def seed_auth_service():
             print(f"   - {name}: {url}")
             
     except Exception as e:
-        print(f"Error: {e}")
+        import traceback
+        import sys
+        import logging
+        error_msg = f"Error: {e}\n{traceback.format_exc()}"
+        print(error_msg, file=sys.stderr)
+        logging.error(error_msg)
         return False
     finally:
         try:

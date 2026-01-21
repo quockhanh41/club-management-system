@@ -118,6 +118,11 @@ resource "aws_ecs_task_definition" "seed_task" {
           name  = "DB_NAME"
           value = "auth_db"
         },
+        # Full PostgreSQL connection string for scripts that expect it
+        {
+          name  = "SUPABASE_DB_URL"
+          value = "postgresql://auth_admin:${var.db_password}@${module.databases.rds_address}:${module.databases.rds_port}/auth_db?sslmode=require"
+        },
         # MongoDB Configuration (for Club & Event services)
         {
           name  = "MONGODB_URI"

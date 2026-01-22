@@ -30,10 +30,14 @@ export const validateApiGatewaySecret = (req, res, next) => {
     });
 
     // In test/CI environment or when explicitly required, enforce gateway secret
-    if (process.env.NODE_ENV === 'test' || process.env.CI === 'true' || process.env.ENFORCE_GATEWAY_SECRET === 'true') {
+    if (
+      process.env.NODE_ENV === "test" ||
+      process.env.CI === "true" ||
+      process.env.ENFORCE_GATEWAY_SECRET === "true"
+    ) {
       return res.status(401).json({
         success: false,
-        message: 'Unauthorized: Request must come through API Gateway'
+        message: "Unauthorized: Request must come through API Gateway",
       });
     }
 
@@ -68,14 +72,23 @@ export const authMiddleware = (req, res, next) => {
           userAgent: req.get("User-Agent"),
           hasSecret: !!gatewaySecret,
           timestamp: new Date().toISOString(),
-        }
+        },
       );
 
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized: Request must come through API Gateway",
-        code: "INVALID_GATEWAY",
-      });
+      // In test/CI environment or when explicitly required, enforce gateway secret
+      if (
+        process.env.NODE_ENV === "test" ||
+        process.env.CI === "true" ||
+        process.env.ENFORCE_GATEWAY_SECRET === "true"
+      ) {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized: Request must come through API Gateway",
+          code: "INVALID_GATEWAY",
+        });
+      }
+
+      // ALLOW request to proceed in ALB architecture for staging/production
     }
 
     console.debug("EVENT SERVICE: Gateway validation passed", {
@@ -98,7 +111,7 @@ export const authMiddleware = (req, res, next) => {
       } catch (e) {
         console.warn(
           "Failed to decode base64 full_name, using original value:",
-          e.message
+          e.message,
         );
         return value;
       }
@@ -278,13 +291,11 @@ export const requireClubManager = async (req, res, next) => {
     if (eventId) {
       const event = await Event.findById(eventId);
       if (!event) {
-        return res
-          .status(404)
-          .json({
-            success: false,
-            message: "Event not found",
-            code: "EVENT_NOT_FOUND",
-          });
+        return res.status(404).json({
+          success: false,
+          message: "Event not found",
+          code: "EVENT_NOT_FOUND",
+        });
       }
 
       // Allow if user is the original creator of the event.
@@ -314,24 +325,20 @@ export const requireClubManager = async (req, res, next) => {
     }
 
     // If none of the above conditions are met, deny access.
-    return res
-      .status(403)
-      .json({
-        success: false,
-        message: "User must be a club manager to perform this action",
-        code: "FORBIDDEN",
-      });
+    return res.status(403).json({
+      success: false,
+      message: "User must be a club manager to perform this action",
+      code: "FORBIDDEN",
+    });
   } catch (error) {
     console.error("Club manager authorization error:", error.message);
     const statusCode =
       error.message === "Error verifying club membership" ? 503 : 500;
-    return res
-      .status(statusCode)
-      .json({
-        success: false,
-        message: "Internal authorization error",
-        code: "AUTH_ERROR",
-      });
+    return res.status(statusCode).json({
+      success: false,
+      message: "Internal authorization error",
+      code: "AUTH_ERROR",
+    });
   }
 };
 
@@ -376,13 +383,11 @@ export const requireClubManagerOrOrganizer = async (req, res, next) => {
     if (eventId) {
       const event = await Event.findById(eventId);
       if (!event) {
-        return res
-          .status(404)
-          .json({
-            success: false,
-            message: "Event not found",
-            code: "EVENT_NOT_FOUND",
-          });
+        return res.status(404).json({
+          success: false,
+          message: "Event not found",
+          code: "EVENT_NOT_FOUND",
+        });
       }
 
       // Allow if user is the original creator of the event
@@ -426,12 +431,10 @@ export const requireClubManagerOrOrganizer = async (req, res, next) => {
     console.error("Authorization error:", error.message);
     const statusCode =
       error.message === "Error verifying club membership" ? 503 : 500;
-    return res
-      .status(statusCode)
-      .json({
-        success: false,
-        message: "Internal authorization error",
-        code: "AUTH_ERROR",
-      });
+    return res.status(statusCode).json({
+      success: false,
+      message: "Internal authorization error",
+      code: "AUTH_ERROR",
+    });
   }
 };

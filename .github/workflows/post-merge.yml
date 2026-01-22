@@ -508,6 +508,54 @@ jobs:
 
           echo "✅ Deployment stable"
 
+      - name: Update ECS Frontend Service
+        run: |
+          echo "🚀 Deploying frontend service..."
+
+          # Get AWS account ID for ECR
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.ap-southeast-1.amazonaws.com"
+
+          # Get current task definition
+          TASK_DEF=$(aws ecs describe-task-definition \
+            --task-definition frontend-service \
+            --query 'taskDefinition' \
+            --output json)
+
+          # Update image tag in task definition to use ECR
+          NEW_TASK_DEF=$(echo $TASK_DEF | jq --arg IMAGE "${ECR_REGISTRY}/club-frontend-service:${{ needs.setup.outputs.image_tag }}" \
+            '.containerDefinitions[0].image = $IMAGE | 
+             del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)')
+
+          echo "📦 Using image: ${ECR_REGISTRY}/club-frontend-service:${{ needs.setup.outputs.image_tag }}"
+
+          # Register new task definition
+          NEW_REVISION=$(aws ecs register-task-definition \
+            --cli-input-json "$NEW_TASK_DEF" \
+            --query 'taskDefinition.revision' \
+            --output text)
+
+          echo "📦 New task definition revision: $NEW_REVISION"
+
+          # Update service with new task definition
+          aws ecs update-service \
+            --cluster staging-club-cluster \
+            --service frontend-service \
+            --task-definition frontend-service:$NEW_REVISION \
+            --force-new-deployment
+
+          echo "✅ Frontend service updated"
+
+      - name: Wait for frontend deployment
+        run: |
+          echo "⏳ Waiting for frontend deployment to complete..."
+
+          aws ecs wait services-stable \
+            --cluster staging-club-cluster \
+            --services frontend-service
+
+          echo "✅ Frontend deployment stable"
+
       - name: Health check
         run: |
           echo "🏥 Running health checks..."
@@ -532,6 +580,21 @@ jobs:
             fi
           done
 
+          # Test frontend service
+          for i in {1..10}; do
+            if curl -f -s "http://${ALB_DNS}/" > /dev/null; then
+              echo "✅ Frontend service is healthy"
+              break
+            else
+              if [ $i -eq 10 ]; then
+                echo "❌ Frontend service health check failed"
+                exit 1
+              fi
+              echo "⏳ Waiting for frontend service... (attempt $i/10)"
+              sleep 10
+            fi
+          done
+
       - name: Smoke tests
         run: |
           echo "🧪 Running smoke tests on staging..."
@@ -542,6 +605,13 @@ jobs:
           echo "Testing auth health..."
           curl -f "http://${ALB_DNS}/api/auth/health" || {
             echo "❌ Auth health check failed"
+            exit 1
+          }
+
+          # Test frontend endpoint
+          echo "Testing frontend..."
+          curl -f "http://${ALB_DNS}/" || {
+            echo "❌ Frontend check failed"
             exit 1
           }
 
@@ -677,12 +747,14 @@ jobs:
           echo ""
           echo "Services deployed:"
           echo "  - Auth Service: ✅"
+          echo "  - Frontend Service: ✅"
           echo ""
           echo "Database seeding:"
           echo "  - Status: Check logs above"
           echo ""
           echo "View logs:"
           echo "  aws logs tail /ecs/staging-club-auth --follow"
+          echo "  aws logs tail /ecs/staging-club-frontend --follow"
           echo "  aws logs tail /ecs/staging-club-management-seed --follow"
 
   # ============================================================================

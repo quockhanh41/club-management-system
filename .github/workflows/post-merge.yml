@@ -500,15 +500,147 @@ jobs:
 
           echo "✅ Auth service updated"
 
-      - name: Wait for deployment
+      - name: Update ECS Club Service
         run: |
-          echo "⏳ Waiting for deployment to complete..."
+          echo "🚀 Deploying club service..."
+
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.ap-southeast-1.amazonaws.com"
+
+          TASK_DEF=$(aws ecs describe-task-definition \
+            --task-definition club-service \
+            --query 'taskDefinition' \
+            --output json)
+
+          NEW_TASK_DEF=$(echo $TASK_DEF | jq --arg IMAGE "${ECR_REGISTRY}/club-club-service:${{ needs.setup.outputs.image_tag }}" \
+            '.containerDefinitions[0].image = $IMAGE | 
+             del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)')
+
+          echo "📦 Using image: ${ECR_REGISTRY}/club-club-service:${{ needs.setup.outputs.image_tag }}"
+
+          NEW_REVISION=$(aws ecs register-task-definition \
+            --cli-input-json "$NEW_TASK_DEF" \
+            --query 'taskDefinition.revision' \
+            --output text)
+
+          echo "📦 New task definition revision: $NEW_REVISION"
+
+          aws ecs update-service \
+            --cluster staging-club-cluster \
+            --service club-service \
+            --task-definition club-service:$NEW_REVISION \
+            --force-new-deployment
+
+          echo "✅ Club service updated"
+
+      - name: Update ECS Event Service
+        run: |
+          echo "🚀 Deploying event service..."
+
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.ap-southeast-1.amazonaws.com"
+
+          TASK_DEF=$(aws ecs describe-task-definition \
+            --task-definition event-service \
+            --query 'taskDefinition' \
+            --output json)
+
+          NEW_TASK_DEF=$(echo $TASK_DEF | jq --arg IMAGE "${ECR_REGISTRY}/club-event-service:${{ needs.setup.outputs.image_tag }}" \
+            '.containerDefinitions[0].image = $IMAGE | 
+             del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)')
+
+          echo "📦 Using image: ${ECR_REGISTRY}/club-event-service:${{ needs.setup.outputs.image_tag }}"
+
+          NEW_REVISION=$(aws ecs register-task-definition \
+            --cli-input-json "$NEW_TASK_DEF" \
+            --query 'taskDefinition.revision' \
+            --output text)
+
+          echo "📦 New task definition revision: $NEW_REVISION"
+
+          aws ecs update-service \
+            --cluster staging-club-cluster \
+            --service event-service \
+            --task-definition event-service:$NEW_REVISION \
+            --force-new-deployment
+
+          echo "✅ Event service updated"
+
+      - name: Update ECS Image Service
+        run: |
+          echo "🚀 Deploying image service..."
+
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.ap-southeast-1.amazonaws.com"
+
+          TASK_DEF=$(aws ecs describe-task-definition \
+            --task-definition image-service \
+            --query 'taskDefinition' \
+            --output json)
+
+          NEW_TASK_DEF=$(echo $TASK_DEF | jq --arg IMAGE "${ECR_REGISTRY}/club-image-service:${{ needs.setup.outputs.image_tag }}" \
+            '.containerDefinitions[0].image = $IMAGE | 
+             del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)')
+
+          echo "📦 Using image: ${ECR_REGISTRY}/club-image-service:${{ needs.setup.outputs.image_tag }}"
+
+          NEW_REVISION=$(aws ecs register-task-definition \
+            --cli-input-json "$NEW_TASK_DEF" \
+            --query 'taskDefinition.revision' \
+            --output text)
+
+          echo "📦 New task definition revision: $NEW_REVISION"
+
+          aws ecs update-service \
+            --cluster staging-club-cluster \
+            --service image-service \
+            --task-definition image-service:$NEW_REVISION \
+            --force-new-deployment
+
+          echo "✅ Image service updated"
+
+      - name: Update ECS Notify Service
+        run: |
+          echo "🚀 Deploying notify service..."
+
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.ap-southeast-1.amazonaws.com"
+
+          TASK_DEF=$(aws ecs describe-task-definition \
+            --task-definition notify-service \
+            --query 'taskDefinition' \
+            --output json)
+
+          NEW_TASK_DEF=$(echo $TASK_DEF | jq --arg IMAGE "${ECR_REGISTRY}/club-notify-service:${{ needs.setup.outputs.image_tag }}" \
+            '.containerDefinitions[0].image = $IMAGE | 
+             del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)')
+
+          echo "📦 Using image: ${ECR_REGISTRY}/club-notify-service:${{ needs.setup.outputs.image_tag }}"
+
+          NEW_REVISION=$(aws ecs register-task-definition \
+            --cli-input-json "$NEW_TASK_DEF" \
+            --query 'taskDefinition.revision' \
+            --output text)
+
+          echo "📦 New task definition revision: $NEW_REVISION"
+
+          aws ecs update-service \
+            --cluster staging-club-cluster \
+            --service notify-service \
+            --task-definition notify-service:$NEW_REVISION \
+            --force-new-deployment
+
+          echo "✅ Notify service updated"
+
+      - name: Wait for all backend deployments
+        run: |
+          echo "⏳ Waiting for all backend services to stabilize..."
 
           aws ecs wait services-stable \
             --cluster staging-club-cluster \
-            --services auth-service
+            --services auth-service club-service event-service image-service notify-service
 
-          echo "✅ Deployment stable"
+          echo "✅ All backend deployments stable"
 
       - name: Update ECS Frontend Service
         run: |
@@ -581,6 +713,9 @@ jobs:
               sleep 10
             fi
           done
+
+          # Note: Other services (club, event, image, notify) will be verified in smoke tests
+          # Frontend health is checked separately below
 
           # Test frontend service
           for i in {1..10}; do
@@ -749,6 +884,10 @@ jobs:
           echo ""
           echo "Services deployed:"
           echo "  - Auth Service: ✅"
+          echo "  - Club Service: ✅"
+          echo "  - Event Service: ✅"
+          echo "  - Image Service: ✅"
+          echo "  - Notify Service: ✅"
           echo "  - Frontend Service: ✅"
           echo ""
           echo "Database seeding:"
@@ -756,6 +895,10 @@ jobs:
           echo ""
           echo "View logs:"
           echo "  aws logs tail /ecs/staging-club-auth --follow"
+          echo "  aws logs tail /ecs/staging-club-club --follow"
+          echo "  aws logs tail /ecs/staging-club-event --follow"
+          echo "  aws logs tail /ecs/staging-club-image --follow"
+          echo "  aws logs tail /ecs/staging-club-notify --follow"
           echo "  aws logs tail /ecs/staging-club-frontend --follow"
           echo "  aws logs tail /ecs/staging-club-management-seed --follow"
 

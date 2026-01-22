@@ -412,6 +412,8 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             NODE_ENV=production
+            ${{ matrix.service == 'frontend' && 'NEXT_PUBLIC_API_BASE_URL=' || '' }}
+            ${{ matrix.service == 'frontend' && 'NEXT_PUBLIC_ENV=staging' || '' }}
 
       - name: Generate SBOM
         uses: anchore/sbom-action@v0

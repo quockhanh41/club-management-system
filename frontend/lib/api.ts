@@ -115,10 +115,15 @@ const createTimeoutController = (timeout: number): AbortController => {
  * Build full URL
  */
 const buildUrl = (endpoint: string): string => {
-  // Ensure we always use the correct base URL
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+  // Use the baseUrl from config (which handles empty string correctly)
+  const baseUrl = config.api.baseUrl;
   
-  // Validate that we're not accidentally using relative URLs
+  // If baseUrl is empty string, use relative URL (same origin)
+  if (baseUrl === '') {
+    return endpoint;
+  }
+  
+  // Validate absolute URLs
   if (!baseUrl.startsWith('http')) {
     console.error('❌ Invalid base URL:', baseUrl);
     throw new Error(`Invalid API base URL: ${baseUrl}`);
@@ -310,13 +315,12 @@ export const api = {
  */
 export async function getUserClubRoles(userId: string) {
   const endpoint = `/api/users/${userId}/club-roles`;
-  const expectedBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
   
   console.log('📊 getUserClubRoles:', { 
     userId, 
     endpoint,
-    expectedBaseUrl,
-    fullExpectedUrl: `${expectedBaseUrl}${endpoint}`
+    baseUrl: config.api.baseUrl,
+    fullUrl: buildUrl(endpoint)
   });
   
   return api.get(endpoint);

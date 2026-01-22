@@ -5,13 +5,21 @@
 // Debug environment variables
 console.log('🔧 Config loading:', {
   NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
-  fallback: 'http://localhost:8000'
+  hasValue: process.env.NEXT_PUBLIC_API_BASE_URL !== undefined,
+  willUse: process.env.NEXT_PUBLIC_API_BASE_URL !== undefined 
+    ? (process.env.NEXT_PUBLIC_API_BASE_URL || 'same-origin')
+    : 'http://localhost:8000'
 });
 
 export const config = {
   // API Configuration
   api: {
-    baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000',
+    // If NEXT_PUBLIC_API_BASE_URL is defined (even as empty string), use it
+    // Empty string = same origin (relative URLs)
+    // Undefined = fallback to localhost for local development
+    baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL !== undefined 
+      ? process.env.NEXT_PUBLIC_API_BASE_URL 
+      : 'http://localhost:8000',
     timeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '10000'),
   },
   

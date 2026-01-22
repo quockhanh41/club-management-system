@@ -188,3 +188,47 @@ module "notify_service" {
   region             = var.aws_region
   tags               = local.common_tags
 }
+
+# ==============================================================================
+# FRONTEND SERVICE (Next.js)
+# ==============================================================================
+module "frontend_service" {
+  source = "../../modules/composition/microservice-stack"
+
+  service_name     = "frontend-service"
+  vpc_id           = module.vpc.vpc_id
+  cluster_id       = aws_ecs_cluster.main.id
+  cluster_name     = aws_ecs_cluster.main.name
+  repository_name  = "club-frontend"
+  
+  container_image  = var.frontend_image
+  container_port   = 3000
+  cpu              = 512   # Higher for Next.js SSR
+  memory           = 1024  # Higher for Next.js SSR
+  desired_count    = 1
+  
+  private_subnet_ids    = module.vpc.private_subnets
+  alb_listener_arn      = module.alb.http_listener_arn
+  alb_security_group_id = module.alb_sg.security_group_id
+  
+  attach_to_alb               = true
+  listener_rule_priority      = 200  # Lowest priority - catch-all for non-API routes
+  listener_rule_path_patterns = ["/*"]
+  health_check_path           = "/"
+  health_check_interval       = 30
+  health_check_matcher        = "200"
+  
+  execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
+  additional_security_group_ids = [module.ecs_tasks_sg.security_group_id]
+  
+  environment_variables = [
+    { name = "NODE_ENV", value = "production" },
+    { name = "PORT", value = "3000" },
+    # Note: NEXT_PUBLIC_ variables should be set at build time in Dockerfile
+    # These runtime vars are available for server-side code
+  ]
+  
+  log_retention_days = 7
+  region             = var.aws_region
+  tags               = local.common_tags
+}
